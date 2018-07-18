@@ -21,7 +21,7 @@ dependencies {
 
 generateGrammarSource {
     maxHeapSize = "64m"
-    arguments += ['-package', 'me.VSOP']
+    arguments += ['-package', 'VSOP']
     outputDirectory = new File("generated-src/antlr/main/VSOP".toString())
 }
 compileJava.dependsOn generateGrammarSource
