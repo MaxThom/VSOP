@@ -22,10 +22,11 @@ public class Main {
 
             VSOPLexer lexer = new VSOPLexer(input);
 
-            List tokens = lexer.getAllTokens();
-            for (Object token : tokens) {
-                System.out.println(token.toString());
-            }
+//            List tokens = lexer.getAllTokens();
+//
+//            for (int i = 0; i < tokens.size(); i++) {
+//                System.out.println(tokens.get(i).toString());
+//            }
 
             VSOPParser parser = new VSOPParser(new CommonTokenStream(lexer));
             parser.addParseListener(new MyListener());

@@ -1,8 +1,9 @@
 grammar VSOP;
     program   : 'begin' statement+ 'end';
 
-    statement : assign | add | print ;
+    statement : assign | add | print | id;
 
+    id        : ID ;
     assign    : 'let' ID 'be' (NUMBER | ID) ;
     print     : 'print' (NUMBER | ID | TEXT) ;
     add       : 'add' (NUMBER | ID) 'to' ID ;

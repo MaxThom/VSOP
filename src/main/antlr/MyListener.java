@@ -65,4 +65,13 @@ public class MyListener extends VSOPBaseListener {
         System.out.println(output);
     }
 
+    @Override
+    public void exitId(VSOPParser.IdContext ctx) {
+        String output = ctx.ID().getSymbol().getLine() + ", " + ctx.ID().getSymbol().getCharPositionInLine() + ": " + ctx.ID().getText();
+
+
+
+        System.out.println(output);
+    }
+
 }

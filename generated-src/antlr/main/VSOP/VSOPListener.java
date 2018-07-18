@@ -28,6 +28,16 @@ public interface VSOPListener extends ParseTreeListener {
 	 */
 	void exitStatement(VSOPParser.StatementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link VSOPParser#id}.
+	 * @param ctx the parse tree
+	 */
+	void enterId(VSOPParser.IdContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VSOPParser#id}.
+	 * @param ctx the parse tree
+	 */
+	void exitId(VSOPParser.IdContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link VSOPParser#assign}.
 	 * @param ctx the parse tree
 	 */
