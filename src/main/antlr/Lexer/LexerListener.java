@@ -1,19 +1,22 @@
-import VSOP.VSOPBaseListener;
-import VSOP.VSOPParser;
+package Lexer;
+
+
+
+import VSOP.Lexer.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MyListener extends VSOPBaseListener {
+public class LexerListener extends LEXERBaseListener {
 
     private Map<String, Integer> variables;
 
-    public MyListener() {
+    public LexerListener() {
         variables = new HashMap<>();
     }
 
     @Override
-    public void exitAssign(VSOPParser.AssignContext ctx) {
+    public void exitAssign(LEXERParser.AssignContext ctx) {
         // This method is called when the parser has finished
         // parsing the assign statement
 
@@ -32,7 +35,7 @@ public class MyListener extends VSOPBaseListener {
     }
 
     @Override
-    public void exitAdd(VSOPParser.AddContext ctx) {
+    public void exitAdd(LEXERParser.AddContext ctx) {
         // This method is called when the parser has finished
         // parsing the add statement
 
@@ -45,7 +48,7 @@ public class MyListener extends VSOPBaseListener {
     }
 
     @Override
-    public void exitPrint(VSOPParser.PrintContext ctx) {
+    public void exitPrint(LEXERParser.PrintContext ctx) {
         // This method is called when the parser has finished
         // parsing the print statement
 
@@ -66,10 +69,8 @@ public class MyListener extends VSOPBaseListener {
     }
 
     @Override
-    public void exitId(VSOPParser.IdContext ctx) {
+    public void exitId(LEXERParser.IdContext ctx) {
         String output = ctx.ID().getSymbol().getLine() + ", " + ctx.ID().getSymbol().getCharPositionInLine() + ": " + ctx.ID().getText();
-
-
 
         System.out.println(output);
     }

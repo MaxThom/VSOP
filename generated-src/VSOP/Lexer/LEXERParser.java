@@ -1,5 +1,5 @@
-// Generated from VSOP.g4 by ANTLR 4.7.1
-package VSOP;
+// Generated from Lexer\LEXER.g4 by ANTLR 4.7.1
+package VSOP.Lexer;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
-public class VSOPParser extends Parser {
+public class LEXERParser extends Parser {
 	static { RuntimeMetaData.checkVersion("4.7.1", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
@@ -67,7 +67,7 @@ public class VSOPParser extends Parser {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "VSOP.g4"; }
+	public String getGrammarFileName() { return "LEXER.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
@@ -78,7 +78,7 @@ public class VSOPParser extends Parser {
 	@Override
 	public ATN getATN() { return _ATN; }
 
-	public VSOPParser(TokenStream input) {
+	public LEXERParser(TokenStream input) {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
@@ -95,11 +95,11 @@ public class VSOPParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_program; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).enterProgram(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).enterProgram(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).exitProgram(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).exitProgram(this);
 		}
 	}
 
@@ -160,11 +160,11 @@ public class VSOPParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_statement; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).enterStatement(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).enterStatement(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).exitStatement(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).exitStatement(this);
 		}
 	}
 
@@ -219,18 +219,18 @@ public class VSOPParser extends Parser {
 	}
 
 	public static class IdContext extends ParserRuleContext {
-		public TerminalNode ID() { return getToken(VSOPParser.ID, 0); }
+		public TerminalNode ID() { return getToken(LEXERParser.ID, 0); }
 		public IdContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_id; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).enterId(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).enterId(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).exitId(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).exitId(this);
 		}
 	}
 
@@ -256,22 +256,22 @@ public class VSOPParser extends Parser {
 	}
 
 	public static class AssignContext extends ParserRuleContext {
-		public List<TerminalNode> ID() { return getTokens(VSOPParser.ID); }
+		public List<TerminalNode> ID() { return getTokens(LEXERParser.ID); }
 		public TerminalNode ID(int i) {
-			return getToken(VSOPParser.ID, i);
+			return getToken(LEXERParser.ID, i);
 		}
-		public TerminalNode NUMBER() { return getToken(VSOPParser.NUMBER, 0); }
+		public TerminalNode NUMBER() { return getToken(LEXERParser.NUMBER, 0); }
 		public AssignContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_assign; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).enterAssign(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).enterAssign(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).exitAssign(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).exitAssign(this);
 		}
 	}
 
@@ -312,20 +312,20 @@ public class VSOPParser extends Parser {
 	}
 
 	public static class PrintContext extends ParserRuleContext {
-		public TerminalNode NUMBER() { return getToken(VSOPParser.NUMBER, 0); }
-		public TerminalNode ID() { return getToken(VSOPParser.ID, 0); }
-		public TerminalNode TEXT() { return getToken(VSOPParser.TEXT, 0); }
+		public TerminalNode NUMBER() { return getToken(LEXERParser.NUMBER, 0); }
+		public TerminalNode ID() { return getToken(LEXERParser.ID, 0); }
+		public TerminalNode TEXT() { return getToken(LEXERParser.TEXT, 0); }
 		public PrintContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_print; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).enterPrint(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).enterPrint(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).exitPrint(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).exitPrint(this);
 		}
 	}
 
@@ -362,22 +362,22 @@ public class VSOPParser extends Parser {
 	}
 
 	public static class AddContext extends ParserRuleContext {
-		public List<TerminalNode> ID() { return getTokens(VSOPParser.ID); }
+		public List<TerminalNode> ID() { return getTokens(LEXERParser.ID); }
 		public TerminalNode ID(int i) {
-			return getToken(VSOPParser.ID, i);
+			return getToken(LEXERParser.ID, i);
 		}
-		public TerminalNode NUMBER() { return getToken(VSOPParser.NUMBER, 0); }
+		public TerminalNode NUMBER() { return getToken(LEXERParser.NUMBER, 0); }
 		public AddContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_add; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).enterAdd(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).enterAdd(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof VSOPListener ) ((VSOPListener)listener).exitAdd(this);
+			if ( listener instanceof LEXERListener ) ((LEXERListener)listener).exitAdd(this);
 		}
 	}
 

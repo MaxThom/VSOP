@@ -1,5 +1,7 @@
-import VSOP.VSOPLexer;
-import VSOP.VSOPParser;
+
+import Lexer.LexerListener;
+import VSOP.Lexer.LEXERLexer;
+import VSOP.Lexer.LEXERParser;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
@@ -20,7 +22,7 @@ public class Main {
             ANTLRInputStream input = new ANTLRInputStream(
                     new FileInputStream(args[0]));
 
-            VSOPLexer lexer = new VSOPLexer(input);
+            LEXERLexer lexer = new LEXERLexer(input);
 
 //            List tokens = lexer.getAllTokens();
 //
@@ -28,8 +30,8 @@ public class Main {
 //                System.out.println(tokens.get(i).toString());
 //            }
 
-            VSOPParser parser = new VSOPParser(new CommonTokenStream(lexer));
-            parser.addParseListener(new MyListener());
+            LEXERParser parser = new LEXERParser(new CommonTokenStream(lexer));
+            parser.addParseListener(new LexerListener());
 
             // Start parsing
             parser.program();

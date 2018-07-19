@@ -1,4 +1,5 @@
-grammar VSOP;
+grammar PARSER;
+@header {package VSOP.Parser;}
     program   : 'begin' statement+ 'end';
 
     statement : assign | add | print | id;
