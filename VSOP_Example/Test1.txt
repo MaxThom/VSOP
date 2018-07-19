@@ -1,12 +1,3 @@
-begin
-    let a be 5
-    let b be 10
-    add 3 to b
-    add b to a
-    add a to b
-    print b
-    print 3
-    print "Hello World !
-    dsfsdf"
-    print a
-end
+{ } () : ;
+, + - * / ^
+. = < <= <-

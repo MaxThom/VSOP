@@ -28,43 +28,53 @@ public interface LEXERListener extends ParseTreeListener {
 	 */
 	void exitStatement(LEXERParser.StatementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link LEXERParser#id}.
+	 * Enter a parse tree produced by {@link LEXERParser#keyword}.
 	 * @param ctx the parse tree
 	 */
-	void enterId(LEXERParser.IdContext ctx);
+	void enterKeyword(LEXERParser.KeywordContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link LEXERParser#id}.
+	 * Exit a parse tree produced by {@link LEXERParser#keyword}.
 	 * @param ctx the parse tree
 	 */
-	void exitId(LEXERParser.IdContext ctx);
+	void exitKeyword(LEXERParser.KeywordContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link LEXERParser#assign}.
+	 * Enter a parse tree produced by {@link LEXERParser#operator}.
 	 * @param ctx the parse tree
 	 */
-	void enterAssign(LEXERParser.AssignContext ctx);
+	void enterOperator(LEXERParser.OperatorContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link LEXERParser#assign}.
+	 * Exit a parse tree produced by {@link LEXERParser#operator}.
 	 * @param ctx the parse tree
 	 */
-	void exitAssign(LEXERParser.AssignContext ctx);
+	void exitOperator(LEXERParser.OperatorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link LEXERParser#print}.
+	 * Enter a parse tree produced by {@link LEXERParser#integer}.
 	 * @param ctx the parse tree
 	 */
-	void enterPrint(LEXERParser.PrintContext ctx);
+	void enterInteger(LEXERParser.IntegerContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link LEXERParser#print}.
+	 * Exit a parse tree produced by {@link LEXERParser#integer}.
 	 * @param ctx the parse tree
 	 */
-	void exitPrint(LEXERParser.PrintContext ctx);
+	void exitInteger(LEXERParser.IntegerContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link LEXERParser#add}.
+	 * Enter a parse tree produced by {@link LEXERParser#objectIdentifier}.
 	 * @param ctx the parse tree
 	 */
-	void enterAdd(LEXERParser.AddContext ctx);
+	void enterObjectIdentifier(LEXERParser.ObjectIdentifierContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link LEXERParser#add}.
+	 * Exit a parse tree produced by {@link LEXERParser#objectIdentifier}.
 	 * @param ctx the parse tree
 	 */
-	void exitAdd(LEXERParser.AddContext ctx);
+	void exitObjectIdentifier(LEXERParser.ObjectIdentifierContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link LEXERParser#typeIdentifier}.
+	 * @param ctx the parse tree
+	 */
+	void enterTypeIdentifier(LEXERParser.TypeIdentifierContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link LEXERParser#typeIdentifier}.
+	 * @param ctx the parse tree
+	 */
+	void exitTypeIdentifier(LEXERParser.TypeIdentifierContext ctx);
 }

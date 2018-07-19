@@ -9,9 +9,11 @@ import java.util.Map;
 public class ParserListener extends PARSERBaseListener {
 
     private Map<String, Integer> variables;
+    private String fileName;
 
-    public ParserListener() {
+    public ParserListener(String fileName) {
         variables = new HashMap<>();
+        this.fileName = fileName;
     }
 
     @Override

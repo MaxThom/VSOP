@@ -40,49 +40,61 @@ public class LEXERBaseListener implements LEXERListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterId(LEXERParser.IdContext ctx) { }
+	@Override public void enterKeyword(LEXERParser.KeywordContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitId(LEXERParser.IdContext ctx) { }
+	@Override public void exitKeyword(LEXERParser.KeywordContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterAssign(LEXERParser.AssignContext ctx) { }
+	@Override public void enterOperator(LEXERParser.OperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitAssign(LEXERParser.AssignContext ctx) { }
+	@Override public void exitOperator(LEXERParser.OperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPrint(LEXERParser.PrintContext ctx) { }
+	@Override public void enterInteger(LEXERParser.IntegerContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPrint(LEXERParser.PrintContext ctx) { }
+	@Override public void exitInteger(LEXERParser.IntegerContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterAdd(LEXERParser.AddContext ctx) { }
+	@Override public void enterObjectIdentifier(LEXERParser.ObjectIdentifierContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitAdd(LEXERParser.AddContext ctx) { }
+	@Override public void exitObjectIdentifier(LEXERParser.ObjectIdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterTypeIdentifier(LEXERParser.TypeIdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTypeIdentifier(LEXERParser.TypeIdentifierContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

@@ -9,7 +9,9 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -22,15 +24,14 @@ public class Main {
                 System.exit(1);
             }
 
-            ANTLRInputStream input = new ANTLRInputStream(
-                    new FileInputStream(args[1]));
+            File file = new File(args[1]);
 
             switch (args[0]) {
                 case "-lex":
-                    startLexer(input);
+                    startLexer(file);
                     break;
                 case "-parse":
-                    startParser(input);
+                    startParser(file);
                     break;
                 default:
                     System.out.println("Error : Missing correct arguments");
@@ -43,21 +44,25 @@ public class Main {
         }
     }
 
-    private static void startLexer(ANTLRInputStream input) {
+    private static void startLexer(File file) throws IOException {
+        ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(file));
+
         LEXERLexer lexer = new LEXERLexer(input);
 
         LEXERParser parser = new LEXERParser(new CommonTokenStream(lexer));
-        parser.addParseListener(new LexerListener());
+        parser.addParseListener(new LexerListener(file.getName()));
 
         // Start parsing
         parser.program();
     }
 
-    private static void startParser(ANTLRInputStream input) {
+    private static void startParser(File file) throws IOException  {
+        ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(file));
+
         PARSERLexer lexer = new PARSERLexer(input);
 
         PARSERParser parser = new PARSERParser(new CommonTokenStream(lexer));
-        parser.addParseListener(new ParserListener());
+        parser.addParseListener(new ParserListener(file.getName()));
 
         // Start parsing
         parser.program();
