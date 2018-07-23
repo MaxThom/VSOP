@@ -95,6 +95,18 @@ public class LEXERBaseListener implements LEXERListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitTypeIdentifier(LEXERParser.TypeIdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterString(LEXERParser.StringContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitString(LEXERParser.StringContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

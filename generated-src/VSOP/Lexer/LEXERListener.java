@@ -77,4 +77,14 @@ public interface LEXERListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitTypeIdentifier(LEXERParser.TypeIdentifierContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link LEXERParser#string}.
+	 * @param ctx the parse tree
+	 */
+	void enterString(LEXERParser.StringContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link LEXERParser#string}.
+	 * @param ctx the parse tree
+	 */
+	void exitString(LEXERParser.StringContext ctx);
 }
