@@ -52,18 +52,6 @@ public class LEXERBaseListener implements LEXERListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOperator(LEXERParser.OperatorContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitOperator(LEXERParser.OperatorContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterInteger(LEXERParser.IntegerContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -107,6 +95,30 @@ public class LEXERBaseListener implements LEXERListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitString(LEXERParser.StringContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSingleLineComment(LEXERParser.SingleLineCommentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSingleLineComment(LEXERParser.SingleLineCommentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterOperator(LEXERParser.OperatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitOperator(LEXERParser.OperatorContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

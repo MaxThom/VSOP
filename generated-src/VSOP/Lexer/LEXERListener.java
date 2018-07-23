@@ -38,16 +38,6 @@ public interface LEXERListener extends ParseTreeListener {
 	 */
 	void exitKeyword(LEXERParser.KeywordContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link LEXERParser#operator}.
-	 * @param ctx the parse tree
-	 */
-	void enterOperator(LEXERParser.OperatorContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link LEXERParser#operator}.
-	 * @param ctx the parse tree
-	 */
-	void exitOperator(LEXERParser.OperatorContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link LEXERParser#integer}.
 	 * @param ctx the parse tree
 	 */
@@ -87,4 +77,24 @@ public interface LEXERListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitString(LEXERParser.StringContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link LEXERParser#singleLineComment}.
+	 * @param ctx the parse tree
+	 */
+	void enterSingleLineComment(LEXERParser.SingleLineCommentContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link LEXERParser#singleLineComment}.
+	 * @param ctx the parse tree
+	 */
+	void exitSingleLineComment(LEXERParser.SingleLineCommentContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link LEXERParser#operator}.
+	 * @param ctx the parse tree
+	 */
+	void enterOperator(LEXERParser.OperatorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link LEXERParser#operator}.
+	 * @param ctx the parse tree
+	 */
+	void exitOperator(LEXERParser.OperatorContext ctx);
 }
