@@ -112,6 +112,18 @@ public class LEXERBaseListener implements LEXERListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterMultiLineComment(LEXERParser.MultiLineCommentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMultiLineComment(LEXERParser.MultiLineCommentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterOperator(LEXERParser.OperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}

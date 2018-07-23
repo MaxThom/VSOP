@@ -88,6 +88,16 @@ public interface LEXERListener extends ParseTreeListener {
 	 */
 	void exitSingleLineComment(LEXERParser.SingleLineCommentContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link LEXERParser#multiLineComment}.
+	 * @param ctx the parse tree
+	 */
+	void enterMultiLineComment(LEXERParser.MultiLineCommentContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link LEXERParser#multiLineComment}.
+	 * @param ctx the parse tree
+	 */
+	void exitMultiLineComment(LEXERParser.MultiLineCommentContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link LEXERParser#operator}.
 	 * @param ctx the parse tree
 	 */
