@@ -23,7 +23,7 @@ grammar LEXER;
     INTEGER_DEC             : [0-9][0-9a-zA-Z]* ;
     OBJECT_IDENTIFIER       : [a-z][a-zA-Z0-9_]* ;
     TYPE_IDENTIFIER         : [A-Z][a-zA-Z0-9_]* ;
-    STRING                  : '"' ( '\\"' | . )*? ('"'| EOF) ;
+    STRING                  : '"' ( '\\"' | . )*? ('"' | EOF) ;
     SINGLE_LINE_COMMENT     : '//'~[\r\n]* ; //'//'.* -> skip ; //'//'[ a-zA-Z0-9_]* -> skip ;
     OPERATOR                : '{' | '}' | '(' | ')' | ':' | ';' | ',' | '+' | '-' | '*' | '/' | '^' | '.' | '=' | '<' | '<=' | '<-' ;
     WS                      : [ \r\n\t]+ -> skip;

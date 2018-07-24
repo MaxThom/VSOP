@@ -11,6 +11,8 @@ public class ParserListener extends PARSERBaseListener {
     private Map<String, Integer> variables;
     private String fileName;
 
+    public Boolean lexicalError = false;
+
     public ParserListener(String fileName) {
         variables = new HashMap<>();
         this.fileName = fileName;

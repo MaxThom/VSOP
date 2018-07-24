@@ -4,12 +4,15 @@ import VSOP.Lexer.LEXERBaseListener;
 import VSOP.Lexer.LEXERParser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.antlr.v4.runtime.tree.pattern.TokenTagToken;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 public class LexerListener extends LEXERBaseListener {
+
+    private final String LINE_FEED_WIN = "\r\n";
+    private final String LINE_FEED_LIN = "\n";
 
     private Map<String, Integer> variables;
     private Map<String, String> operatorsName;
@@ -18,8 +21,14 @@ public class LexerListener extends LEXERBaseListener {
     private Stack<TerminalNode> closeCommentStack;
     private String fileName;
 
+    public Boolean lexicalError = false;
+    public ArrayList<String> tokenOutput;
+    public ArrayList<String> errorOutput;
+
     public LexerListener(String fileName) {
         this.fileName = fileName;
+        tokenOutput = new ArrayList();
+        errorOutput = new ArrayList();
         commentStack = new Stack<>();
         closeCommentStack = new Stack<>();
         variables = new HashMap<>();
@@ -53,14 +62,14 @@ public class LexerListener extends LEXERBaseListener {
     @Override
     public void exitObjectIdentifier(LEXERParser.ObjectIdentifierContext ctx) {
        if (commentStack.empty()) {
-            printToken(ctx.OBJECT_IDENTIFIER().getSymbol(), "object-literal,");
+            printToken(ctx.OBJECT_IDENTIFIER().getSymbol(), "object-identifier,");
        }
     }
 
     @Override
     public void exitTypeIdentifier(LEXERParser.TypeIdentifierContext ctx) {
         if (commentStack.empty()) {
-            printToken(ctx.TYPE_IDENTIFIER().getSymbol(), "type-literal,");
+            printToken(ctx.TYPE_IDENTIFIER().getSymbol(), "type-identifier,");
         }
     }
 
@@ -103,23 +112,27 @@ public class LexerListener extends LEXERBaseListener {
                 if (node != null)
                     printTokenCustom(node.getSymbol(), "integer-literal," + decimalValue);
             } catch (Exception e) {
-                printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "\n  " + node.getText() + " is not a valid integer literal.");
+                printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "lexical error\n  " + node.getText() + " is not a valid integer literal.");
             }
         }
     }
 
     @Override
     public void exitString(LEXERParser.StringContext ctx) {
+        String string = ctx.STRING().getText();
         if (commentStack.empty()) {
             Boolean inError = false;
-            String string = ctx.STRING().getText();
             int errLine = ctx.STRING().getSymbol().getLine();
             int errCol = ctx.STRING().getSymbol().getCharPositionInLine();
+
+
 
             // Check for EOF
             if (string.charAt(string.length()-1) != '"') {
                 inError = true;
             }
+
+
 
             //Hexadecimal Character
             int hex = -4;
@@ -140,18 +153,24 @@ public class LexerListener extends LEXERBaseListener {
 
             // New Line
             int nl = -1;
-            while ((nl = string.indexOf("\r\n", nl)) != -1) {
-                if (string.charAt(nl - 1) != '\\') {
+            //while (string.indexOf(LINE_FEED_WIN, nl) != -1 || string.indexOf(LINE_FEED_LIN, nl) != -1) {
+            //    nl = Math.max(string.indexOf(LINE_FEED_WIN, nl), string.indexOf(LINE_FEED_LIN, nl));
+            while ((nl = string.indexOf(LINE_FEED_LIN, nl)) != -1) {
+                int offsetWin = 0;
+                if (string.charAt(nl - 1) == '\r') {
+                    offsetWin = 1;
+                }
+                if (string.charAt(nl - 1 - offsetWin) != '\\') {
                     inError = true;
-                    nl += 2;
+                    nl += 1 + offsetWin;
                     // TODO : Column error at faulty character
                 } else {
-                    int endIndex = nl + 2;
+                    int endIndex = nl + 1 + offsetWin;
 
                     while (string.charAt(endIndex) == ' ' || string.charAt(endIndex) == '\t') {
                         endIndex++;
                     }
-                    string = string.substring(0, nl - 1) + string.substring(endIndex);
+                    string = string.substring(0, nl - 1 - offsetWin) + string.substring(endIndex);
                 }
             }
 
@@ -162,8 +181,9 @@ public class LexerListener extends LEXERBaseListener {
                     inError = true;
                     String before = ctx.STRING().getText().substring(0, ctx.STRING().getText().indexOf("\\" + string.charAt(esc+1)));
                     int posNewLine = -2;
-                    while ((posNewLine = before.indexOf("\r\n", posNewLine+2)) != -1)
+                    while ((posNewLine = before.indexOf(LINE_FEED_LIN, posNewLine+2)) != -1) {
                         errLine++;
+                    }
                     // TODO : Column error at faulty character
 
                     break;
@@ -214,11 +234,11 @@ public class LexerListener extends LEXERBaseListener {
 
         if (!commentStack.empty()) {
             TerminalNode node = commentStack.pop();
-            printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "Multi-line comment not closed");
+            printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "lexical error");
         }
         if (!closeCommentStack.empty()) {
             TerminalNode node = closeCommentStack.pop();
-            printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "Multi-line comment not opened");
+            printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "lexical error");
         }
 
     }
@@ -226,20 +246,21 @@ public class LexerListener extends LEXERBaseListener {
 
     private void printToken(Token token, String message) {
         String output = token.getLine() + "," + (token.getCharPositionInLine()+1) + "," + message + token.getText();
-
-        System.out.println(output);
+        tokenOutput.add(output);
+        //System.out.println(output);
     }
 
     private void printTokenCustom(Token token, String message) {
         String output = token.getLine() + "," + (token.getCharPositionInLine()+1) + "," + message;
-
-        System.out.println(output);
+        tokenOutput.add(output);
+        //System.out.println(output);
     }
 
     private void printError(int line, int column, String message) {
+        lexicalError = true;
         String output = this.fileName + ":" + line + ":" + (column+1) + ": " + message;
-
-        System.out.println(output);
+        errorOutput.add(output);
+        //System.out.println(output);
     }
 }
 
