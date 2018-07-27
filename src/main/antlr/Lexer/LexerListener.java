@@ -4,8 +4,6 @@ import VSOP.Lexer.LEXERBaseListener;
 import VSOP.Lexer.LEXERParser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.TerminalNodeImpl;
-import org.antlr.v4.runtime.tree.pattern.TokenTagToken;
 
 import java.util.*;
 
@@ -17,8 +15,8 @@ public class LexerListener extends LEXERBaseListener {
     private Map<String, Integer> variables;
     private Map<String, String> operatorsName;
     private Map<String, String> characterEscape;
-    private Stack<TerminalNode> commentStack;
-    private Stack<TerminalNode> closeCommentStack;
+    private Stack<CommentNode> commentStack;
+    private Stack<CommentNode> closeCommentStack;
     private String fileName;
 
     public Boolean lexicalError = false;
@@ -122,6 +120,7 @@ public class LexerListener extends LEXERBaseListener {
         String string = ctx.STRING().getText();
         if (commentStack.empty()) {
             Boolean inError = false;
+            String errorMessage = "lexical error\n";
             int errLine = ctx.STRING().getSymbol().getLine();
             int errCol = ctx.STRING().getSymbol().getCharPositionInLine();
 
@@ -137,11 +136,21 @@ public class LexerListener extends LEXERBaseListener {
             //Hexadecimal Character
             int hex = -4;
             while ((hex = string.indexOf("\\x", hex + 4)) != -1) {
-                String hexNumber = string.substring(hex + 2, hex + 4);
+                String hexNumber = "";
                 try {
+                    hexNumber = string.substring(hex + 2, hex + 4);
                     int decimalValue = Integer.parseInt(hexNumber, 16);
                 } catch (Exception e) {
                     inError = true;
+                    errorMessage += "  \\x" + hexNumber + " is not a valid escape sequence.";
+
+                    errLine = ctx.STRING().getSymbol().getLine();
+                    errCol = hex;
+                    for (int nl2 = 0; (nl2 = string.substring(0, hex).indexOf(LINE_FEED_LIN, nl2++)) != -1; nl2++) {
+                        errLine++;
+                        errCol = hex - nl2 - 1;
+                    }
+
                     break;
                 }
             }
@@ -160,10 +169,19 @@ public class LexerListener extends LEXERBaseListener {
                 if (string.charAt(nl - 1) == '\r') {
                     offsetWin = 1;
                 }
+
                 if (string.charAt(nl - 1 - offsetWin) != '\\') {
                     inError = true;
+                    errorMessage += "  character '\\n' is illegal in this context.";
                     nl += 1 + offsetWin;
-                    // TODO : Column error at faulty character
+                    int posErr = nl - 1 - offsetWin;
+
+                    errLine = ctx.STRING().getSymbol().getLine();
+                    errCol = posErr - offsetWin;
+                    for (int nl2 = 0; (nl2 = string.substring(0, posErr).indexOf(LINE_FEED_LIN, nl2++)) != -1; nl2++) {
+                        errLine++;
+                        errCol = posErr - nl2 - 1 - offsetWin;
+                    }
                 } else {
                     int endIndex = nl + 1 + offsetWin;
 
@@ -179,10 +197,13 @@ public class LexerListener extends LEXERBaseListener {
             while ((esc = string.indexOf("\\", esc + 2)) != -1) {
                 if (string.charAt(esc + 1) != 'x' && string.charAt(esc + 1) != '"' && string.charAt(esc + 1) != '\\') {
                     inError = true;
+                    errorMessage += "  \\" + string.charAt(esc + 1) + " is not a valid escape sequence.";
+                    errCol = ctx.STRING().getText().indexOf("\\" + string.charAt(esc+1));
                     String before = ctx.STRING().getText().substring(0, ctx.STRING().getText().indexOf("\\" + string.charAt(esc+1)));
                     int posNewLine = -2;
                     while ((posNewLine = before.indexOf(LINE_FEED_LIN, posNewLine+2)) != -1) {
                         errLine++;
+                        errCol = ctx.STRING().getText().indexOf("\\" + string.charAt(esc+1)) - posNewLine - 1;
                     }
                     // TODO : Column error at faulty character
 
@@ -190,8 +211,20 @@ public class LexerListener extends LEXERBaseListener {
                 }
             }
 
+            int posNull;
+            if ((posNull = string.indexOf('\0')) != -1) {
+                inError = true;
+                errorMessage += "  character '\\000' is illegal in this context.";
+                errLine = ctx.STRING().getSymbol().getLine();
+                errCol = posNull;
+                for (int nl2 = 0; (nl2 = string.substring(0, posNull).indexOf(LINE_FEED_LIN, nl2++)) != -1; nl2++) {
+                    errLine++;
+                    errCol = posNull - nl2 - 1;
+                }
+            }
+
             if (inError) {
-                printError(errLine, errCol, "\n  " + string + " is not a valid string-literal.");
+                printError(errLine, errCol, errorMessage);
             } else {
                 printTokenCustom(ctx.STRING().getSymbol(), "string-literal," + string);
             }
@@ -209,36 +242,56 @@ public class LexerListener extends LEXERBaseListener {
     public void exitMultiLineComment(LEXERParser.MultiLineCommentContext ctx) {
         TerminalNode node = null;
 
-        if (ctx.MULTILINE_OPEN_COMMENT() != null) {
-            node = ctx.MULTILINE_OPEN_COMMENT();
+        if (ctx.MULTILINE_COMMENT() != null) {
+            node = ctx.MULTILINE_COMMENT();
+            String txt = ctx.MULTILINE_COMMENT().getText();
+            int nextOpen = 1;
+            /*while (txt.indexOf("(*", nextOpen) != -1) {
+                nextOpen = txt.indexOf("(*", nextOpen);
+                nextOpen += 1;
+                commentStack.push(new CommentNode(CommentType.OPEN, node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine()+nextOpen));
+            }*/
 
-            commentStack.push(node);
-
-
-        } else if (ctx.MULTILINE_CLOSE_COMMENT() != null) {
-            node = ctx.MULTILINE_CLOSE_COMMENT();
-
-            if (!commentStack.empty() && commentStack.peek().getText().equals("(*")) {
-                commentStack.pop();
-            } else {
-                closeCommentStack.push(node);
+            for (int i = 0; (i = txt.indexOf("(*", i++)) != -1; i++) {
+                int row = node.getSymbol().getLine();
+                int col = node.getSymbol().getCharPositionInLine()+i;
+                for (int nl = 1; (nl = txt.substring(0, i).indexOf(LINE_FEED_LIN, nl++)) != -1; nl++) {
+                    row++;
+                    col = i - nl - 1;
+                }
+                commentStack.push(new CommentNode(CommentType.OPEN, row, col));
             }
 
+            if (txt.substring(txt.length()-3).equals("(*)")) {
+
+            } else if (txt.substring(txt.length()-2).equals("*)")) {
+                commentStack.pop();
+            }
+
+        } else if (ctx.MULTILINE_OPEN_COMMENT() != null) {
+            node = ctx.MULTILINE_OPEN_COMMENT();
+            commentStack.push(new CommentNode(CommentType.OPEN, node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine()));
+        } else if (ctx.MULTILINE_CLOSE_COMMENT() != null) {
+            node = ctx.MULTILINE_CLOSE_COMMENT();
+            if (!commentStack.empty()) {
+                commentStack.pop();
+            } else {
+                closeCommentStack.push(new CommentNode(CommentType.CLOSE, node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine()));
+            }
         }
 
-        //printToken(node.getSymbol(), "");
     }
 
     @Override
     public void exitProgram(LEXERParser.ProgramContext ctx) {
 
         if (!commentStack.empty()) {
-            TerminalNode node = commentStack.pop();
-            printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "lexical error");
+            CommentNode node = commentStack.pop();
+            printError(node.row, node.col, "lexical error");
         }
         if (!closeCommentStack.empty()) {
-            TerminalNode node = closeCommentStack.pop();
-            printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "lexical error");
+            CommentNode node = closeCommentStack.pop();
+            printError(node.row, node.col, "lexical error");
         }
 
     }

@@ -1,4 +1,5 @@
 
+import Lexer.DescriptiveErrorListener;
 import Lexer.LexerListener;
 import Parser.ParserListener;
 import VSOP.Lexer.LEXERLexer;
@@ -47,9 +48,13 @@ public class Main {
     private static int startLexer(File file) throws IOException {
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(file));
         LEXERLexer lexer = new LEXERLexer(input);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(DescriptiveErrorListener.getInstance(file.getName()));
         LEXERParser parser = new LEXERParser(new CommonTokenStream(lexer));
         LexerListener listener = new LexerListener(file.getName());
         parser.addParseListener(listener);
+        parser.removeErrorListeners();
+        parser.addErrorListener(DescriptiveErrorListener.getInstance(file.getName()));
 
         // Start parsing
         parser.program();
@@ -64,10 +69,12 @@ public class Main {
             }
 
             for (String token : listener.errorOutput) {
-                System.out.println(token);
+                System.err.println(token);
             }
         }
 
+        if (DescriptiveErrorListener.getInstance("").inError)
+            return 1;
         return listener.lexicalError ? 1 : 0 ;
     }
 
