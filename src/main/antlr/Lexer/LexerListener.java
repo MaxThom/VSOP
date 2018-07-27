@@ -129,6 +129,7 @@ public class LexerListener extends LEXERBaseListener {
             // Check for EOF
             if (string.charAt(string.length()-1) != '"') {
                 inError = true;
+                errorMessage += "  unterminated string.";
             }
 
 

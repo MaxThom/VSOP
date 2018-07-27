@@ -1,1 +1,5 @@
-another ~
+42
+    "This string with\
+     several lines\
+     does not properly\n\
+     ends.
