@@ -20,6 +20,22 @@ public class ParserListener extends PARSERBaseListener {
 
     @Override
     public void exitAssign(PARSERParser.AssignContext ctx) {
+        System.out.println(ctx.getText());
+    }
+
+    @Override
+    public void exitCondition(PARSERParser.ConditionContext ctx) {
+        System.out.println(ctx.getText());
+    }
+
+    @Override
+    public void exitIfStatement(PARSERParser.IfStatementContext ctx) {
+        System.out.println(ctx.getText());
+    }
+
+/*
+    @Override
+    public void exitAssign(PARSERParser.AssignContext ctx) {
         // This method is called when the parser has finished
         // parsing the assign statement
 
@@ -75,6 +91,6 @@ public class ParserListener extends PARSERBaseListener {
         String output = ctx.ID().getSymbol().getLine() + ", " + ctx.ID().getSymbol().getCharPositionInLine() + ": " + ctx.ID().getText();
 
         System.out.println(output);
-    }
+    }*/
 
 }

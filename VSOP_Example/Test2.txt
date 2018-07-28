@@ -1,5 +1,3 @@
-42
-    "This string with\
-     several lines\
-     does not properly\n\
-     ends.
+while test <= abc do
+    abc: string <- "Test"
+    dbe: Plane

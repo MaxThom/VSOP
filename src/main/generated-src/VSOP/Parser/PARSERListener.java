@@ -28,16 +28,6 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitStatement(PARSERParser.StatementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#id}.
-	 * @param ctx the parse tree
-	 */
-	void enterId(PARSERParser.IdContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#id}.
-	 * @param ctx the parse tree
-	 */
-	void exitId(PARSERParser.IdContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link PARSERParser#assign}.
 	 * @param ctx the parse tree
 	 */
@@ -48,23 +38,83 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitAssign(PARSERParser.AssignContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#print}.
+	 * Enter a parse tree produced by {@link PARSERParser#whileStatement}.
 	 * @param ctx the parse tree
 	 */
-	void enterPrint(PARSERParser.PrintContext ctx);
+	void enterWhileStatement(PARSERParser.WhileStatementContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link PARSERParser#print}.
+	 * Exit a parse tree produced by {@link PARSERParser#whileStatement}.
 	 * @param ctx the parse tree
 	 */
-	void exitPrint(PARSERParser.PrintContext ctx);
+	void exitWhileStatement(PARSERParser.WhileStatementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#add}.
+	 * Enter a parse tree produced by {@link PARSERParser#ifStatement}.
 	 * @param ctx the parse tree
 	 */
-	void enterAdd(PARSERParser.AddContext ctx);
+	void enterIfStatement(PARSERParser.IfStatementContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link PARSERParser#add}.
+	 * Exit a parse tree produced by {@link PARSERParser#ifStatement}.
 	 * @param ctx the parse tree
 	 */
-	void exitAdd(PARSERParser.AddContext ctx);
+	void exitIfStatement(PARSERParser.IfStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#ifStat}.
+	 * @param ctx the parse tree
+	 */
+	void enterIfStat(PARSERParser.IfStatContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#ifStat}.
+	 * @param ctx the parse tree
+	 */
+	void exitIfStat(PARSERParser.IfStatContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#elseStat}.
+	 * @param ctx the parse tree
+	 */
+	void enterElseStat(PARSERParser.ElseStatContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#elseStat}.
+	 * @param ctx the parse tree
+	 */
+	void exitElseStat(PARSERParser.ElseStatContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void enterCondition(PARSERParser.ConditionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void exitCondition(PARSERParser.ConditionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#comparaiser}.
+	 * @param ctx the parse tree
+	 */
+	void enterComparaiser(PARSERParser.ComparaiserContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#comparaiser}.
+	 * @param ctx the parse tree
+	 */
+	void exitComparaiser(PARSERParser.ComparaiserContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#integer}.
+	 * @param ctx the parse tree
+	 */
+	void enterInteger(PARSERParser.IntegerContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#integer}.
+	 * @param ctx the parse tree
+	 */
+	void exitInteger(PARSERParser.IntegerContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#varType}.
+	 * @param ctx the parse tree
+	 */
+	void enterVarType(PARSERParser.VarTypeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#varType}.
+	 * @param ctx the parse tree
+	 */
+	void exitVarType(PARSERParser.VarTypeContext ctx);
 }

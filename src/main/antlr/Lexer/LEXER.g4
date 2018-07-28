@@ -15,7 +15,6 @@ grammar LEXER;
     operator                : OPERATOR ;
 
     KEYWORD                 : 'and' | 'bool' | 'class' | 'do' | 'else' | 'extends' | 'false' | 'if' | 'in' | 'int32' | 'isnull' | 'let' | 'new' | 'not' | 'string' | 'then' | 'true' | 'unit' | 'while' ;
-
     MULTILINE_OPEN_COMMENT  : '(*' ;
     MULTILINE_CLOSE_COMMENT : '*)' ;
     MULTILINE_COMMENT       : '(*' .*? '*)' ;
