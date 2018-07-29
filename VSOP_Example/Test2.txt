@@ -1,3 +1,14 @@
+class TaMere extends TonPere {
+    nbEnfant : int32 <- 2 ;
+    fils: Enfant ;
+    fille: Enfant ;
+
+    function echangerFilsFille(cheveux: int32) : bool {
+
+    }
+
+}
+
 while test <= abc do
     abc: string <- "Test"
     dbe: Plane
