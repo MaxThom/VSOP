@@ -5,11 +5,11 @@ grammar PARSER;
     code                    : classHeader | methodHeader | statement ; //TODO REMOVE STATEMENT
     statement               : assign | ifStatement | whileStatement;
 
-    classHeader             : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' classBody '}';
-    classBody               : methodHeader* | field*;
+    classHeader             : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' classBody* '}';
+    classBody               : methodHeader | field;
 
-    methodHeader            : OBJECT_IDENTIFIER '(' (((formal ',')+ (formal)) | (formal)?) ')' ':' varType '{' methodBody '}' ;
-    methodBody              : statement* ;
+    methodHeader            : OBJECT_IDENTIFIER '(' (((formal ',')+ (formal)) | (formal)?) ')' ':' varType '{' methodBody* '}' ;
+    methodBody              : statement ;
     formal                  : OBJECT_IDENTIFIER ':' varType ;
     field                   : OBJECT_IDENTIFIER ':' varType ('<-' varValue)? ';' ;
 
