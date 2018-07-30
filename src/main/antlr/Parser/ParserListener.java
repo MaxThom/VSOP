@@ -19,6 +19,11 @@ public class ParserListener extends PARSERBaseListener {
     }
 
     @Override
+    public void exitCode(PARSERParser.CodeContext ctx) {
+        System.out.println(ctx.getText());
+    }
+
+    @Override
     public void exitAssign(PARSERParser.AssignContext ctx) {
         System.out.println(ctx.getText());
     }

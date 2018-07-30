@@ -3,12 +3,8 @@ class TaMere extends TonPere {
     fils: Enfant ;
     fille: Enfant ;
 
-    function echangerFilsFille(cheveux: int32) : bool {
+    changerFilsFille(cheveux: int32) : bool {
 
     }
 
 }
-
-while test <= abc do
-    abc: string <- "Test"
-    dbe: Plane

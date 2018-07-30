@@ -1,13 +1,20 @@
-startEngine(gazLevel: int32, readyToStart:bool, foodOnBoard: bool) : bool {
-    if abc = 2 then
-        dbe: int32 <- 0x1b
-        dbc: Car
-    else
-        dbc: Car
+(* *)
 
-    while test <= abc do
-        abc: string <- "Test"
-        dbe: Plane
-}
+(* QWEQWE *)
 
 
+(* QWEQWE
+
+ dasd weqw
+  qweeqwdd*)
+
+  (* QWE QWE
+
+  qwe wqwe (* QWEqwe qwe
+  we*)*)
+
+
+  // Test
+  qwed
+  // qwedsad
+  // qqwe

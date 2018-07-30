@@ -10,11 +10,9 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
+import java.util.Stack;
 
 public class Main {
     public static void main(String[] args) {
@@ -79,8 +77,9 @@ public class Main {
     }
 
     private static int startParser(File file) throws IOException  {
-        ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(file));
+        String text = removeComments(file);
 
+        ANTLRInputStream input = new ANTLRInputStream(text);//(new FileInputStream(file));
         PARSERLexer lexer = new PARSERLexer(input);
 
         PARSERParser parser = new PARSERParser(new CommonTokenStream(lexer));
@@ -91,5 +90,43 @@ public class Main {
         parser.program();
 
         return listener.lexicalError ? 1 : 0 ;
+    }
+
+    private static String removeComments(File file) {
+
+        String text = "";
+        boolean forgetSingle = false;
+        Stack<Integer> comments = new Stack<>();
+
+        // Remove Multiline
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+            int c;
+            while((c = reader.read()) != -1) {
+                text += String.valueOf((char) c);
+                if (text.length() >= 2 && text.charAt(text.length()-2) == '(' && text.charAt(text.length()-1) == '*') {
+                    comments.push(text.length()-2);
+                }
+                else if (text.length() >= 2 && text.charAt(text.length()-2) == '*' && text.charAt(text.length()-1) == ')') {
+
+                    text = text.substring(0, comments.pop()) + text.substring(text.length());
+                }
+            }
+        }
+        catch (IOException e) {
+
+        }
+
+        // Remove single line
+        int i = 0;
+        while ((i = text.indexOf("//", i)) != -1) {
+            int nl = text.indexOf("\n", i);
+            if (nl == -1)
+                text = text.substring(0, i);
+            else
+                text = text.substring(0, i) + text.substring(nl+1);
+        }
+
+        return text;
     }
 }
