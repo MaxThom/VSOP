@@ -28,18 +28,6 @@ public class PARSERBaseListener implements PARSERListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCode(PARSERParser.CodeContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitCode(PARSERParser.CodeContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterStatement(PARSERParser.StatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -52,49 +40,37 @@ public class PARSERBaseListener implements PARSERListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterClassHeader(PARSERParser.ClassHeaderContext ctx) { }
+	@Override public void enterBlock(PARSERParser.BlockContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitClassHeader(PARSERParser.ClassHeaderContext ctx) { }
+	@Override public void exitBlock(PARSERParser.BlockContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterClassBody(PARSERParser.ClassBodyContext ctx) { }
+	@Override public void enterClassDefinition(PARSERParser.ClassDefinitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitClassBody(PARSERParser.ClassBodyContext ctx) { }
+	@Override public void exitClassDefinition(PARSERParser.ClassDefinitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterMethodHeader(PARSERParser.MethodHeaderContext ctx) { }
+	@Override public void enterMethodDefinition(PARSERParser.MethodDefinitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitMethodHeader(PARSERParser.MethodHeaderContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterMethodBody(PARSERParser.MethodBodyContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMethodBody(PARSERParser.MethodBodyContext ctx) { }
+	@Override public void exitMethodDefinition(PARSERParser.MethodDefinitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -179,6 +155,18 @@ public class PARSERBaseListener implements PARSERListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitElseStat(PARSERParser.ElseStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterLet(PARSERParser.LetContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLet(PARSERParser.LetContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

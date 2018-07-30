@@ -1,20 +1,29 @@
-(* *)
+class Plane extends Transport {
+    nbEngine : int32 <- 2 ;
+    nbPassengers: int32 ;
+    pilot: Employee ;
+    
+    startEngine(allEngine: bool, gazLevel: int32) : bool {
+        while test <= abc do {
+            abc <- "Test" ;
+            abc <- "Test2";
 
-(* QWEQWE *)
+            if test=451 then {
+                adqwe <- allEngine
+            }
+        }
 
+        let n : int32 <- 2 in
+            if test=3 then {
+                test2 <- 0x343;
+                test4 <- 0x343
+            };
 
-(* QWEQWE
+        bobette <- 32;
+        bobette <- 21;
 
- dasd weqw
-  qweeqwdd*)
+        if test=3 then {
 
-  (* QWE QWE
-
-  qwe wqwe (* QWEqwe qwe
-  we*)*)
-
-
-  // Test
-  qwed
-  // qwedsad
-  // qqwe
+        }
+    } 
+}

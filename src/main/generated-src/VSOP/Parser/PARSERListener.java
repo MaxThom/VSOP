@@ -18,16 +18,6 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitProgram(PARSERParser.ProgramContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#code}.
-	 * @param ctx the parse tree
-	 */
-	void enterCode(PARSERParser.CodeContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#code}.
-	 * @param ctx the parse tree
-	 */
-	void exitCode(PARSERParser.CodeContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link PARSERParser#statement}.
 	 * @param ctx the parse tree
 	 */
@@ -38,45 +28,35 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitStatement(PARSERParser.StatementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#classHeader}.
+	 * Enter a parse tree produced by {@link PARSERParser#block}.
 	 * @param ctx the parse tree
 	 */
-	void enterClassHeader(PARSERParser.ClassHeaderContext ctx);
+	void enterBlock(PARSERParser.BlockContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link PARSERParser#classHeader}.
+	 * Exit a parse tree produced by {@link PARSERParser#block}.
 	 * @param ctx the parse tree
 	 */
-	void exitClassHeader(PARSERParser.ClassHeaderContext ctx);
+	void exitBlock(PARSERParser.BlockContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#classBody}.
+	 * Enter a parse tree produced by {@link PARSERParser#classDefinition}.
 	 * @param ctx the parse tree
 	 */
-	void enterClassBody(PARSERParser.ClassBodyContext ctx);
+	void enterClassDefinition(PARSERParser.ClassDefinitionContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link PARSERParser#classBody}.
+	 * Exit a parse tree produced by {@link PARSERParser#classDefinition}.
 	 * @param ctx the parse tree
 	 */
-	void exitClassBody(PARSERParser.ClassBodyContext ctx);
+	void exitClassDefinition(PARSERParser.ClassDefinitionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#methodHeader}.
+	 * Enter a parse tree produced by {@link PARSERParser#methodDefinition}.
 	 * @param ctx the parse tree
 	 */
-	void enterMethodHeader(PARSERParser.MethodHeaderContext ctx);
+	void enterMethodDefinition(PARSERParser.MethodDefinitionContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link PARSERParser#methodHeader}.
+	 * Exit a parse tree produced by {@link PARSERParser#methodDefinition}.
 	 * @param ctx the parse tree
 	 */
-	void exitMethodHeader(PARSERParser.MethodHeaderContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link PARSERParser#methodBody}.
-	 * @param ctx the parse tree
-	 */
-	void enterMethodBody(PARSERParser.MethodBodyContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#methodBody}.
-	 * @param ctx the parse tree
-	 */
-	void exitMethodBody(PARSERParser.MethodBodyContext ctx);
+	void exitMethodDefinition(PARSERParser.MethodDefinitionContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link PARSERParser#formal}.
 	 * @param ctx the parse tree
@@ -147,6 +127,16 @@ public interface PARSERListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitElseStat(PARSERParser.ElseStatContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#let}.
+	 * @param ctx the parse tree
+	 */
+	void enterLet(PARSERParser.LetContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#let}.
+	 * @param ctx the parse tree
+	 */
+	void exitLet(PARSERParser.LetContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link PARSERParser#condition}.
 	 * @param ctx the parse tree

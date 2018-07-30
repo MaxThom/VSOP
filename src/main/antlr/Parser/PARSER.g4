@@ -1,28 +1,30 @@
 grammar PARSER;
 @header {package VSOP.Parser;}
-    program                 : code+ ; //statement+ ;
+    program                 : (classDefinition | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
 
-    code                    : classHeader | methodHeader | statement ; //TODO REMOVE STATEMENT
-    statement               : assign | ifStatement | whileStatement;
+    statement               : assign | ifStatement | whileStatement | let;
+    block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}';
 
-    classHeader             : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' classBody* '}';
-    classBody               : methodHeader | field;
+    classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}';
+    //classBody               : method | field;
 
-    methodHeader            : OBJECT_IDENTIFIER '(' (((formal ',')+ (formal)) | (formal)?) ')' ':' varType '{' methodBody* '}' ;
-    methodBody              : statement ;
+    methodDefinition        : OBJECT_IDENTIFIER '(' (((formal ',')+ (formal)) | (formal)?) ')' ':' varType block ;
+    //methodBody              : block ;
     formal                  : OBJECT_IDENTIFIER ':' varType ;
     field                   : OBJECT_IDENTIFIER ':' varType ('<-' varValue)? ';' ;
 
 
 
-    assign                  : OBJECT_IDENTIFIER ':' varType ('<-' varValue)? ;
+    assign                  : OBJECT_IDENTIFIER '<-' (varValue | statement | OBJECT_IDENTIFIER) ;
 
-    whileStatement          : 'while' condition* 'do' statement* ;
+    whileStatement          : 'while' condition 'do' (statement | block) ;
 
     ifStatement             : ifStat elseStat? ; //ifStat elseIfStat* elseStat? ;
-    ifStat                  : 'if' condition 'then' statement* ;
-    //elseIfStat              : 'else if' condition 'then' '{' statement* '}' ;
-    elseStat                : 'else' statement* ;
+    ifStat                  : 'if' condition 'then' (statement | block) ;
+    //elseIfStat              : 'else if' condition 'then' block ;
+    elseStat                : 'else' (statement | block) ;
+
+    let                     : 'let' OBJECT_IDENTIFIER ':' varType ('<-' varValue | statement | OBJECT_IDENTIFIER)? 'in' statement ;
 
     condition               : comparaiser CONDITIONAL_OPERATOR comparaiser ;
     comparaiser             : OBJECT_IDENTIFIER | integer | STRING ;
