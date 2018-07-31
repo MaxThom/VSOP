@@ -2,7 +2,7 @@ grammar PARSER;
 @header {package VSOP.Parser;}
     program                 : (classDefinition | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
 
-    statement               : assign | ifStatement | whileStatement | let;
+    statement               : assign | ifStatement | whileStatement | let | unOperation | binaryOperation | callMethod | newObj | OBJECT_IDENTIFIER | varValue ;
     block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}';
 
     classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}';
@@ -11,11 +11,12 @@ grammar PARSER;
     methodDefinition        : OBJECT_IDENTIFIER '(' (((formal ',')+ (formal)) | (formal)?) ')' ':' varType block ;
     //methodBody              : block ;
     formal                  : OBJECT_IDENTIFIER ':' varType ;
-    field                   : OBJECT_IDENTIFIER ':' varType ('<-' varValue)? ';' ;
+    field                   : OBJECT_IDENTIFIER ':' varType ('<-' statement)? ';' ;
+    callMethod              : (OBJECT_IDENTIFIER '.')* OBJECT_IDENTIFIER '(' (argument ',')* argument ')' ;
+    argument                : OBJECT_IDENTIFIER | varValue ;
 
 
-
-    assign                  : OBJECT_IDENTIFIER '<-' (varValue | statement | OBJECT_IDENTIFIER) ;
+    assign                  : OBJECT_IDENTIFIER '<-' statement ;
 
     whileStatement          : 'while' condition 'do' (statement | block) ;
 
@@ -24,7 +25,18 @@ grammar PARSER;
     //elseIfStat              : 'else if' condition 'then' block ;
     elseStat                : 'else' (statement | block) ;
 
-    let                     : 'let' OBJECT_IDENTIFIER ':' varType ('<-' varValue | statement | OBJECT_IDENTIFIER)? 'in' statement ;
+    let                     : 'let' OBJECT_IDENTIFIER ':' varType ('<-' statement)? 'in' statement ;
+
+    binaryOperation         : (OBJECT_IDENTIFIER | varValue) ((ARITHMETIC_OPERATOR | CONDITIONAL_OPERATOR) statement)+ ;
+    /*
+    expr                    : term ( ( PLUS | MINUS )  term )* ;
+    term                    : factor ( ( MULT | DIV ) factor )* ;
+    factor                  : NUMBER ;
+    */
+
+    unOperation             : UN_OPERATOR statement ;
+
+    newObj                  : 'new' TYPE_IDENTIFIER ;
 
     condition               : comparaiser CONDITIONAL_OPERATOR comparaiser ;
     comparaiser             : OBJECT_IDENTIFIER | integer | STRING ;
@@ -33,9 +45,11 @@ grammar PARSER;
     varValue                : ('true' | 'false' | STRING | integer) ;
 
 
-   // KEYWORD                 : 'and' | 'class' | 'do' | 'else' | 'extends' | 'false' | 'if' | 'in' | 'isnull' | 'let' | 'new' | 'not' | 'then' | 'true' | 'unit' | 'while' ;
+   // KEYWORD                 : 'and' ;
+    UN_OPERATOR             : 'not' | '-' | 'isnull' ;
     ARITHMETIC_OPERATOR     : '+' | '-' | '*' | '/' | '^' ;
     CONDITIONAL_OPERATOR    : '=' | '<' | '<=';
+
     MULTILINE_OPEN_COMMENT  : '(*' ;
     MULTILINE_CLOSE_COMMENT : '*)' ;
     MULTILINE_COMMENT       : '(*' .*? '*)' ;

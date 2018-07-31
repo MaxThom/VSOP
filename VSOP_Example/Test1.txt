@@ -4,8 +4,23 @@ class Plane extends Transport {
     pilot: Employee ;
     
     startEngine(allEngine: bool, gazLevel: int32) : bool {
+
+        a + b * c;
+        2 + 4;
+
+        df - 2 ;
+
+        n * n2;
+        not h2;
+        - h2;
+        isnull obj;
+
+        startEngine(true, 42);
+        plane2.startEngine(true, abc);
+        plane2.plane1.startEngine("asd", abc);
+
         while test <= abc do {
-            abc <- "Test" ;
+            abc <- "Test";
             abc <- "Test2";
 
             if test=451 then {

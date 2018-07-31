@@ -78,6 +78,26 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitField(PARSERParser.FieldContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link PARSERParser#callMethod}.
+	 * @param ctx the parse tree
+	 */
+	void enterCallMethod(PARSERParser.CallMethodContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#callMethod}.
+	 * @param ctx the parse tree
+	 */
+	void exitCallMethod(PARSERParser.CallMethodContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#argument}.
+	 * @param ctx the parse tree
+	 */
+	void enterArgument(PARSERParser.ArgumentContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#argument}.
+	 * @param ctx the parse tree
+	 */
+	void exitArgument(PARSERParser.ArgumentContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link PARSERParser#assign}.
 	 * @param ctx the parse tree
 	 */
@@ -137,6 +157,36 @@ public interface PARSERListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitLet(PARSERParser.LetContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#binaryOperation}.
+	 * @param ctx the parse tree
+	 */
+	void enterBinaryOperation(PARSERParser.BinaryOperationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#binaryOperation}.
+	 * @param ctx the parse tree
+	 */
+	void exitBinaryOperation(PARSERParser.BinaryOperationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#unOperation}.
+	 * @param ctx the parse tree
+	 */
+	void enterUnOperation(PARSERParser.UnOperationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#unOperation}.
+	 * @param ctx the parse tree
+	 */
+	void exitUnOperation(PARSERParser.UnOperationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#newObj}.
+	 * @param ctx the parse tree
+	 */
+	void enterNewObj(PARSERParser.NewObjContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#newObj}.
+	 * @param ctx the parse tree
+	 */
+	void exitNewObj(PARSERParser.NewObjContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link PARSERParser#condition}.
 	 * @param ctx the parse tree

@@ -4,6 +4,7 @@ package Parser;
 import VSOP.Parser.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -90,9 +91,9 @@ public class ParserListener extends PARSERBaseListener {
         output.append(", ");
         output.append(field.varType().getText());
 
-        if (field.varValue() != null) {
+        if (field.statement() != null) {
             output.append(", ");
-            output.append(field.varValue().getText());
+            output.append(handleStatement(field.statement()));
         }
 
         output.append(")");
@@ -127,7 +128,6 @@ public class ParserListener extends PARSERBaseListener {
 
         return output;
     }
-
 
     private StringBuilder handleFormal(FormalContext formal) {
         StringBuilder output = new StringBuilder();
@@ -184,6 +184,12 @@ public class ParserListener extends PARSERBaseListener {
             output.append(handleWhileStatement(statement.whileStatement()));
         } else if (statement.let() != null) {
             output.append(handleLet(statement.let()));
+        } else if (statement.unOperation() != null) {
+            output.append(handleUnOperation(statement.unOperation()));
+        } else if (statement.binaryOperation() != null) {
+            output.append(handleBinaryOperation(statement.binaryOperation()));
+        } else if (statement.callMethod() != null) {
+            output.append(handleCallMethod(statement.callMethod()));
         }
 
         return output;
@@ -237,44 +243,29 @@ public class ParserListener extends PARSERBaseListener {
     private StringBuilder handleAssign(AssignContext assign) {
         StringBuilder output = new StringBuilder();
         output.append("Assign(");
-        output.append(assign.OBJECT_IDENTIFIER(0).getText());
+        output.append(assign.OBJECT_IDENTIFIER().getText());
         output.append(", ");
 
         if (assign.statement() != null) {
             output.append(handleStatement(assign.statement()));
-        } else if (assign.varValue() != null) {
-            output.append(assign.varValue().getText());
-        } else if (assign.OBJECT_IDENTIFIER(1) != null) {
-            output.append(assign.OBJECT_IDENTIFIER(1).getText());
         }
 
         output.append(")");
         return output;
     }
 
-
     private StringBuilder handleLet(LetContext let) {
         StringBuilder output = new StringBuilder();
         output.append("Let(");
-        output.append(let.OBJECT_IDENTIFIER(0).getText());
+        output.append(let.OBJECT_IDENTIFIER().getText());
         output.append(", ");
         output.append(let.varType().getText());
         output.append(", ");
 
         int statOffset = 0;
         if (let.statement().size() > 1) {
-            output.append(handleStatement(let.statement(statOffset)));
-            statOffset++;
+            output.append(handleStatement(let.statement(statOffset++)));
             output.append(", ");
-
-        } else if (let.varValue() != null) {
-            output.append(let.varValue().getText());
-            output.append(", ");
-        } else if (let.OBJECT_IDENTIFIER(1) != null) {
-            output.append(let.OBJECT_IDENTIFIER(1).getText());
-            output.append(", ");
-        } else {
-            output.append(handleStatement(let.statement(0)));
         }
 
         output.append(handleStatement(let.statement(statOffset)));
@@ -282,6 +273,73 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    private StringBuilder handleUnOperation(UnOperationContext unOp) {
+        StringBuilder output = new StringBuilder();
+        output.append("UnOp(");
+        output.append(unOp.UN_OPERATOR().getText());
+        output.append(", ");
+        output.append(handleStatement(unOp.statement()));
+        output.append(")");
+
+        return output;
+    }
+
+    private StringBuilder handleBinaryOperation(BinaryOperationContext binOp) {
+        StringBuilder output = new StringBuilder();
+        output.append("BinOp(");
+        output.append(binOp.ARITHMETIC_OPERATOR(0) != null ? binOp.ARITHMETIC_OPERATOR(0).getText() : binOp.CONDITIONAL_OPERATOR(0).getText());
+        output.append(", ");
+        output.append(binOp.OBJECT_IDENTIFIER() != null ? binOp.OBJECT_IDENTIFIER().getText() : binOp.varValue().getText());
+        output.append(", ");
+
+
+        for (int i = 1; i < binOp.statement().size(); i++) {
+            output.append("BinOp(");
+            output.append(binOp.ARITHMETIC_OPERATOR(i) != null ? binOp.ARITHMETIC_OPERATOR(i).getText() : binOp.CONDITIONAL_OPERATOR(i).getText());
+        }
+
+
+       // output.append(handleStatement(binOp.statement()));
+        output.append(")");
+
+        return output;
+    }
+
+    private StringBuilder handleCallMethod(CallMethodContext call) {
+        StringBuilder output = new StringBuilder();
+        output.append("Call(");
+
+        if (call.OBJECT_IDENTIFIER().size() == 1) {
+            output.append("self");
+            output.append(", ");
+            output.append(call.OBJECT_IDENTIFIER(0));
+        } else {
+            for (int i = 0; i < call.OBJECT_IDENTIFIER().size() - 1; i++) {
+                output.append(call.OBJECT_IDENTIFIER(i) + ".");
+            }
+            output.delete(output.length()-1, output.length());
+            output.append(", ");
+            output.append(call.OBJECT_IDENTIFIER(call.OBJECT_IDENTIFIER().size() - 1));
+        }
+        output.append(", [");
+
+        for (ArgumentContext arg : call.argument()) {
+            output.append(handleArgument(arg));
+            output.append(", ");
+        }
+
+        if (call.argument().size() > 0) output.delete(output.length()-2, output.length());
+        output.append("])");
+
+        return output;
+    }
+
+    private StringBuilder handleArgument(ArgumentContext arg) {
+        StringBuilder output = new StringBuilder();
+        output.append(arg.varValue() != null ? arg.varValue().getText() : arg.OBJECT_IDENTIFIER().getText());
+
+        return output;
+    }
 
     /*
     private StringBuilder handleMethod(MethodDefinitionContext method) {
