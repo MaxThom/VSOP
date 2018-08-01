@@ -282,7 +282,7 @@ public class ParserListener extends PARSERBaseListener {
     private StringBuilder handleUnOperation(UnOperationContext unOp) {
         StringBuilder output = new StringBuilder();
         output.append("UnOp(");
-        output.append(unOp.UN_OPERATOR().getText());
+        output.append(unOp.unOperator().getText());
         output.append(", ");
         output.append(handleStatement(unOp.statement()));
         output.append(")");
@@ -301,13 +301,6 @@ public class ParserListener extends PARSERBaseListener {
 
     private StringBuilder handleBinaryOperation(BinaryOperationContext binOp) {
         StringBuilder output = new StringBuilder();
-        /*output.append("BinOp(");
-        output.append(binOp.ARITHMETIC_OPERATOR(0) != null ? binOp.ARITHMETIC_OPERATOR(0).getText() : binOp.CONDITIONAL_OPERATOR(0).getText());
-        output.append(", ");
-        output.append(binOp.OBJECT_IDENTIFIER() != null ? binOp.OBJECT_IDENTIFIER().getText() : binOp.varValue().getText());
-        output.append(", ");
-        output.append(handleStatement(binOp.statement(0)));
-        output.append(")");*/
 
         if (binOp.term().size() == 1) {
             output.append(handleTerm(binOp.term(0)));
@@ -326,16 +319,6 @@ public class ParserListener extends PARSERBaseListener {
             }
         }
 
-
-        /*for (int i = 1; i < binOp.statement().size(); i++) {
-            output.append("BinOp(");
-            output.append(binOp.ARITHMETIC_OPERATOR(i) != null ? binOp.ARITHMETIC_OPERATOR(i).getText() : binOp.CONDITIONAL_OPERATOR(i).getText());
-        }
-
-
-       // output.append(handleStatement(binOp.statement()));
-        output.append(")");*/
-
         return output;
     }
 
@@ -345,15 +328,15 @@ public class ParserListener extends PARSERBaseListener {
         if (term.factor().size() == 1) {
             output.append(handleFactor(term.factor(0)));
         } else {
-            for (int i = 0; i < term.TERM_OPERATOR().size(); i++) {
+            for (int i = 0; i < term.termOperator().size(); i++) {
                 output.append("BinOp(");
-                output.append(term.TERM_OPERATOR(i).getText());
+                output.append(term.termOperator(i).getText());
                 output.append(", ");
                 output.append(handleFactor(term.factor(i)));
                 output.append(", ");
-                if (i + 1 == term.TERM_OPERATOR().size()) {
+                if (i + 1 == term.termOperator().size()) {
                     output.append(handleFactor(term.factor(i + 1)));
-                    for (int j = 0; j < term.TERM_OPERATOR().size(); j++)
+                    for (int j = 0; j < term.termOperator().size(); j++)
                         output.append(")");
                 }
             }
@@ -390,7 +373,6 @@ public class ParserListener extends PARSERBaseListener {
         output.append(value.getChild(0).getText());
         return output;
     }
-
 
     private StringBuilder handleCallMethod(CallMethodContext call) {
         StringBuilder output = new StringBuilder();

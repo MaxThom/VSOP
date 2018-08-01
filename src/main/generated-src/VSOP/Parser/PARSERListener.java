@@ -218,6 +218,26 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitNewObj(PARSERParser.NewObjContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link PARSERParser#unOperator}.
+	 * @param ctx the parse tree
+	 */
+	void enterUnOperator(PARSERParser.UnOperatorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#unOperator}.
+	 * @param ctx the parse tree
+	 */
+	void exitUnOperator(PARSERParser.UnOperatorContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#termOperator}.
+	 * @param ctx the parse tree
+	 */
+	void enterTermOperator(PARSERParser.TermOperatorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#termOperator}.
+	 * @param ctx the parse tree
+	 */
+	void exitTermOperator(PARSERParser.TermOperatorContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link PARSERParser#condition}.
 	 * @param ctx the parse tree
 	 */

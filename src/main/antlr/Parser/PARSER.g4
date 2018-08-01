@@ -2,7 +2,7 @@ grammar PARSER;
 @header {package VSOP.Parser;}
     program                 : (classDefinition | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
 
-    statement               : assign | ifStatement | whileStatement | let | unOperation | binaryOperation | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')');
+    statement               : assign | ifStatement | whileStatement | let | unOperation | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation;
     block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}';
 
     classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}';
@@ -30,29 +30,31 @@ grammar PARSER;
     //binaryOperation         : (OBJECT_IDENTIFIER | varValue) ((ARITHMETIC_OPERATOR | CONDITIONAL_OPERATOR) statement)+ ;
 
     binaryOperation         : term (CONDITIONAL_OPERATOR term)* | ('(' term (CONDITIONAL_OPERATOR term)* ')') ;
-    term                    : factor (TERM_OPERATOR factor)* | ('(' factor (TERM_OPERATOR factor)* ')') ;
+    term                    : factor (termOperator factor)* | ('(' factor (termOperator factor)* ')') ;
     factor                  : (value (FACTOR_OPERATOR value)*) | ('(' value (FACTOR_OPERATOR value)* ')') ;
     value                   : OBJECT_IDENTIFIER | varValue ;
 
-
-    unOperation             : UN_OPERATOR statement ;
+    unOperation             : unOperator statement ;
 
     newObj                  : 'new' TYPE_IDENTIFIER ;
 
+    unOperator              : UN_OPERATOR | NEGATIVE_OPERATOR ;
+    termOperator            : TERM_OPERATOR | NEGATIVE_OPERATOR ;
     condition               : comparaiser CONDITIONAL_OPERATOR comparaiser ;
     comparaiser             : OBJECT_IDENTIFIER | integer | STRING ;
     integer                 : INTEGER_HEX | INTEGER_DEC | INTEGER_BIN ;
     varType                 : 'bool' | 'int32' | 'string' | 'unit' | TYPE_IDENTIFIER ;
-    varValue                : ('true' | 'false' | STRING | integer) ;
+    varValue                : 'true' | 'false' | STRING | integer  ;
 
 
    // KEYWORD                 : 'and' ;
 
-    UN_OPERATOR             : 'not' | '-' | 'isnull' ;
+    UN_OPERATOR             : 'not' | 'isnull' ;
     //ARITHMETIC_OPERATOR     : '+' | '-' | '*' | '/' | '^' ;
     FACTOR_OPERATOR         : '*' | '/' | '^' ;
-    TERM_OPERATOR           : '+' | '-' ;
+    TERM_OPERATOR           : '+' ;
     CONDITIONAL_OPERATOR    : '=' | '<' | '<=';
+    NEGATIVE_OPERATOR       : '-' ;
 
     MULTILINE_OPEN_COMMENT  : '(*' ;
     MULTILINE_CLOSE_COMMENT : '*)' ;
