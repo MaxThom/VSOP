@@ -25,24 +25,22 @@ public class ParserListener extends PARSERBaseListener {
 
     @Override
     public void exitProgram(ProgramContext ctx) {
-        String treeOutput = "";
+        StringBuilder treeOutput = new StringBuilder();
+        treeOutput.append("[");
 
         for (ClassDefinitionContext classDef : ctx.classDefinition()) {
-            treeOutput += handleClass(classDef);
+            treeOutput.append(handleClass(classDef));
+            treeOutput.append(", ");
         }
+        if ( ctx.classDefinition().size() > 0) treeOutput.delete(treeOutput.length()-2, treeOutput.length());
 
-
-        System.out.println(ctx.getText());
+        treeOutput.append("]");
+        //System.out.println(ctx.getText());
         System.out.println(treeOutput);
     }
 
     @Override
     public void exitAssign(AssignContext ctx) {
-
-    }
-
-    @Override
-    public void exitCondition(ConditionContext ctx) {
 
     }
 
@@ -106,19 +104,15 @@ public class ParserListener extends PARSERBaseListener {
         output.append("Method(");
         output.append(method.OBJECT_IDENTIFIER());
         output.append(", ");
+        output.append("[");
 
-        if (method.formal().size() == 1) {
-            output.append(handleFormal(method.formal(0)));
-        } else {
-            output.append("[");
-
-            for (FormalContext formal : method.formal()) {
-                output.append(handleFormal(formal));
-                output.append(", ");
-            }
-            output.delete(output.length()-2, output.length());
-            output.append("]");
+        for (FormalContext formal : method.formal()) {
+            output.append(handleFormal(formal));
+            output.append(", ");
         }
+
+        if (method.formal().size() > 0) output.delete(output.length()-2, output.length());
+        output.append("]");
 
         output.append(", ");
         output.append(method.varType().getText());
@@ -204,12 +198,12 @@ public class ParserListener extends PARSERBaseListener {
     private StringBuilder handleIfStatement(IfStatementContext ifStatement) {
         StringBuilder output = new StringBuilder();
         output.append("If(");
-        output.append(ifStatement.ifStat().condition().getText());
+        output.append(handleStatement(ifStatement.ifStat().statement(0)));
 
 
-        if (ifStatement.ifStat().statement() != null) {
+        if (ifStatement.ifStat().statement(1) != null) {
             output.append(", ");
-            output.append(handleStatement(ifStatement.ifStat().statement()));
+            output.append(handleStatement(ifStatement.ifStat().statement(1)));
         } else if (ifStatement.ifStat().block() != null) {
             output.append(", ");
             output.append(handleBlock(ifStatement.ifStat().block()));
@@ -231,12 +225,12 @@ public class ParserListener extends PARSERBaseListener {
     private StringBuilder handleWhileStatement(WhileStatementContext whileStatement) {
         StringBuilder output = new StringBuilder();
         output.append("While(");
-        output.append(whileStatement.condition().getText());
+        output.append(handleStatement(whileStatement.statement(0)));
 
 
-        if (whileStatement.statement() != null) {
+        if (whileStatement.statement(1) != null) {
             output.append(", ");
-            output.append(handleStatement(whileStatement.statement()));
+            output.append(handleStatement(whileStatement.statement(1)));
         } else if (whileStatement.block() != null) {
             output.append(", ");
             output.append(handleBlock(whileStatement.block()));
@@ -269,12 +263,18 @@ public class ParserListener extends PARSERBaseListener {
         output.append(", ");
 
         int statOffset = 0;
-        if (let.statement().size() > 1) {
+        if (let.statement().size() == 2 || (let.block() != null && let.statement().size() == 1)) {
             output.append(handleStatement(let.statement(statOffset++)));
             output.append(", ");
         }
 
-        output.append(handleStatement(let.statement(statOffset)));
+        if (let.block() != null) {
+            output.append(handleBlock(let.block()));
+        } else {
+            output.append(handleStatement(let.statement(statOffset)));
+        }
+
+
         output.append(")");
         return output;
     }
@@ -299,21 +299,80 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    private StringBuilder handleCallMethod(CallMethodContext call) {
+        StringBuilder output = new StringBuilder();
+        output.append("Call(");
+
+        if (call.OBJECT_IDENTIFIER().size() == 1) {
+            output.append("self");
+            output.append(", ");
+            output.append(call.OBJECT_IDENTIFIER(0));
+        } else {
+            for (int i = 0; i < call.OBJECT_IDENTIFIER().size() - 1; i++) {
+                output.append(call.OBJECT_IDENTIFIER(i) + ".");
+            }
+            output.delete(output.length()-1, output.length());
+            output.append(", ");
+            output.append(call.OBJECT_IDENTIFIER(call.OBJECT_IDENTIFIER().size() - 1));
+        }
+        output.append(", [");
+
+        for (ArgumentContext arg : call.argument()) {
+            output.append(handleArgument(arg));
+            output.append(", ");
+        }
+
+        if (call.argument().size() > 0) output.delete(output.length()-2, output.length());
+        output.append("])");
+
+        return output;
+    }
+
+    private StringBuilder handleArgument(ArgumentContext arg) {
+        StringBuilder output = new StringBuilder();
+        output.append(arg.varValue() != null ? arg.varValue().getText() : arg.OBJECT_IDENTIFIER().getText());
+
+        return output;
+    }
+
     private StringBuilder handleBinaryOperation(BinaryOperationContext binOp) {
         StringBuilder output = new StringBuilder();
 
-        if (binOp.term().size() == 1) {
-            output.append(handleTerm(binOp.term(0)));
+        if (binOp.condition().size() == 1) {
+            output.append(handleCondition(binOp.condition(0)));
         } else {
-            for (int i = 0; i < binOp.CONDITIONAL_OPERATOR().size(); i++) {
+            for (int i = 0; i < binOp.AND_OPERATOR().size(); i++) {
                 output.append("BinOp(");
-                output.append(binOp.CONDITIONAL_OPERATOR(i).getText());
+                output.append(binOp.AND_OPERATOR(i).getText());
                 output.append(", ");
-                output.append(handleTerm(binOp.term(i)));
+                output.append(handleCondition(binOp.condition(i)));
                 output.append(", ");
-                if (i + 1 == binOp.CONDITIONAL_OPERATOR().size()) {
-                    output.append(handleTerm(binOp.term(i + 1)));
-                    for (int j = 0; j < binOp.CONDITIONAL_OPERATOR().size(); j++)
+                if (i + 1 == binOp.AND_OPERATOR().size()) {
+                    output.append(handleCondition(binOp.condition(i + 1)));
+                    for (int j = 0; j < binOp.AND_OPERATOR().size(); j++)
+                        output.append(")");
+                }
+            }
+        }
+
+        return output;
+    }
+
+    private StringBuilder handleCondition(ConditionContext cond) {
+        StringBuilder output = new StringBuilder();
+
+        if (cond.term().size() == 1) {
+            output.append(handleTerm(cond.term(0)));
+        } else {
+            for (int i = 0; i < cond.CONDITIONAL_OPERATOR().size(); i++) {
+                output.append("BinOp(");
+                output.append(cond.CONDITIONAL_OPERATOR(i).getText());
+                output.append(", ");
+                output.append(handleTerm(cond.term(i)));
+                output.append(", ");
+                if (i + 1 == cond.CONDITIONAL_OPERATOR().size()) {
+                    output.append(handleTerm(cond.term(i + 1)));
+                    for (int j = 0; j < cond.CONDITIONAL_OPERATOR().size(); j++)
                         output.append(")");
                 }
             }
@@ -374,41 +433,7 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
-    private StringBuilder handleCallMethod(CallMethodContext call) {
-        StringBuilder output = new StringBuilder();
-        output.append("Call(");
 
-        if (call.OBJECT_IDENTIFIER().size() == 1) {
-            output.append("self");
-            output.append(", ");
-            output.append(call.OBJECT_IDENTIFIER(0));
-        } else {
-            for (int i = 0; i < call.OBJECT_IDENTIFIER().size() - 1; i++) {
-                output.append(call.OBJECT_IDENTIFIER(i) + ".");
-            }
-            output.delete(output.length()-1, output.length());
-            output.append(", ");
-            output.append(call.OBJECT_IDENTIFIER(call.OBJECT_IDENTIFIER().size() - 1));
-        }
-        output.append(", [");
-
-        for (ArgumentContext arg : call.argument()) {
-            output.append(handleArgument(arg));
-            output.append(", ");
-        }
-
-        if (call.argument().size() > 0) output.delete(output.length()-2, output.length());
-        output.append("])");
-
-        return output;
-    }
-
-    private StringBuilder handleArgument(ArgumentContext arg) {
-        StringBuilder output = new StringBuilder();
-        output.append(arg.varValue() != null ? arg.varValue().getText() : arg.OBJECT_IDENTIFIER().getText());
-
-        return output;
-    }
 
     /*
     private StringBuilder handleMethod(MethodDefinitionContext method) {

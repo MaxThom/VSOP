@@ -168,6 +168,16 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitBinaryOperation(PARSERParser.BinaryOperationContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link PARSERParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void enterCondition(PARSERParser.ConditionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void exitCondition(PARSERParser.ConditionContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link PARSERParser#term}.
 	 * @param ctx the parse tree
 	 */
@@ -237,16 +247,6 @@ public interface PARSERListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitTermOperator(PARSERParser.TermOperatorContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link PARSERParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void enterCondition(PARSERParser.ConditionContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void exitCondition(PARSERParser.ConditionContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link PARSERParser#comparaiser}.
 	 * @param ctx the parse tree

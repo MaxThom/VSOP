@@ -1,10 +1,7 @@
-class TaMere extends TonPere {
-    nbEnfant : int32 <- 2 ;
-    fils: Enfant ;
-    fille: Enfant ;
+class Test {
+    field1 : int32 <- 0;
+    field2 : bool;
 
-    changerFilsFille(cheveux: int32) : bool {
-
-    }
-
+    method1() : int32 { 0 }
+    method2(b : bool) : bool { b }
 }

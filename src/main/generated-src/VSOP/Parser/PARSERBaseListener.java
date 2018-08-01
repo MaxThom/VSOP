@@ -208,6 +208,18 @@ public class PARSERBaseListener implements PARSERListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterCondition(PARSERParser.ConditionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCondition(PARSERParser.ConditionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterTerm(PARSERParser.TermContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -287,18 +299,6 @@ public class PARSERBaseListener implements PARSERListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitTermOperator(PARSERParser.TermOperatorContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterCondition(PARSERParser.ConditionContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitCondition(PARSERParser.ConditionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

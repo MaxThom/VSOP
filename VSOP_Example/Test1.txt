@@ -1,44 +1,7 @@
-class Plane extends Transport {
-    nbEngine : int32 <- 2 ;
-    nbPassengers: int32 ;
-    pilot: Employee ;
-    
-    startEngine(allEngine: bool, gazLevel: int32) : bool {
+class T {
 
-        a + b * c < 2;
-        2 + 4 + 7;
-        3 * 8;
-        //df - 2 ;
+    f(i : int32, j : int32) : bool {
+        not i <= j and j = 42 and true
+    }
 
-        n * n2;
-        not h2;
-        - h2;
-        isnull obj;
-
-        startEngine(true, 42);
-        plane2.startEngine(true, abc);
-        plane2.plane1.startEngine("asd", abc);
-
-        while test <= abc do {
-            abc <- "Test";
-            abc <- "Test2";
-
-            if test=451 then {
-                adqwe <- allEngine
-            }
-        }
-
-        let n : int32 <- 2 in
-            if test=3 then {
-                test2 <- 0x343;
-                test4 <- 0x343
-            };
-
-        bobette <- 32;
-        bobette <- 21;
-
-        if test=3 then {
-
-        }
-    } 
 }

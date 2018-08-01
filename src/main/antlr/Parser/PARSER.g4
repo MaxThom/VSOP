@@ -2,11 +2,12 @@ grammar PARSER;
 @header {package VSOP.Parser;}
     program                 : (classDefinition | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
 
-    statement               : assign | ifStatement | whileStatement | let | unOperation | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation;
+    statement               : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation | unOperation;
     block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}';
 
     classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}';
-    //classBody               : method | field;
+    //classBody
+    //  : method | field;
 
     methodDefinition        : OBJECT_IDENTIFIER '(' (((formal ',')+ (formal)) | (formal)?) ')' ':' varType block ;
     //methodBody              : block ;
@@ -18,21 +19,22 @@ grammar PARSER;
 
     assign                  : OBJECT_IDENTIFIER '<-' statement ;
 
-    whileStatement          : 'while' condition 'do' (statement | block) ;
+    whileStatement          : 'while' statement 'do' (statement | block) ;
 
     ifStatement             : ifStat elseStat? ; //ifStat elseIfStat* elseStat? ;
-    ifStat                  : 'if' condition 'then' (statement | block) ;
+    ifStat                  : 'if' statement 'then' (statement | block) ;
     //elseIfStat              : 'else if' condition 'then' block ;
     elseStat                : 'else' (statement | block) ;
 
-    let                     : 'let' OBJECT_IDENTIFIER ':' varType ('<-' statement)? 'in' statement ;
+    let                     : 'let' OBJECT_IDENTIFIER ':' varType ('<-' statement)? 'in' (statement | block) ;
 
     //binaryOperation         : (OBJECT_IDENTIFIER | varValue) ((ARITHMETIC_OPERATOR | CONDITIONAL_OPERATOR) statement)+ ;
 
-    binaryOperation         : term (CONDITIONAL_OPERATOR term)* | ('(' term (CONDITIONAL_OPERATOR term)* ')') ;
+    binaryOperation         : condition (AND_OPERATOR condition)* | ('(' condition (AND_OPERATOR condition)* ')') ;
+    condition               : term (CONDITIONAL_OPERATOR term)* | ('(' term (CONDITIONAL_OPERATOR term)* ')') ;
     term                    : factor (termOperator factor)* | ('(' factor (termOperator factor)* ')') ;
     factor                  : (value (FACTOR_OPERATOR value)*) | ('(' value (FACTOR_OPERATOR value)* ')') ;
-    value                   : OBJECT_IDENTIFIER | varValue ;
+    value                   : statement ;
 
     unOperation             : unOperator statement ;
 
@@ -40,7 +42,7 @@ grammar PARSER;
 
     unOperator              : UN_OPERATOR | NEGATIVE_OPERATOR ;
     termOperator            : TERM_OPERATOR | NEGATIVE_OPERATOR ;
-    condition               : comparaiser CONDITIONAL_OPERATOR comparaiser ;
+    //condition               : comparaiser CONDITIONAL_OPERATOR comparaiser ;
     comparaiser             : OBJECT_IDENTIFIER | integer | STRING ;
     integer                 : INTEGER_HEX | INTEGER_DEC | INTEGER_BIN ;
     varType                 : 'bool' | 'int32' | 'string' | 'unit' | TYPE_IDENTIFIER ;
@@ -53,7 +55,8 @@ grammar PARSER;
     //ARITHMETIC_OPERATOR     : '+' | '-' | '*' | '/' | '^' ;
     FACTOR_OPERATOR         : '*' | '/' | '^' ;
     TERM_OPERATOR           : '+' ;
-    CONDITIONAL_OPERATOR    : '=' | '<' | '<=';
+    AND_OPERATOR            : 'and' ;
+    CONDITIONAL_OPERATOR    : '=' | '<' | '<=' ;
     NEGATIVE_OPERATOR       : '-' ;
 
     MULTILINE_OPEN_COMMENT  : '(*' ;
