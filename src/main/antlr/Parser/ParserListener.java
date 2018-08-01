@@ -408,7 +408,7 @@ public class ParserListener extends PARSERBaseListener {
         StringBuilder output = new StringBuilder();
 
         if (factor.value().size() == 1) {
-            output.append(factor.value(0).getText());
+            output.append(handleValue(factor.value(0)));
         } else {
             for (int i = 0 ; i < factor.FACTOR_OPERATOR().size() ; i++) {
                 output.append("BinOp(");
@@ -429,7 +429,11 @@ public class ParserListener extends PARSERBaseListener {
 
     private StringBuilder handleValue(ValueContext value) {
         StringBuilder output = new StringBuilder();
-        output.append(value.getChild(0).getText());
+
+        if (value.unOperation() != null)
+            output.append(handleUnOperation(value.unOperation()));
+        else
+            output.append(value.getChild(0).getText());
         return output;
     }
 
