@@ -5,10 +5,10 @@ class Plane extends Transport {
     
     startEngine(allEngine: bool, gazLevel: int32) : bool {
 
-        a + b * c;
-        2 + 4;
-
-        df - 2 ;
+        a + b * c < 2;
+        2 + 4 + 7;
+        3 * 8;
+        //df - 2 ;
 
         n * n2;
         not h2;

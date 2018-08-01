@@ -168,6 +168,36 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitBinaryOperation(PARSERParser.BinaryOperationContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link PARSERParser#term}.
+	 * @param ctx the parse tree
+	 */
+	void enterTerm(PARSERParser.TermContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#term}.
+	 * @param ctx the parse tree
+	 */
+	void exitTerm(PARSERParser.TermContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#factor}.
+	 * @param ctx the parse tree
+	 */
+	void enterFactor(PARSERParser.FactorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#factor}.
+	 * @param ctx the parse tree
+	 */
+	void exitFactor(PARSERParser.FactorContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#value}.
+	 * @param ctx the parse tree
+	 */
+	void enterValue(PARSERParser.ValueContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#value}.
+	 * @param ctx the parse tree
+	 */
+	void exitValue(PARSERParser.ValueContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link PARSERParser#unOperation}.
 	 * @param ctx the parse tree
 	 */

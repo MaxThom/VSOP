@@ -2,7 +2,7 @@ grammar PARSER;
 @header {package VSOP.Parser;}
     program                 : (classDefinition | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
 
-    statement               : assign | ifStatement | whileStatement | let | unOperation | binaryOperation | callMethod | newObj | OBJECT_IDENTIFIER | varValue ;
+    statement               : assign | ifStatement | whileStatement | let | unOperation | binaryOperation | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')');
     block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}';
 
     classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}';
@@ -27,12 +27,13 @@ grammar PARSER;
 
     let                     : 'let' OBJECT_IDENTIFIER ':' varType ('<-' statement)? 'in' statement ;
 
-    binaryOperation         : (OBJECT_IDENTIFIER | varValue) ((ARITHMETIC_OPERATOR | CONDITIONAL_OPERATOR) statement)+ ;
-    /*
-    expr                    : term ( ( PLUS | MINUS )  term )* ;
-    term                    : factor ( ( MULT | DIV ) factor )* ;
-    factor                  : NUMBER ;
-    */
+    //binaryOperation         : (OBJECT_IDENTIFIER | varValue) ((ARITHMETIC_OPERATOR | CONDITIONAL_OPERATOR) statement)+ ;
+
+    binaryOperation         : term (CONDITIONAL_OPERATOR term)* | ('(' term (CONDITIONAL_OPERATOR term)* ')') ;
+    term                    : factor (TERM_OPERATOR factor)* | ('(' factor (TERM_OPERATOR factor)* ')') ;
+    factor                  : (value (FACTOR_OPERATOR value)*) | ('(' value (FACTOR_OPERATOR value)* ')') ;
+    value                   : OBJECT_IDENTIFIER | varValue ;
+
 
     unOperation             : UN_OPERATOR statement ;
 
@@ -46,8 +47,11 @@ grammar PARSER;
 
 
    // KEYWORD                 : 'and' ;
+
     UN_OPERATOR             : 'not' | '-' | 'isnull' ;
-    ARITHMETIC_OPERATOR     : '+' | '-' | '*' | '/' | '^' ;
+    //ARITHMETIC_OPERATOR     : '+' | '-' | '*' | '/' | '^' ;
+    FACTOR_OPERATOR         : '*' | '/' | '^' ;
+    TERM_OPERATOR           : '+' | '-' ;
     CONDITIONAL_OPERATOR    : '=' | '<' | '<=';
 
     MULTILINE_OPEN_COMMENT  : '(*' ;
