@@ -1,6 +1,6 @@
 grammar PARSER;
 @header {package VSOP.Parser;}
-    program                 : (classDefinition | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
+    program                 : (classDefinition)+ ; // | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
 
     statement               : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation | unOperation;
     block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}';
@@ -12,9 +12,12 @@ grammar PARSER;
     methodDefinition        : OBJECT_IDENTIFIER '(' (((formal ',')+ (formal)) | (formal)?) ')' ':' varType block ;
     //methodBody              : block ;
     formal                  : OBJECT_IDENTIFIER ':' varType ;
-    field                   : OBJECT_IDENTIFIER ':' varType ('<-' statement)? ';' ;
-    callMethod              : (OBJECT_IDENTIFIER '.')* OBJECT_IDENTIFIER '(' (argument ',')* argument ')' ;
-    argument                : OBJECT_IDENTIFIER | varValue ;
+    field                   : OBJECT_IDENTIFIER ':' varType ('<-' (statement | block))? ';' ;
+    callMethod              : (singleCallMethod) | ((singleCallMethod  '.')+ (singleCallMethod));
+    singleCallMethod        : (caller)* callFunction ('.' callFunction)* ;
+    caller                  : (OBJECT_IDENTIFIER | ('(' newObj ')')) '.';
+    callFunction            : OBJECT_IDENTIFIER '(' (((argument ',')+ argument) | argument?) ')' ;
+    argument                : OBJECT_IDENTIFIER | varValue | callMethod | newObj | binaryOperation;
 
 
     assign                  : OBJECT_IDENTIFIER '<-' statement ;
@@ -34,9 +37,9 @@ grammar PARSER;
     condition               : term (CONDITIONAL_OPERATOR term)* | ('(' term (CONDITIONAL_OPERATOR term)* ')') ;
     term                    : factor (termOperator factor)* | ('(' factor (termOperator factor)* ')') ;
     factor                  : (value (FACTOR_OPERATOR value)*) | ('(' value (FACTOR_OPERATOR value)* ')') ;
-    value                   : unOperation | OBJECT_IDENTIFIER | varValue ;
+    value                   : unOperation | OBJECT_IDENTIFIER | varValue | callMethod;
 
-    unOperation             : unOperator statement ;
+    unOperation             : unOperator (condition | statement) ;
 
     newObj                  : 'new' TYPE_IDENTIFIER ;
 
@@ -53,8 +56,8 @@ grammar PARSER;
 
     UN_OPERATOR             : 'not' | 'isnull' ;
     //ARITHMETIC_OPERATOR     : '+' | '-' | '*' | '/' | '^' ;
-    FACTOR_OPERATOR         : '*' | '/' | '^' ;
-    TERM_OPERATOR           : '+' ;
+    FACTOR_OPERATOR         : 'd zzdqasdw' ;
+    TERM_OPERATOR           : '+' | '*' | '/' | '^';
     AND_OPERATOR            : 'and' ;
     CONDITIONAL_OPERATOR    : '=' | '<' | '<=' ;
     NEGATIVE_OPERATOR       : '-' ;

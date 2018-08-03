@@ -11,7 +11,9 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 public class Main {
@@ -77,7 +79,7 @@ public class Main {
     }
 
     private static int startParser(File file) throws IOException  {
-        String text = removeComments(file);
+        String text = removeSpecialChar(removeComments(file));
 
         ANTLRInputStream input = new ANTLRInputStream(text);//(new FileInputStream(file));
         PARSERLexer lexer = new PARSERLexer(input);
@@ -89,7 +91,62 @@ public class Main {
         // Start parsing
         parser.program();
 
-        return listener.lexicalError ? 1 : 0 ;
+        return parser.getNumberOfSyntaxErrors(); //listener.lexicalError ? 1 : 0 ;
+    }
+
+    private static String removeSpecialChar(String file) {
+        HashMap<String, String> characterEscape = new HashMap<>();
+        characterEscape.put("\\b", "\\x08");
+        characterEscape.put("\\t", "\\x09");
+        characterEscape.put("\\n", "\\x0a");
+        characterEscape.put("\\r", "\\x0d");
+
+        // Escape Character
+        for (Map.Entry<String, String> escape : characterEscape.entrySet()) {
+            file = file.replace(escape.getKey(), escape.getValue());
+        }
+
+        // New Line
+        String LINE_FEED_LIN = "\n";
+        int nl = -1;
+        while ((nl = file.indexOf(LINE_FEED_LIN, nl)) != -1) {
+            int offsetWindows = 0;
+            if ((nl - 1) >= 0 && file.charAt(nl - 1) == '\r')
+                offsetWindows = 1;
+
+            if ((nl - 1 - offsetWindows) >= 0 && file.charAt(nl - 1 - offsetWindows) == '\\') {
+                int endIndex = nl + 1 + offsetWindows;
+                while (file.charAt(endIndex) == ' ' || file.charAt(endIndex) == '\t')
+                    endIndex++;
+                file = file.substring(0, nl - 1 - offsetWindows) + file.substring(endIndex);
+            }
+            ++nl;
+        }
+
+        //Hexadecimal Character
+        int hex = 0;
+        while ((hex = file.indexOf("0x", hex)) != -1 ||
+                (hex = file.indexOf("0X", hex)) != -1 ||
+                (hex = file.indexOf("0b", hex)) != -1 ||
+                (hex = file.indexOf("0B", hex)) != -1) {
+            String hexNumber = "";
+            try {
+
+                while (file.substring(hex+2, hex+3).matches("[0-9a-zA-Z]")) {
+                    hexNumber += file.substring(hex+2, hex+3);
+                    ++hex;
+                }
+
+                int radix = file.charAt(hex - hexNumber.length() + 1) == 'x' || file.charAt(hex - hexNumber.length() + 1) == 'X' ? 16 : 2;
+                int decimalValue = Integer.parseInt(hexNumber, radix);
+                file = file.substring(0, hex - hexNumber.length()) + decimalValue + file.substring(hex + 2);
+            } catch (Exception e) {
+
+                break;
+            }
+        }
+
+        return file;
     }
 
     private static String removeComments(File file) {

@@ -1,7 +1,9 @@
-class Test {
-    field1 : int32 <- 0;
-    field2 : bool;
-
-    method1() : int32 { 0 }
-    method2(b : bool) : bool { b }
+class Main extends IO {
+    main() : int32 {
+        let xs : List <- (new Cons).init(0, (new Cons).init(
+                                         1, (new Cons).init(
+                                         2, new Nil)))
+        in print("List has length ").printInt32(xs.length()).print("\n");
+        0
+    }
 }

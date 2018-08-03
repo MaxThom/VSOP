@@ -206,7 +206,6 @@ public class LexerListener extends LEXERBaseListener {
                         errLine++;
                         errCol = ctx.STRING().getText().indexOf("\\" + string.charAt(esc+1)) - posNewLine - 1;
                     }
-                    // TODO : Column error at faulty character
 
                     break;
                 }

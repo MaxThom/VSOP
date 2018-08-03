@@ -88,6 +88,36 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitCallMethod(PARSERParser.CallMethodContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link PARSERParser#singleCallMethod}.
+	 * @param ctx the parse tree
+	 */
+	void enterSingleCallMethod(PARSERParser.SingleCallMethodContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#singleCallMethod}.
+	 * @param ctx the parse tree
+	 */
+	void exitSingleCallMethod(PARSERParser.SingleCallMethodContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#caller}.
+	 * @param ctx the parse tree
+	 */
+	void enterCaller(PARSERParser.CallerContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#caller}.
+	 * @param ctx the parse tree
+	 */
+	void exitCaller(PARSERParser.CallerContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#callFunction}.
+	 * @param ctx the parse tree
+	 */
+	void enterCallFunction(PARSERParser.CallFunctionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#callFunction}.
+	 * @param ctx the parse tree
+	 */
+	void exitCallFunction(PARSERParser.CallFunctionContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link PARSERParser#argument}.
 	 * @param ctx the parse tree
 	 */
