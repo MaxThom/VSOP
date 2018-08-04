@@ -1,6 +1,7 @@
 
 import Lexer.DescriptiveErrorListener;
 import Lexer.LexerListener;
+import Parser.ErrorListener;
 import Parser.ParserListener;
 import VSOP.Lexer.LEXERLexer;
 import VSOP.Lexer.LEXERParser;
@@ -20,23 +21,24 @@ public class Main {
     public static void main(String[] args) {
         try {
             int exitCode = 0;
-            if (args.length <= 1) {
+            if (args.length == 0) {
                 System.out.println("Error : Missing correct arguments");
                 System.exit(1);
             }
 
-            File file = new File(args[1]);
+            File file = new File(args[args.length-1]);
 
             switch (args[0]) {
                 case "-lex":
-                    exitCode = startLexer(file);
+                    exitCode = startLexer(file, true);
                     break;
                 case "-parse":
-                    exitCode = startParser(file);
+                    exitCode = startParser(file, true);
                     break;
                 default:
-                    System.out.println("Error : Missing correct arguments");
-                    exitCode = 1;
+                    exitCode = startProgram(file, args[0].equals("-v") || args[0].equals("-visual"));
+                    //System.out.println("Error : Missing correct arguments");
+                    //exitCode = 1;
                     break;
             }
             System.exit(exitCode);
@@ -45,7 +47,32 @@ public class Main {
         }
     }
 
-    private static int startLexer(File file) throws IOException {
+    private static int startProgram(File file, boolean displayVisual) throws IOException {
+        int exitCode = 0;
+
+        if (displayVisual) {
+            System.out.println("======================");
+            System.out.println("= LEXER ==============");
+            System.out.println("======================");
+        }
+        exitCode = startLexer(file, displayVisual);
+
+        if (exitCode == 0) {
+            if (displayVisual) {
+                System.out.println("======================");
+                System.out.println("= PARSER =============");
+                System.out.println("======================");
+            }
+
+            exitCode = startParser(file, displayVisual);
+        }
+
+        return exitCode;
+    }
+
+    private static int startLexer(File file, boolean displayVisual) throws IOException {
+
+
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(file));
         LEXERLexer lexer = new LEXERLexer(input);
         lexer.removeErrorListeners();
@@ -59,39 +86,39 @@ public class Main {
         // Start parsing
         parser.program();
 
-        if (listener.errorOutput.isEmpty()) {
+        if (displayVisual) {
             for (String token : listener.tokenOutput) {
                 System.out.println(token);
-            }
-        } else {
-            for (String token : listener.tokenOutput) {
-                System.out.println(token);
-            }
-
-            for (String token : listener.errorOutput) {
-                System.err.println(token);
             }
         }
+        for (String token : listener.errorOutput) {
+            System.err.println(token);
+        }
 
-        if (DescriptiveErrorListener.getInstance("").inError)
-            return 1;
-        return listener.lexicalError ? 1 : 0 ;
+        return DescriptiveErrorListener.getInstance("").inError ? 1 : (listener.lexicalError ? 1 : 0) ;
     }
 
-    private static int startParser(File file) throws IOException  {
+    private static int startParser(File file, boolean displayVisual) throws IOException  {
         String text = removeSpecialChar(removeComments(file));
 
         ANTLRInputStream input = new ANTLRInputStream(text);//(new FileInputStream(file));
         PARSERLexer lexer = new PARSERLexer(input);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(ErrorListener.getInstance(file.getName()));
 
         PARSERParser parser = new PARSERParser(new CommonTokenStream(lexer));
         ParserListener listener = new ParserListener(file.getName());
         parser.addParseListener(listener);
+        parser.removeErrorListeners();
+        parser.addErrorListener(ErrorListener.getInstance(file.getName()));
 
         // Start parsing
         parser.program();
 
-        return parser.getNumberOfSyntaxErrors(); //listener.lexicalError ? 1 : 0 ;
+        if (parser.getNumberOfSyntaxErrors() == 0 && displayVisual)
+            System.out.println(listener.treeOuput);
+
+        return parser.getNumberOfSyntaxErrors();
     }
 
     private static String removeSpecialChar(String file) {
