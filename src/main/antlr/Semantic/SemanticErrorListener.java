@@ -1,14 +1,14 @@
-package Lexer;
+package Semantic;
 
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
-public class DescriptiveErrorListener extends BaseErrorListener {
-    private static DescriptiveErrorListener INSTANCE;
-    public static DescriptiveErrorListener getInstance(String src) {
+public class SemanticErrorListener extends BaseErrorListener {
+    private static SemanticErrorListener INSTANCE;
+    public static SemanticErrorListener getInstance(String src) {
         if (INSTANCE == null)
-            INSTANCE = new DescriptiveErrorListener(src);
+            INSTANCE = new SemanticErrorListener(src);
         return INSTANCE;
     }
 
@@ -18,7 +18,7 @@ public class DescriptiveErrorListener extends BaseErrorListener {
     private String inputSource;
     public boolean inError;
 
-    private DescriptiveErrorListener(String src) {
+    private SemanticErrorListener(String src) {
         this.inputSource = src;
         this.inError = false;
     }
@@ -30,6 +30,6 @@ public class DescriptiveErrorListener extends BaseErrorListener {
     {
 
         inError = true;
-        System.err.println(String.format("%s:%d:%d: \n  character %s is illegal in this context.", inputSource, line, charPositionInLine+1, msg.substring(msg.indexOf(": ")+2)));
+        System.err.println(String.format("%s:%d:%d: syntax error.", inputSource, line, charPositionInLine+1));
     }
 }

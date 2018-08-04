@@ -1,14 +1,14 @@
-package Parser;
+package Lexer;
 
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
-public class ErrorListener extends BaseErrorListener {
-    private static ErrorListener INSTANCE;
-    public static ErrorListener getInstance(String src) {
+public class LexerErrorListener extends BaseErrorListener {
+    private static LexerErrorListener INSTANCE;
+    public static LexerErrorListener getInstance(String src) {
         if (INSTANCE == null)
-            INSTANCE = new ErrorListener(src);
+            INSTANCE = new LexerErrorListener(src);
         return INSTANCE;
     }
 
@@ -18,7 +18,7 @@ public class ErrorListener extends BaseErrorListener {
     private String inputSource;
     public boolean inError;
 
-    private ErrorListener(String src) {
+    private LexerErrorListener(String src) {
         this.inputSource = src;
         this.inError = false;
     }
@@ -30,6 +30,6 @@ public class ErrorListener extends BaseErrorListener {
     {
 
         inError = true;
-        System.err.println(String.format("%s:%d:%d: syntax error.", inputSource, line, charPositionInLine+1));
+        System.err.println(String.format("%s:%d:%d: \n  character %s is illegal in this context.", inputSource, line, charPositionInLine+1, msg.substring(msg.indexOf(": ")+2)));
     }
 }

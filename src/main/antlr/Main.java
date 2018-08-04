@@ -1,19 +1,21 @@
 
-import Lexer.DescriptiveErrorListener;
+import Lexer.LexerErrorListener;
 import Lexer.LexerListener;
-import Parser.ErrorListener;
+import Parser.ParserErrorListener;
 import Parser.ParserListener;
+import Semantic.SemanticErrorListener;
+import Semantic.SemanticListener;
 import VSOP.Lexer.LEXERLexer;
 import VSOP.Lexer.LEXERParser;
 import VSOP.Parser.PARSERLexer;
 import VSOP.Parser.PARSERParser;
+import VSOP.Semantic.SEMANTICLexer;
+import VSOP.Semantic.SEMANTICParser;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Token;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -34,6 +36,12 @@ public class Main {
                     break;
                 case "-parse":
                     exitCode = startParser(file, true);
+                    break;
+                case "-check":
+                    exitCode = startSemantic(file, true);
+                    break;
+                case "-llvm":
+                    exitCode = startCodeGeneration(file, true);
                     break;
                 default:
                     exitCode = startProgram(file, args[0].equals("-v") || args[0].equals("-visual"));
@@ -67,21 +75,39 @@ public class Main {
             exitCode = startParser(file, displayVisual);
         }
 
+        if (exitCode == 0) {
+            if (displayVisual) {
+                System.out.println("======================");
+                System.out.println("= SEMANTIC ===========");
+                System.out.println("======================");
+            }
+
+            exitCode = startSemantic(file, displayVisual);
+        }
+
+        if (exitCode == 0) {
+            if (displayVisual) {
+                System.out.println("======================");
+                System.out.println("= CODE GENERATION ====");
+                System.out.println("======================");
+            }
+
+            exitCode = startCodeGeneration(file, displayVisual);
+        }
+
         return exitCode;
     }
 
     private static int startLexer(File file, boolean displayVisual) throws IOException {
-
-
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(file));
         LEXERLexer lexer = new LEXERLexer(input);
         lexer.removeErrorListeners();
-        lexer.addErrorListener(DescriptiveErrorListener.getInstance(file.getName()));
+        lexer.addErrorListener(LexerErrorListener.getInstance(file.getName()));
         LEXERParser parser = new LEXERParser(new CommonTokenStream(lexer));
         LexerListener listener = new LexerListener(file.getName());
         parser.addParseListener(listener);
         parser.removeErrorListeners();
-        parser.addErrorListener(DescriptiveErrorListener.getInstance(file.getName()));
+        parser.addErrorListener(LexerErrorListener.getInstance(file.getName()));
 
         // Start parsing
         parser.program();
@@ -95,7 +121,7 @@ public class Main {
             System.err.println(token);
         }
 
-        return DescriptiveErrorListener.getInstance("").inError ? 1 : (listener.lexicalError ? 1 : 0) ;
+        return LexerErrorListener.getInstance("").inError ? 1 : (listener.lexicalError ? 1 : 0) ;
     }
 
     private static int startParser(File file, boolean displayVisual) throws IOException  {
@@ -104,13 +130,13 @@ public class Main {
         ANTLRInputStream input = new ANTLRInputStream(text);//(new FileInputStream(file));
         PARSERLexer lexer = new PARSERLexer(input);
         lexer.removeErrorListeners();
-        lexer.addErrorListener(ErrorListener.getInstance(file.getName()));
+        lexer.addErrorListener(ParserErrorListener.getInstance(file.getName()));
 
         PARSERParser parser = new PARSERParser(new CommonTokenStream(lexer));
         ParserListener listener = new ParserListener(file.getName());
         parser.addParseListener(listener);
         parser.removeErrorListeners();
-        parser.addErrorListener(ErrorListener.getInstance(file.getName()));
+        parser.addErrorListener(ParserErrorListener.getInstance(file.getName()));
 
         // Start parsing
         parser.program();
@@ -120,6 +146,35 @@ public class Main {
 
         return parser.getNumberOfSyntaxErrors();
     }
+
+    private static int startSemantic(File file, boolean displayVisual) throws IOException  {
+        String text = removeSpecialChar(removeComments(file));
+
+        ANTLRInputStream input = new ANTLRInputStream(text);
+        SEMANTICLexer lexer = new SEMANTICLexer(input);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(SemanticErrorListener.getInstance(file.getName()));
+
+        SEMANTICParser parser = new SEMANTICParser(new CommonTokenStream(lexer));
+        SemanticListener listener = new SemanticListener(file.getName());
+        parser.addParseListener(listener);
+        parser.removeErrorListeners();
+        parser.addErrorListener(SemanticErrorListener.getInstance(file.getName()));
+
+        // Start parsing
+        parser.program();
+
+        if (parser.getNumberOfSyntaxErrors() == 0 && displayVisual)
+            System.out.println(listener.treeOuput);
+
+        return parser.getNumberOfSyntaxErrors();
+    }
+
+    private static int startCodeGeneration(File file, boolean displayVisual) throws IOException  {
+
+        return 0;
+    }
+
 
     private static String removeSpecialChar(String file) {
         HashMap<String, String> characterEscape = new HashMap<>();

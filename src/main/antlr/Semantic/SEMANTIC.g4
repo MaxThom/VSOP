@@ -1,5 +1,5 @@
-grammar PARSER;
-@header {package VSOP.Parser;}
+grammar SEMANTIC;
+@header {package VSOP.Semantic;}
     program                 : (classDefinition)+ ; // | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
 
     statement               : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation | unOperation;
@@ -21,14 +21,11 @@ grammar PARSER;
 
     whileStatement          : 'while' statement 'do' (statement | block) ;
 
-    ifStatement             : ifStat elseStat? ; //ifStat elseIfStat* elseStat? ;
+    ifStatement             : ifStat elseStat? ;
     ifStat                  : 'if' statement 'then' (statement | block) ;
-    //elseIfStat              : 'else if' condition 'then' block ;
     elseStat                : 'else' (statement | block) ;
 
     let                     : 'let' OBJECT_IDENTIFIER ':' varType ('<-' statement)? 'in' (statement | block) ;
-
-    //binaryOperation         : (OBJECT_IDENTIFIER | varValue) ((ARITHMETIC_OPERATOR | CONDITIONAL_OPERATOR) statement)+ ;
 
     binaryOperation         : condition (AND_OPERATOR condition)* | ('(' condition (AND_OPERATOR condition)* ')') ;
     condition               : term (CONDITIONAL_OPERATOR term)* | ('(' term (CONDITIONAL_OPERATOR term)* ')') ;
@@ -42,14 +39,13 @@ grammar PARSER;
 
     unOperator              : UN_OPERATOR | NEGATIVE_OPERATOR ;
     termOperator            : TERM_OPERATOR | NEGATIVE_OPERATOR ;
-    //condition               : comparaiser CONDITIONAL_OPERATOR comparaiser ;
     comparaiser             : OBJECT_IDENTIFIER | integer | STRING ;
     integer                 : INTEGER_HEX | INTEGER_DEC | INTEGER_BIN ;
     varType                 : 'bool' | 'int32' | 'string' | 'unit' | TYPE_IDENTIFIER ;
     varValue                : 'true' | 'false' | STRING | integer  ;
 
+
     UN_OPERATOR             : 'not' | 'isnull' ;
-    //ARITHMETIC_OPERATOR     : '+' | '-' | '*' | '/' | '^' ;
     FACTOR_OPERATOR         : 'd zzdqasdw' ;
     TERM_OPERATOR           : '+' | '*' | '/' | '^';
     AND_OPERATOR            : 'and' ;
