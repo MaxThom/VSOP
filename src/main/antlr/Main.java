@@ -167,6 +167,10 @@ public class Main {
         if (parser.getNumberOfSyntaxErrors() == 0 && displayVisual)
             System.out.println(listener.treeOuput);
 
+        for (String token : listener.errorOutput) {
+            System.err.println(token);
+        }
+
         return parser.getNumberOfSyntaxErrors();
     }
 
