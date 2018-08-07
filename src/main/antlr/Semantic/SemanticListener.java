@@ -17,7 +17,7 @@ public class SemanticListener extends SEMANTICBaseListener {
     private Map<String, Integer> variables;
     public Map<String, ClassDefinition> classes;
     private String fileName;
-    public String treeOuput;
+    public String treeOutput;
     public ArrayList<String> errorOutput;
 
     public Boolean lexicalError = false;
@@ -28,7 +28,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         errorOutput = new ArrayList<>();
 
         this.fileName = fileName;
-        treeOuput = "";
+        treeOutput = "";
     }
 
     @Override
@@ -36,24 +36,9 @@ public class SemanticListener extends SEMANTICBaseListener {
         checkForMainClass(ctx);
         checkForInheritance(ctx);
 
+        checkTypeCompileTime(ctx);
 
-        StringBuilder output = new StringBuilder();
-        output.append("[");
-
-        for (ClassDefinitionContext classDef : ctx.classDefinition()) {
-            output.append(handleClass(classDef));
-            output.append(", ");
-        }
-        if ( ctx.classDefinition().size() > 0) output.delete(output.length()-2, output.length());
-
-        output.append("]");
-
-        this.treeOuput = output.toString();
-    }
-
-    @Override
-    public void exitBlock(BlockContext ctx) {
-
+        this.treeOutput = handleProgram(ctx).toString();
     }
 
     @Override
@@ -111,26 +96,12 @@ public class SemanticListener extends SEMANTICBaseListener {
 
     @Override
     public void exitField(FieldContext ctx) {
-        VariableType fieldType = stringToVarType(ctx.varType().getText());
-        VariableType typeFound = null;
-
-        if (ctx.statement() != null) {
-            typeFound = checkStatementType(ctx.statement());
-        }
-        else if (ctx.block() != null) {
-            typeFound = checkBlockType(ctx.block());
-        }
-        else
-            fieldType = null;
-
-        if (fieldType != typeFound) {
-            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid type in initializer of field '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + fieldType + "', found '" + typeFound + "'.");
-        }
+        //checkFieldDefinition(ctx);
     }
 
     @Override
     public void exitMethodDefinition(MethodDefinitionContext ctx) {
-        VariableType methodType = stringToVarType(ctx.varType().getText());
+        /*VariableType methodType = stringToVarType(ctx.varType().getText());
         VariableType typeFound = null;
 
         if (ctx.block() != null) {
@@ -139,23 +110,39 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         if (methodType != typeFound) {
             errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid return type in method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
-        }
+        }*/
     }
 
 
     @Override
     public void exitIfStatement(IfStatementContext ctx) {
-        checkIfStatementType(ctx, true);
+        //checkIfStatementType(ctx, true);
     }
 
     @Override
     public void exitWhileStatement(WhileStatementContext ctx) {
-        checkWhileStatementType(ctx);
+        //checkWhileStatementType(ctx);
     }
 
     @Override
     public void exitLet(LetContext ctx) {
-        checkLetStatementType(ctx);
+        //checkLetStatementType(ctx);
+    }
+
+
+
+    private void checkTypeCompileTime(ProgramContext ctx) {
+        for (ClassDefinitionContext classDef : ctx.classDefinition()) {
+            for (int i = 0; i < classDef.children.size() ; i++) {
+                if (classDef.children.get(i) instanceof FieldContext) {
+                    checkFieldDefinition((FieldContext) classDef.children.get(i));
+                }
+                else if (classDef.children.get(i) instanceof MethodDefinitionContext) {
+                    checkMethodDefinition((MethodDefinitionContext) classDef.children.get(i));
+
+                }
+            }
+        }
     }
 
 
@@ -258,10 +245,58 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
     }
 
+    public void checkFieldDefinition(FieldContext ctx) {
+        VariableType fieldType = stringToVarType(ctx.varType().getText());
+        VariableType typeFound = null;
+
+        if (ctx.statement() != null) {
+            typeFound = checkStatementType(ctx.statement());
+        }
+        else if (ctx.block() != null) {
+            typeFound = checkBlockType(ctx.block());
+        }
+        else
+            fieldType = null;
+
+        if (fieldType != typeFound) {
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid type in initializer of field '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + fieldType + "', found '" + typeFound + "'.");
+        }
+    }
+
+    public void checkMethodDefinition(MethodDefinitionContext ctx) {
+        VariableType methodType = stringToVarType(ctx.varType().getText());
+        VariableType typeFound = null;
+
+        if (ctx.block() != null) {
+            typeFound = checkBlockType(ctx.block());
+        }
+
+        if (methodType != typeFound) {
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid return type in method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
+        }
+    }
+
+
     private VariableType checkBlockType(BlockContext ctx) {
         VariableType typeFound = VariableType.unit;
 
-        //for (ParseTree child : ctx.children) {
+        for (int i = 0; i < ctx.children.size() ; i++) {
+            if (ctx.children.get(i) instanceof ParserRuleContext) {
+                ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
+
+                if (child instanceof IfStatementContext) {
+                    checkIfStatementType((IfStatementContext) child, true);
+                } else if (child instanceof WhileStatementContext) {
+                    checkWhileStatementType((WhileStatementContext) child);
+                } else if (child instanceof StatementContext) {
+                    checkStatementType((StatementContext) child);
+                }
+
+            }
+        }
+
+
+        // Check last statement
         for (int i = ctx.children.size()-1; i >= 0 ; i--) {
             if (ctx.children.get(i) instanceof ParserRuleContext) {
                 ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
@@ -283,7 +318,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         if (ctx.assign() != null) {
 
         } else if (ctx.ifStatement() != null) {
-            typeFound = checkIfStatementType(ctx.ifStatement(), false);
+            typeFound = checkIfStatementType(ctx.ifStatement(), true);
         } else if (ctx.whileStatement() != null) {
             typeFound = checkWhileStatementType(ctx.whileStatement());
         } else if (ctx.let() != null) {
@@ -411,6 +446,25 @@ public class SemanticListener extends SEMANTICBaseListener {
         return typeFound;
     }
 
+
+
+
+
+    private StringBuilder handleProgram(ProgramContext ctx) {
+
+        StringBuilder output = new StringBuilder();
+        output.append("[");
+
+        for (ClassDefinitionContext classDef : ctx.classDefinition()) {
+            output.append(handleClass(classDef));
+            output.append(", ");
+        }
+        if ( ctx.classDefinition().size() > 0) output.delete(output.length()-2, output.length());
+
+        output.append("]");
+
+        return output;
+    }
 
     private StringBuilder handleClass(ClassDefinitionContext classDef) {
 

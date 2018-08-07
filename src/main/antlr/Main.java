@@ -165,7 +165,7 @@ public class Main {
         parser.program();
 
         if (parser.getNumberOfSyntaxErrors() == 0 && displayVisual)
-            System.out.println(listener.treeOuput);
+            System.out.println(listener.treeOutput);
 
         for (String token : listener.errorOutput) {
             System.err.println(token);
