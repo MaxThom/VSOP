@@ -2,9 +2,11 @@ package Semantic;
 
 
 import VSOP.Semantic.SEMANTICBaseListener;
+import jdk.nashorn.internal.ir.Block;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.time.temporal.ValueRange;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,8 +33,8 @@ public class SemanticListener extends SEMANTICBaseListener {
 
     @Override
     public void exitProgram(ProgramContext ctx) {
-        CheckForMainClass(ctx);
-        CheckForInheritance(ctx);
+        checkForMainClass(ctx);
+        checkForInheritance(ctx);
 
 
         StringBuilder output = new StringBuilder();
@@ -47,6 +49,11 @@ public class SemanticListener extends SEMANTICBaseListener {
         output.append("]");
 
         this.treeOuput = output.toString();
+    }
+
+    @Override
+    public void exitBlock(BlockContext ctx) {
+
     }
 
     @Override
@@ -82,6 +89,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
 
         for (FieldContext field: fields) {
+
             FieldDefinition fieldDef = new FieldDefinition(field.OBJECT_IDENTIFIER().getText(), field.varType().getText());
 
             // Check for same field name
@@ -101,13 +109,94 @@ public class SemanticListener extends SEMANTICBaseListener {
             classes.put(classDef.name, classDef);
     }
 
-    private void CheckForMainClass(ProgramContext ctx) {
+    @Override
+    public void exitField(FieldContext ctx) {
+        VariableType fieldType = stringToVarType(ctx.varType().getText());
+        VariableType typeFound = null;
+
+        if (ctx.statement() != null) {
+            typeFound = checkStatementType(ctx.statement());
+        }
+        else if (ctx.block() != null) {
+            typeFound = checkBlockType(ctx.block());
+        }
+        else
+            fieldType = null;
+
+        if (fieldType != typeFound) {
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid type in initializer of field '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + fieldType + "', found '" + typeFound + "'.");
+        }
+    }
+
+    @Override
+    public void exitMethodDefinition(MethodDefinitionContext ctx) {
+        VariableType methodType = stringToVarType(ctx.varType().getText());
+        VariableType typeFound = null;
+
+        if (ctx.block() != null) {
+            typeFound = checkBlockType(ctx.block());
+        }
+
+        if (methodType != typeFound) {
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid return type in method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
+        }
+    }
+
+
+    @Override
+    public void exitIfStatement(IfStatementContext ctx) {
+        checkIfStatementType(ctx, true);
+    }
+
+    @Override
+    public void exitWhileStatement(WhileStatementContext ctx) {
+        checkWhileStatementType(ctx);
+    }
+
+    @Override
+    public void exitLet(LetContext ctx) {
+        checkLetStatementType(ctx);
+    }
+
+
+
+    private VariableType stringToVarType(String varType) {
+        switch (varType) {
+            case "int32":
+                return VariableType.int32;
+            case "unit":
+                return VariableType.unit;
+            case "bool":
+                return VariableType.bool;
+            case "string":
+                return VariableType.string;
+            default:
+                return VariableType.object;
+        }
+    }
+
+    private String defaultVarValue(String varType) {
+        switch (varType) {
+            case "int32":
+                return "0";
+            case "unit":
+                return "()";
+            case "bool":
+                return "false";
+            case "string":
+                return "\"\"";
+            default:
+                return "null";
+        }
+    }
+
+    private void checkForMainClass(ProgramContext ctx) {
         if (!classes.containsKey("Main") || !classes.get("Main").methods.containsKey("main") || !classes.get("Main").methods.get("main").type.equals("int32")) {
             errorOutput.add(fileName + ":" + 1 + ":" + 1 + ":" + " semantic error - a vsop program must define a Main class with a main method of type int32");
         }
     }
 
-    private void CheckForInheritance(ProgramContext ctx) {
+    private void checkForInheritance(ProgramContext ctx) {
         for (ClassDefinition classDef : classes.values()) {
             if (!classDef.extend.equals("Object")) {
 
@@ -169,6 +258,158 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
     }
 
+    private VariableType checkBlockType(BlockContext ctx) {
+        VariableType typeFound = VariableType.unit;
+
+        //for (ParseTree child : ctx.children) {
+        for (int i = ctx.children.size()-1; i >= 0 ; i--) {
+            if (ctx.children.get(i) instanceof ParserRuleContext) {
+                ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
+
+                if (child instanceof StatementContext) {
+                    typeFound = checkStatementType((StatementContext) child);
+                }
+
+                break;
+            }
+        }
+
+        return typeFound;
+    }
+
+    private VariableType checkStatementType(StatementContext ctx) {
+        VariableType typeFound = null;
+
+        if (ctx.assign() != null) {
+
+        } else if (ctx.ifStatement() != null) {
+            typeFound = checkIfStatementType(ctx.ifStatement(), false);
+        } else if (ctx.whileStatement() != null) {
+            typeFound = checkWhileStatementType(ctx.whileStatement());
+        } else if (ctx.let() != null) {
+            typeFound = checkLetStatementType(ctx.let());
+        } else if (ctx.unOperation() != null) {
+
+        } else if (ctx.binaryOperation() != null) {
+            typeFound = checkBinaryOperation(ctx.binaryOperation());
+        } else if (ctx.callMethod() != null) {
+
+        } else if (ctx.newObj() != null) {
+            typeFound = VariableType.object;
+        } else if (ctx.OBJECT_IDENTIFIER() != null) {
+
+        } else if (ctx.statement() != null) {
+            typeFound = checkStatementType(ctx.statement());
+        }
+        else if (ctx.varValue() != null) {
+            if (ctx.varValue().integer() != null) {
+                typeFound = VariableType.int32;
+            } else if (ctx.varValue().STRING() != null) {
+                typeFound = VariableType.string;
+            } else if (ctx.varValue().getText().equals("true") || ctx.varValue().getText().equals("false")) {
+                typeFound = VariableType.bool;
+            } else if (ctx.varValue().VOID_OPERATOR() != null) {
+                typeFound = VariableType.unit;
+            }
+
+        }
+
+
+
+        return typeFound;
+    }
+
+    private VariableType checkIfStatementType(IfStatementContext ctx, boolean displayError) {
+        VariableType returnType = null;
+        VariableType typeIfBranch = null;
+        VariableType typeElseBranch = null;
+
+        // Check if condition is a bool type
+        if (ctx.ifStat().statement(0) != null) {
+            VariableType conditionType = checkStatementType(ctx.ifStat().statement(0));
+            if (displayError && conditionType != VariableType.bool) {
+                errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + conditionType + "'. Required type is 'bool'.");
+            }
+        }
+
+        if (ctx.ifStat().statement(1) != null) {
+            typeIfBranch = checkStatementType(ctx.ifStat().statement(1));
+        } else if (ctx.ifStat().block() != null) {
+            typeIfBranch = checkBlockType(ctx.ifStat().block());
+        }
+
+        if (ctx.elseStat() != null) {
+            if (ctx.elseStat().statement() != null) {
+                typeElseBranch = checkStatementType(ctx.elseStat().statement());
+            } else if (ctx.elseStat().block() != null) {
+                typeElseBranch = checkBlockType(ctx.elseStat().block());
+            }
+        } else {
+            typeElseBranch = VariableType.unit;
+        }
+
+        if (displayError && typeIfBranch != typeElseBranch && (typeIfBranch != VariableType.unit && typeElseBranch != VariableType.unit)) {
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + typeIfBranch + "' in if branch and '" + typeElseBranch + "' in else branch.");
+        }
+
+        if (typeIfBranch == VariableType.unit || typeElseBranch == VariableType.unit) {
+            returnType = VariableType.unit;
+        } else {
+            returnType = typeIfBranch;
+        }
+
+        return returnType;
+    }
+
+    private VariableType checkWhileStatementType(WhileStatementContext ctx) {
+        VariableType returnType = VariableType.unit;
+
+        if (ctx.statement(0) != null) {
+            VariableType conditionType = checkStatementType(ctx.statement(0));
+            if (conditionType != VariableType.bool) {
+                errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + conditionType + "'. Required type is 'bool'.");
+            }
+        }
+
+        return returnType;
+    }
+
+    private VariableType checkLetStatementType(LetContext ctx) {
+        VariableType letType = stringToVarType(ctx.varType().getText());
+        VariableType typeFound = null;
+
+        int statOffset = 0;
+        if (ctx.statement().size() == 2 || (ctx.statement().size() == 1 && ctx.block() != null)) {
+            typeFound = checkStatementType(ctx.statement(statOffset++));
+
+            if (typeFound != letType)
+                errorOutput.add(fileName + ":" + ctx.statement(0).getStart().getLine() + ":" + (ctx.statement(0).getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid type in initializer of let statement. Found '" + typeFound + "'. Expected type is '" + letType + "'.");
+        }
+
+        if (ctx.statement(statOffset) != null) {
+            typeFound = checkStatementType(ctx.statement(statOffset));
+        } else if (ctx.block() != null) {
+            typeFound = checkBlockType(ctx.block());
+        }
+
+        if (typeFound != letType)
+            errorOutput.add(fileName + ":" + ctx.statement(0).getStart().getLine() + ":" + (ctx.statement(0).getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid type in body of let statement. Found '" + typeFound + "'. Expected type is '" + letType + "'.");
+
+        return typeFound;
+    }
+
+    private VariableType checkBinaryOperation(BinaryOperationContext ctx) {
+        VariableType typeFound = null;
+
+        if (ctx.AND_OPERATOR().size() > 0)
+            typeFound = VariableType.bool;
+        else if (ctx.condition(0).CONDITIONAL_OPERATOR().size() > 0)
+            typeFound = VariableType.bool;
+        else
+            typeFound = VariableType.int32;
+
+        return typeFound;
+    }
 
 
     private StringBuilder handleClass(ClassDefinitionContext classDef) {
@@ -213,9 +454,14 @@ public class SemanticListener extends SEMANTICBaseListener {
             output.append(", ");
             output.append(handleStatement(field.statement()));
         }
-        if (field.block() != null) {
+        else if (field.block() != null) {
             output.append(", ");
             output.append(handleBlock(field.block()));
+        } else {
+            /*output.append(", ");
+            output.append(defaultVarValue(field.varType().getText()));
+            output.append(" : ");
+            output.append(field.varType().getText());*/
         }
 
         output.append(")");
@@ -313,7 +559,9 @@ public class SemanticListener extends SEMANTICBaseListener {
         } else if (statement.OBJECT_IDENTIFIER() != null) {
             output.append(statement.OBJECT_IDENTIFIER().getText());
         } else if (statement.varValue() != null) {
-            output.append(statement.varValue().getText());
+            output.append(handleVarValue(statement.varValue()));
+        } else if (statement.statement() != null) {
+            output.append(handleStatement(statement.statement()));
         }
 
         return output;
@@ -343,6 +591,9 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
 
         output.append(")");
+        output.append(" : ");
+        output.append(checkIfStatementType(ifStatement, false));
+
         return output;
     }
 
@@ -360,7 +611,7 @@ public class SemanticListener extends SEMANTICBaseListener {
             output.append(handleBlock(whileStatement.block()));
         }
 
-        output.append(")");
+        output.append(") : unit");
         return output;
     }
 
@@ -557,12 +808,12 @@ public class SemanticListener extends SEMANTICBaseListener {
             for (int j = 1 ; j < binOp.AND_OPERATOR().size(); j++) {
                 output.append(", ");
                 output.append(handleCondition(binOp.condition(j)));
-                output.append(")");
+                output.append(") : bool");
             }
 
             output.append(", ");
             output.append(handleCondition(binOp.condition(binOp.AND_OPERATOR().size())));
-            output.append(")");
+            output.append(") : bool");
         }
 
         return output;
@@ -586,12 +837,12 @@ public class SemanticListener extends SEMANTICBaseListener {
             for (int j = 1 ; j < cond.CONDITIONAL_OPERATOR().size(); j++) {
                 output.append(", ");
                 output.append(handleTerm(cond.term(j)));
-                output.append(")");
+                output.append(") : bool");
             }
 
             output.append(", ");
             output.append(handleTerm(cond.term(cond.CONDITIONAL_OPERATOR().size())));
-            output.append(")");
+            output.append(") : bool");
         }
 
         return output;
@@ -614,12 +865,12 @@ public class SemanticListener extends SEMANTICBaseListener {
             for (int j = 1 ; j < term.termOperator().size(); j++) {
                 output.append(", ");
                 output.append(handleFactor(term.factor(j)));
-                output.append(")");
+                output.append(") : int32");
             }
 
             output.append(", ");
             output.append(handleFactor(term.factor(term.termOperator().size())));
-            output.append(")");
+            output.append(") : int32");
         }
 
         return output;
@@ -643,12 +894,12 @@ public class SemanticListener extends SEMANTICBaseListener {
             for (int j = 1 ; j < factor.FACTOR_OPERATOR().size(); j++) {
                 output.append(", ");
                 output.append(handleValue(factor.value(j)));
-                output.append(")");
+                output.append(") : int32");
             }
 
             output.append(", ");
             output.append(handleValue(factor.value(factor.FACTOR_OPERATOR().size())));
-            output.append(")");
+            output.append(") : int32");
         }
 
         return output;
@@ -661,8 +912,35 @@ public class SemanticListener extends SEMANTICBaseListener {
             output.append(handleUnOperation(value.unOperation()));
         else if (value.callMethod() != null)
             output.append(handleCallMethod(value.callMethod()));
+        else if (value.varValue() != null)
+            output.append(handleVarValue(value.varValue()));
         else
             output.append(value.getChild(0).getText());
+
         return output;
     }
+
+    private StringBuilder handleVarValue(VarValueContext varValue) {
+        StringBuilder output = new StringBuilder();
+        output.append(varValue.getText());
+
+        if (varValue.STRING() != null)
+            output.append(" : string");
+        else if (varValue.integer() != null)
+            output.append(" : int32");
+        else if (varValue.VOID_OPERATOR() != null)
+            output.append(" : unit");
+        else
+            output.append(" : bool");
+
+        return output;
+    }
+
+    private StringBuilder handleObjectIdentifier(ValueContext value) {
+        StringBuilder output = new StringBuilder();
+
+
+        return output;
+    }
+
 }

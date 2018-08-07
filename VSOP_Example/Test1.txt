@@ -1,4 +1,27 @@
 class MyClass {
-    myField : bool <- false;
+    myField : unit;
 }
-class Main { main() : int32 { 0 } }
+    class Main {
+        main() : int32 {
+            if (abc = true) then {
+                1
+            } else {
+                2
+            }
+
+            while (true) do {
+
+            }
+
+            let test: int32 in {0};
+
+            (*let xs : List <- (new Cons).init(0, (new Cons).init(
+                                             1, (new Cons).init(
+                                             2, new Nil)))
+                in print("List has length ").printInt32(xs.length()).print("\n");*)
+
+
+
+            878 + 232
+        }
+}

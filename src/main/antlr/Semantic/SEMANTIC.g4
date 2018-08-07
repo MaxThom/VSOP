@@ -7,13 +7,13 @@ grammar SEMANTIC;
 
     classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}';
 
-    methodDefinition        : OBJECT_IDENTIFIER '(' (((formal ',')+ (formal)) | (formal)?) ')' ':' varType block ;
+    methodDefinition        : OBJECT_IDENTIFIER ('(' ((((formal ',')+ (formal)) | (formal)?) ')') | ('()')) ':' varType block ;
     formal                  : OBJECT_IDENTIFIER ':' varType ;
     field                   : OBJECT_IDENTIFIER ':' varType ('<-' (statement | block))? ';' ;
     callMethod              : (singleCallMethod) | ((singleCallMethod  '.')+ (singleCallMethod));
     singleCallMethod        : (caller)* callFunction ('.' callFunction)* ;
     caller                  : (OBJECT_IDENTIFIER | ('(' newObj ')')) '.';
-    callFunction            : OBJECT_IDENTIFIER '(' (((argument ',')+ argument) | argument?) ')' ;
+    callFunction            : OBJECT_IDENTIFIER (('(' (((argument ',')+ argument) | argument?) ')') | ('()')) ;
     argument                : OBJECT_IDENTIFIER | varValue | callMethod | newObj | binaryOperation;
 
 
@@ -42,7 +42,7 @@ grammar SEMANTIC;
     comparaiser             : OBJECT_IDENTIFIER | integer | STRING ;
     integer                 : INTEGER_HEX | INTEGER_DEC | INTEGER_BIN ;
     varType                 : 'bool' | 'int32' | 'string' | 'unit' | TYPE_IDENTIFIER ;
-    varValue                : 'true' | 'false' | STRING | integer  ;
+    varValue                : 'true' | 'false' | STRING | integer  | VOID_OPERATOR;
 
 
     UN_OPERATOR             : 'not' | 'isnull' ;
@@ -51,6 +51,7 @@ grammar SEMANTIC;
     AND_OPERATOR            : 'and' ;
     CONDITIONAL_OPERATOR    : '=' | '<' | '<=' ;
     NEGATIVE_OPERATOR       : '-' ;
+    VOID_OPERATOR           : '()' ;
 
     MULTILINE_OPEN_COMMENT  : '(*' ;
     MULTILINE_CLOSE_COMMENT : '*)' ;

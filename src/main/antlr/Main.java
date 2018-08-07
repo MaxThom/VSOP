@@ -170,8 +170,8 @@ public class Main {
         for (String token : listener.errorOutput) {
             System.err.println(token);
         }
-
-        return parser.getNumberOfSyntaxErrors();
+;
+        return parser.getNumberOfSyntaxErrors() + listener.errorOutput.size();
     }
 
     private static int startCodeGeneration(File file, boolean displayVisual) throws IOException  {

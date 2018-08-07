@@ -187,6 +187,8 @@ public class ParserListener extends PARSERBaseListener {
             output.append(statement.OBJECT_IDENTIFIER().getText());
         } else if (statement.varValue() != null) {
             output.append(statement.varValue().getText());
+        } else if (statement.statement() != null) {
+            output.append(handleStatement(statement.statement()));
         }
 
         return output;
