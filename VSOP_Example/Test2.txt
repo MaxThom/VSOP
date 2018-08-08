@@ -1,4 +1,23 @@
 class MyClass {
     myField : int32 <- let x : int32 <- 42 in x;
 }
-class Main { main() : int32 { 0 } }
+class Main {
+
+    myField : int32 <- let x : int32 <- 42 in x;
+    myField2 : int32 <- let x : int32 <- 42 in x;
+    myField3 : int32 <- let x : int32 <- 42 in x;
+
+    main() : int32 { 0 }
+
+    test(bob: int32, lara: string, ginette: bool): int32 {
+        if (false) then {
+            let x: int32 in x;
+            lara
+        }
+        else
+            lara
+
+        bob
+    }
+
+}

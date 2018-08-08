@@ -14,8 +14,9 @@ import static VSOP.Semantic.SEMANTICParser.*;
 
 public class SemanticListener extends SEMANTICBaseListener {
 
-    private Map<String, Integer> variables;
+
     public Map<String, ClassDefinition> classes;
+    private ClassDefinition currentClass;
     private String fileName;
     public String treeOutput;
     public ArrayList<String> errorOutput;
@@ -23,10 +24,9 @@ public class SemanticListener extends SEMANTICBaseListener {
     public Boolean lexicalError = false;
 
     public SemanticListener(String fileName) {
-        variables = new HashMap<>();
         classes = new HashMap<>();
         errorOutput = new ArrayList<>();
-
+        currentClass = null;
         this.fileName = fileName;
         treeOutput = "";
     }
@@ -133,14 +133,18 @@ public class SemanticListener extends SEMANTICBaseListener {
 
     private void checkTypeCompileTime(ProgramContext ctx) {
         for (ClassDefinitionContext classDef : ctx.classDefinition()) {
-            for (int i = 0; i < classDef.children.size() ; i++) {
-                if (classDef.children.get(i) instanceof FieldContext) {
-                    checkFieldDefinition((FieldContext) classDef.children.get(i));
-                }
-                else if (classDef.children.get(i) instanceof MethodDefinitionContext) {
-                    checkMethodDefinition((MethodDefinitionContext) classDef.children.get(i));
+            currentClass = classes.get(classDef.TYPE_IDENTIFIER(0).getText());
+            List<FieldContext> fields = classDef.children.stream().filter(x -> x instanceof  FieldContext).map(x -> (FieldContext) x).collect(Collectors.toList());
+            List<MethodDefinitionContext> methods = classDef.children.stream().filter(x -> x instanceof  MethodDefinitionContext).map(x -> (MethodDefinitionContext) x).collect(Collectors.toList());
 
-                }
+            for (FieldContext field: fields) {
+                checkFieldDefinition(field);
+            }
+
+            currentClass.classInitialized = true;
+
+            for (MethodDefinitionContext method: methods) {
+                checkMethodDefinition(method);
             }
         }
     }
@@ -245,15 +249,18 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
     }
 
-    public void checkFieldDefinition(FieldContext ctx) {
+    private void checkFieldDefinition(FieldContext ctx) {
+        ArrayList<Map<String, VariableType>> variablesCache = new ArrayList<>();
         VariableType fieldType = stringToVarType(ctx.varType().getText());
         VariableType typeFound = null;
 
         if (ctx.statement() != null) {
-            typeFound = checkStatementType(ctx.statement());
+            if (variablesCache != null) variablesCache.add(new HashMap<>());
+            typeFound = checkStatementType(ctx.statement(), variablesCache);
+            if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
         }
         else if (ctx.block() != null) {
-            typeFound = checkBlockType(ctx.block());
+            typeFound = checkBlockType(ctx.block(), variablesCache);
         }
         else
             fieldType = null;
@@ -263,38 +270,55 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
     }
 
-    public void checkMethodDefinition(MethodDefinitionContext ctx) {
+    private void checkMethodDefinition(MethodDefinitionContext ctx) {
+        ArrayList<Map<String, VariableType>> variablesCache = new ArrayList<>();
         VariableType methodType = stringToVarType(ctx.varType().getText());
         VariableType typeFound = null;
 
-        if (ctx.block() != null) {
-            typeFound = checkBlockType(ctx.block());
+        // Add Fields
+        variablesCache.add(new HashMap<>());
+        for (FieldDefinition field : currentClass.fields.values()) {
+            variablesCache.get(variablesCache.size()-1).put(field.name, stringToVarType(field.type));
         }
+
+        // Add formals
+        variablesCache.add(new HashMap<>());
+        for (FormalDefinition formal : currentClass.methods.get(ctx.OBJECT_IDENTIFIER().getText()).formals.values()) {
+            variablesCache.get(variablesCache.size()-1).put(formal.name, stringToVarType(formal.type));
+        }
+
+        if (ctx.block() != null) {
+            typeFound = checkBlockType(ctx.block(), variablesCache);
+        }
+
+        variablesCache.remove(variablesCache.size()-1);
+        variablesCache.remove(variablesCache.size()-1);
 
         if (methodType != typeFound) {
             errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid return type in method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
         }
+
     }
 
 
-    private VariableType checkBlockType(BlockContext ctx) {
+    private VariableType checkBlockType(BlockContext ctx, ArrayList<Map<String, VariableType>> variablesCache) {
         VariableType typeFound = VariableType.unit;
+        if (variablesCache != null) variablesCache.add(new HashMap<>());
 
-        for (int i = 0; i < ctx.children.size() ; i++) {
+        for (int i = 0; i < ctx.children.size()-1 ; i++) {
             if (ctx.children.get(i) instanceof ParserRuleContext) {
                 ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
 
                 if (child instanceof IfStatementContext) {
-                    checkIfStatementType((IfStatementContext) child, true);
+                    checkIfStatementType((IfStatementContext) child, variablesCache, true);
                 } else if (child instanceof WhileStatementContext) {
-                    checkWhileStatementType((WhileStatementContext) child);
+                    checkWhileStatementType((WhileStatementContext) child, variablesCache);
                 } else if (child instanceof StatementContext) {
-                    checkStatementType((StatementContext) child);
+                    checkStatementType((StatementContext) child, variablesCache);
                 }
 
             }
         }
-
 
         // Check last statement
         for (int i = ctx.children.size()-1; i >= 0 ; i--) {
@@ -302,27 +326,29 @@ public class SemanticListener extends SEMANTICBaseListener {
                 ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
 
                 if (child instanceof StatementContext) {
-                    typeFound = checkStatementType((StatementContext) child);
+                    typeFound = checkStatementType((StatementContext) child, variablesCache);
                 }
 
                 break;
             }
         }
 
+        if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
+
         return typeFound;
     }
 
-    private VariableType checkStatementType(StatementContext ctx) {
+    private VariableType checkStatementType(StatementContext ctx, ArrayList<Map<String, VariableType>> variablesCache) {
         VariableType typeFound = null;
 
         if (ctx.assign() != null) {
 
         } else if (ctx.ifStatement() != null) {
-            typeFound = checkIfStatementType(ctx.ifStatement(), true);
+            typeFound = checkIfStatementType(ctx.ifStatement(), variablesCache, true);
         } else if (ctx.whileStatement() != null) {
-            typeFound = checkWhileStatementType(ctx.whileStatement());
+            typeFound = checkWhileStatementType(ctx.whileStatement(), variablesCache);
         } else if (ctx.let() != null) {
-            typeFound = checkLetStatementType(ctx.let());
+            typeFound = checkLetStatementType(ctx.let(), variablesCache);
         } else if (ctx.unOperation() != null) {
 
         } else if (ctx.binaryOperation() != null) {
@@ -332,9 +358,9 @@ public class SemanticListener extends SEMANTICBaseListener {
         } else if (ctx.newObj() != null) {
             typeFound = VariableType.object;
         } else if (ctx.OBJECT_IDENTIFIER() != null) {
-
+            typeFound = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER().getText(), variablesCache);
         } else if (ctx.statement() != null) {
-            typeFound = checkStatementType(ctx.statement());
+            typeFound = checkStatementType(ctx.statement(), variablesCache);
         }
         else if (ctx.varValue() != null) {
             if (ctx.varValue().integer() != null) {
@@ -346,39 +372,40 @@ public class SemanticListener extends SEMANTICBaseListener {
             } else if (ctx.varValue().VOID_OPERATOR() != null) {
                 typeFound = VariableType.unit;
             }
-
         }
-
-
 
         return typeFound;
     }
 
-    private VariableType checkIfStatementType(IfStatementContext ctx, boolean displayError) {
+    private VariableType checkIfStatementType(IfStatementContext ctx, ArrayList<Map<String, VariableType>> variablesCache, boolean displayError) {
         VariableType returnType = null;
         VariableType typeIfBranch = null;
         VariableType typeElseBranch = null;
 
         // Check if condition is a bool type
         if (ctx.ifStat().statement(0) != null) {
-            VariableType conditionType = checkStatementType(ctx.ifStat().statement(0));
+            VariableType conditionType = checkStatementType(ctx.ifStat().statement(0), variablesCache);
             if (displayError && conditionType != VariableType.bool) {
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + conditionType + "'. Required type is 'bool'.");
             }
         }
 
+        if (variablesCache != null) variablesCache.add(new HashMap<>());
         if (ctx.ifStat().statement(1) != null) {
-            typeIfBranch = checkStatementType(ctx.ifStat().statement(1));
+            typeIfBranch = checkStatementType(ctx.ifStat().statement(1), variablesCache);
         } else if (ctx.ifStat().block() != null) {
-            typeIfBranch = checkBlockType(ctx.ifStat().block());
+            typeIfBranch = checkBlockType(ctx.ifStat().block(), variablesCache);
         }
+        if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
 
         if (ctx.elseStat() != null) {
+            if (variablesCache != null) variablesCache.add(new HashMap<>());
             if (ctx.elseStat().statement() != null) {
-                typeElseBranch = checkStatementType(ctx.elseStat().statement());
+                typeElseBranch = checkStatementType(ctx.elseStat().statement(), variablesCache);
             } else if (ctx.elseStat().block() != null) {
-                typeElseBranch = checkBlockType(ctx.elseStat().block());
+                typeElseBranch = checkBlockType(ctx.elseStat().block(), variablesCache);
             }
+            if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
         } else {
             typeElseBranch = VariableType.unit;
         }
@@ -396,41 +423,55 @@ public class SemanticListener extends SEMANTICBaseListener {
         return returnType;
     }
 
-    private VariableType checkWhileStatementType(WhileStatementContext ctx) {
+    private VariableType checkWhileStatementType(WhileStatementContext ctx, ArrayList<Map<String, VariableType>> variablesCache) {
         VariableType returnType = VariableType.unit;
 
         if (ctx.statement(0) != null) {
-            VariableType conditionType = checkStatementType(ctx.statement(0));
+            VariableType conditionType = checkStatementType(ctx.statement(0), variablesCache);
             if (conditionType != VariableType.bool) {
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + conditionType + "'. Required type is 'bool'.");
             }
         }
 
+        if (variablesCache != null) variablesCache.add(new HashMap<>());
+        if (ctx.statement(1) != null) {
+            checkStatementType(ctx.statement(1), variablesCache);
+        } else if (ctx.block() != null) {
+            checkBlockType(ctx.block(), variablesCache);
+        }
+        if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
+
         return returnType;
     }
 
-    private VariableType checkLetStatementType(LetContext ctx) {
+    private VariableType checkLetStatementType(LetContext ctx, ArrayList<Map<String, VariableType>> variablesCache) {
         VariableType letType = stringToVarType(ctx.varType().getText());
+        if (variablesCache != null) variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), letType);
+
         VariableType typeFound = null;
 
         int statOffset = 0;
         if (ctx.statement().size() == 2 || (ctx.statement().size() == 1 && ctx.block() != null)) {
-            typeFound = checkStatementType(ctx.statement(statOffset++));
+            if (variablesCache != null) variablesCache.add(new HashMap<>());
+            typeFound = checkStatementType(ctx.statement(statOffset++), variablesCache);
 
             if (typeFound != letType)
                 errorOutput.add(fileName + ":" + ctx.statement(0).getStart().getLine() + ":" + (ctx.statement(0).getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid type in initializer of let statement. Found '" + typeFound + "'. Expected type is '" + letType + "'.");
+            if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
         }
 
+        if (variablesCache != null) variablesCache.add(new HashMap<>());
         if (ctx.statement(statOffset) != null) {
-            typeFound = checkStatementType(ctx.statement(statOffset));
+            typeFound = checkStatementType(ctx.statement(statOffset), variablesCache);
         } else if (ctx.block() != null) {
-            typeFound = checkBlockType(ctx.block());
+            typeFound = checkBlockType(ctx.block(), variablesCache);
         }
+        if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
 
         if (typeFound != letType)
             errorOutput.add(fileName + ":" + ctx.statement(0).getStart().getLine() + ":" + (ctx.statement(0).getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid type in body of let statement. Found '" + typeFound + "'. Expected type is '" + letType + "'.");
 
-        return typeFound;
+        return letType;
     }
 
     private VariableType checkBinaryOperation(BinaryOperationContext ctx) {
@@ -446,9 +487,21 @@ public class SemanticListener extends SEMANTICBaseListener {
         return typeFound;
     }
 
+    private VariableType checkVariableCacheForIdentifier(String identifier, ArrayList<Map<String, VariableType>> variablesCache) {
+        if (variablesCache != null) {
+            for (int i = variablesCache.size() - 1; i >= 0; i--) {
+                if (variablesCache.get(i).containsKey(identifier)) {
+                    return variablesCache.get(i).get(identifier);
+                }
+            }
+        }
+
+        return null;
+    }
 
 
 
+//region WRITE_ABSTRACT_TREE
 
     private StringBuilder handleProgram(ProgramContext ctx) {
 
@@ -646,7 +699,7 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         output.append(")");
         output.append(" : ");
-        output.append(checkIfStatementType(ifStatement, false));
+        output.append(checkIfStatementType(ifStatement, null,false));
 
         return output;
     }
@@ -704,7 +757,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
 
 
-        output.append(")");
+        output.append(") : " + let.varType().getText());
         return output;
     }
 
@@ -997,4 +1050,5 @@ public class SemanticListener extends SEMANTICBaseListener {
         return output;
     }
 
+//endregion
 }

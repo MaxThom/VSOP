@@ -1,12 +1,12 @@
 class MyClass {
-    myField : bool <- if (true) then "" else 32;
+    myField : bool <- if (true) then true else false;
 }
 class Main {
         main() : int32 {
             if (abc = true) then {
-                ""
+                1
             } else {
-                true
+                2
             }
 
             while (true) do {
