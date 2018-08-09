@@ -1,27 +1,55 @@
-class MyClass {
-    myField : bool <- if (true) then true else false;
-}
+
 class Main {
-        main() : int32 {
-            if (abc = true) then {
-                1
-            } else {
-                2
-            }
+    main(test: Men, test2: Human, test3: Boy) : int32 {
 
-            while (true) do {
+        test <- new Human; // WRONG
+        test2 <- new Men; // RIGHT
+        test3 <- new Men; // WRONG
+        test3 <- new Human; // WRONG
+        test <- new Boy; // RIGHT
+        test2 <- new Men; // RIGHT
+        test2 <- new Boy; // RIGHT
+        test3 <- new Boy; // RIGHT
+        test <- new Men; // RIGHT
+        test2 <- new Human; // RIGHT
+        test2 <- new Women; // WRONG
 
-            }
+        let j : Men in new Men;
+        let b : Men <- if (true) then new Men else new Men in new Men;
+        let p : Men <- if (true) then new Boy else new Men in new Men;
+        let d : Men <- if (true) then new Human else new Human in new Human;
 
-            let test: int32 in {0};
-
-            (*let xs : List <- (new Cons).init(0, (new Cons).init(
-                                             1, (new Cons).init(
-                                             2, new Nil)))
-                in print("List has length ").printInt32(xs.length()).print("\n");*)
-
-
-
-            878 + 232
-        }
+        0
+    }
 }
+
+class Boy extends Men {
+
+    drinkWater(amout: int32) : bool {
+
+        gotBigDick <- true;
+        true
+    }
+}
+
+class Men extends Human {
+
+    gotBigDick: bool;
+
+    drinkBeer(amout: int32) : bool {
+
+        gotBigDick <- true;
+        true
+    }
+}
+
+class Human {
+    age : int32;
+    name : string;
+    isSick : bool;
+
+    eatFood(amout: int32) : bool {
+        true
+    }
+}
+

@@ -267,7 +267,7 @@ public class Main {
             if (nl == -1)
                 text = text.substring(0, i);
             else
-                text = text.substring(0, i) + text.substring(nl+1);
+                text = text.substring(0, i) + text.substring(nl);
         }
 
         return text;

@@ -1,23 +1,34 @@
-class MyClass {
-    myField : int32 <- let x : int32 <- 42 in x;
+
+class List {
+isNil() : bool { true }
+length() : int32 { 0 }
 }
+
+
 class Main {
 
-    myField : int32 <- let x : int32 <- 42 in x;
-    myField2 : int32 <- let x : int32 <- 42 in x;
-    myField3 : int32 <- let x : int32 <- 42 in x;
+    test: Main <- self;
 
     main() : int32 { 0 }
 
-    test(bob: int32, lara: string, ginette: bool): int32 {
-        if (false) then {
-            let x: int32 in x;
-            lara
-        }
-        else
-            lara
 
-        bob
+
+}
+
+class Cons {
+    head : int32;
+    tail : List;
+
+    init(hd : int32, tl : List) : Cons {
+        head <- hd;
+        tail <- tl;
+
+        let p : Main <- self in self;
+
+        self
     }
+
+    head() : int32 { head }
+    isNil() : bool { false }
 
 }
