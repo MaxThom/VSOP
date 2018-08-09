@@ -1,6 +1,6 @@
 
 class LinkedList {
-    length() : List { new List }
+    length(a: int32, b: bool, c: int32, d: string, e: int32) : List { new List }
 }
 
 class List {
@@ -16,9 +16,11 @@ class Main {
 
     test: Main ;
 
-    main() : int32 {
-        (new Cons).tail.ll.length().ee.isNil();
-        main();
+    main(x: bool) : int32 {
+
+
+        (new Cons).tail.ll.length(main(x), x, (new List).length(), "", 1+(new Cons).head()).isNil();
+        main(true);
 
         0
     }

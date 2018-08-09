@@ -2074,8 +2074,8 @@ public class SEMANTICParser extends Parser {
 			return getRuleContext(UnOperationContext.class,0);
 		}
 		public TerminalNode OBJECT_IDENTIFIER() { return getToken(SEMANTICParser.OBJECT_IDENTIFIER, 0); }
-		public VarValueContext varValue() {
-			return getRuleContext(VarValueContext.class,0);
+		public IntegerContext integer() {
+			return getRuleContext(IntegerContext.class,0);
 		}
 		public CallMethodContext callMethod() {
 			return getRuleContext(CallMethodContext.class,0);
@@ -2119,7 +2119,7 @@ public class SEMANTICParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(346);
-				varValue();
+				integer();
 				}
 				break;
 			case 4:
@@ -2697,7 +2697,7 @@ public class SEMANTICParser extends Parser {
 		"\u014f\3\2\2\2\u0152\u0155\3\2\2\2\u0153\u0151\3\2\2\2\u0153\u0154\3\2"+
 		"\2\2\u0154\u0156\3\2\2\2\u0155\u0153\3\2\2\2\u0156\u0157\7\4\2\2\u0157"+
 		"\u0159\3\2\2\2\u0158\u0145\3\2\2\2\u0158\u014d\3\2\2\2\u0159-\3\2\2\2"+
-		"\u015a\u015f\5\60\31\2\u015b\u015f\7)\2\2\u015c\u015f\5> \2\u015d\u015f"+
+		"\u015a\u015f\5\60\31\2\u015b\u015f\7)\2\2\u015c\u015f\5:\36\2\u015d\u015f"+
 		"\5\20\t\2\u015e\u015a\3\2\2\2\u015e\u015b\3\2\2\2\u015e\u015c\3\2\2\2"+
 		"\u015e\u015d\3\2\2\2\u015f/\3\2\2\2\u0160\u0163\5\64\33\2\u0161\u0164"+
 		"\5(\25\2\u0162\u0164\5\4\3\2\u0163\u0161\3\2\2\2\u0163\u0162\3\2\2\2\u0164"+

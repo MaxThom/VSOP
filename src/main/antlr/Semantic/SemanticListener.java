@@ -339,17 +339,8 @@ public class SemanticListener extends SEMANTICBaseListener {
             typeFound = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
         } else if (ctx.statement() != null) {
             typeFound = checkStatementType(ctx.statement(), variablesCache);
-        }
-        else if (ctx.varValue() != null) {
-            if (ctx.varValue().integer() != null) {
-                typeFound = "int32";
-            } else if (ctx.varValue().STRING() != null) {
-                typeFound = "string";
-            } else if (ctx.varValue().getText().equals("true") || ctx.varValue().getText().equals("false")) {
-                typeFound = "bool";
-            } else if (ctx.varValue().VOID_OPERATOR() != null) {
-                typeFound = "unit";
-            }
+        } else if (ctx.varValue() != null) {
+            typeFound = checkVarValue(ctx.varValue(), variablesCache);
         }
 
         return typeFound;
@@ -553,7 +544,33 @@ public class SemanticListener extends SEMANTICBaseListener {
     private String checkCallFunction(SingleCallMethodContext ctx, String lastCallerType, ArrayList<Map<String, String>> variablesCache) {
         for (int i = 0; i < ctx.callFunction().size(); i++) {
             if (classes.containsKey(lastCallerType) && classes.get(lastCallerType).methods.containsKey(ctx.callFunction(i).OBJECT_IDENTIFIER().getText())) {
-                lastCallerType = classes.get(lastCallerType).methods.get(ctx.callFunction(i).OBJECT_IDENTIFIER().getText()).type;
+                MethodDefinition methodToCheck =classes.get(lastCallerType).methods.get(ctx.callFunction(i).OBJECT_IDENTIFIER().getText());
+                lastCallerType = methodToCheck.type;
+                //Check arguments
+                if (methodToCheck.formals.values().size() != ctx.callFunction(i).argument().size()) {
+                    errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method call '" + methodToCheck.name + "()' has a different number of arguments then is definition.");
+                    break;
+                }
+                int j = 0;
+                for (FormalDefinition formal : methodToCheck.formals.values()) {
+                    ArgumentContext arg = ctx.callFunction(i).argument(j++);
+                    String argType = "";
+                    if (arg.binaryOperation() != null) {
+                        argType = checkBinaryOperation(arg.binaryOperation());
+                    } else if (arg.callMethod() != null) {
+                        argType = checkCallMethod(arg.callMethod(), variablesCache);
+                    } else if (arg.newObj() != null) {
+                        argType = checkNewOperator(arg.newObj(), variablesCache);
+                    } else if (arg.OBJECT_IDENTIFIER() != null) {
+                        argType = checkVariableCacheForIdentifier(arg.OBJECT_IDENTIFIER(), variablesCache);
+                    } else if (arg.varValue() != null) {
+                        argType = checkVarValue(arg.varValue(), variablesCache);
+                    }
+
+                    if (!formal.type.equals(argType)) {
+                        errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method call '" + methodToCheck.name + "()' argument's #" + j + " is of type '" + argType + "'. Expecting '" + formal.type + "'.");
+                    }
+                }
             } else {
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method '" + ctx.callFunction(i).OBJECT_IDENTIFIER().getText() + "' does not exist in class '" + lastCallerType + "'.");
                 break;
@@ -561,6 +578,21 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
 
         return lastCallerType;
+    }
+
+    private String checkVarValue(VarValueContext ctx, ArrayList<Map<String, String>> variablesCache) {
+        String typeFound = "";
+        if (ctx.integer() != null) {
+            typeFound = "int32";
+        } else if (ctx.STRING() != null) {
+            typeFound = "string";
+        } else if (ctx.getText().equals("true") || ctx.getText().equals("false")) {
+            typeFound = "bool";
+        } else if (ctx.VOID_OPERATOR() != null) {
+            typeFound = "unit";
+        }
+
+        return typeFound;
     }
 
     private String checkVariableCacheForIdentifier(TerminalNode identifier, ArrayList<Map<String, String>> variablesCache) {
@@ -1137,8 +1169,10 @@ public class SemanticListener extends SEMANTICBaseListener {
             output.append(handleUnOperation(value.unOperation()));
         else if (value.callMethod() != null)
             output.append(handleCallMethod(value.callMethod()));
-        else if (value.varValue() != null)
-            output.append(handleVarValue(value.varValue()));
+        //else if (value.varValue() != null)
+            //output.append(handleVarValue(value.varValue()));
+        else if (value.integer() != null)
+            output.append(value.integer().getText() + " : int32");
         else
             output.append(value.getChild(0).getText());
 
