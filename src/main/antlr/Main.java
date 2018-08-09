@@ -3,8 +3,7 @@ import Lexer.LexerErrorListener;
 import Lexer.LexerListener;
 import Parser.ParserErrorListener;
 import Parser.ParserListener;
-import Semantic.SemanticErrorListener;
-import Semantic.SemanticListener;
+import Semantic.*;
 import VSOP.Lexer.LEXERLexer;
 import VSOP.Lexer.LEXERParser;
 import VSOP.Parser.PARSERLexer;
@@ -157,6 +156,9 @@ public class Main {
 
         SEMANTICParser parser = new SEMANTICParser(new CommonTokenStream(lexer));
         SemanticListener listener = new SemanticListener(file.getName());
+        listener.addLibrary(addIOClasses());
+        listener.addLibrary(addObjectClasses());
+
         parser.addParseListener(listener);
         parser.removeErrorListeners();
         parser.addErrorListener(SemanticErrorListener.getInstance(file.getName()));
@@ -271,5 +273,41 @@ public class Main {
         }
 
         return text;
+    }
+
+    private static ClassDefinition addIOClasses() {
+        ClassDefinition ioClass = new ClassDefinition("IO", "Object");
+        ioClass.classInitialized = true;
+
+        // READ
+        MethodDefinition print = new MethodDefinition("print", "IO");
+        print.formals.put("s", new FormalDefinition("s", "string", 0));
+        ioClass.methods.put(print.name, print);
+
+        MethodDefinition printBool = new MethodDefinition("printBool", "IO");
+        printBool.formals.put("b", new FormalDefinition("b", "bool", 0));
+        ioClass.methods.put(printBool.name, printBool);
+
+        MethodDefinition printInt32 = new MethodDefinition("printInt32", "IO");
+        printInt32.formals.put("i", new FormalDefinition("i", "int32", 0));
+        ioClass.methods.put(printInt32.name, printInt32);
+
+        // WRITE
+        MethodDefinition inputLine = new MethodDefinition("inputLine", "string");
+        ioClass.methods.put(inputLine.name, inputLine);
+
+        MethodDefinition inputBool = new MethodDefinition("inputBool", "bool");
+        ioClass.methods.put(inputBool.name, inputBool);
+
+        MethodDefinition inputInt32 = new MethodDefinition("inputInt32", "int32");
+        ioClass.methods.put(inputInt32.name, inputInt32);
+
+        return ioClass;
+    }
+
+    private static ClassDefinition addObjectClasses() {
+        ClassDefinition objectClass = new ClassDefinition("Object", "");
+        objectClass.classInitialized = true;
+        return objectClass;
     }
 }

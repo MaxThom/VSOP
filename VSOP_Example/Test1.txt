@@ -1,4 +1,5 @@
-class MyClass {
-    myMethod(c : bool, i : int32) : int32 { if c then 42 else i }
-}
+class One extends Two { }
+class Two extends Three { }
+class Three extends Four { }
+class Four extends One { }
 class Main { main() : int32 { 0 } }

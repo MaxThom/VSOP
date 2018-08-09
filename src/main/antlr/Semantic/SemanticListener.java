@@ -28,6 +28,10 @@ public class SemanticListener extends SEMANTICBaseListener {
         treeOutput = new StringBuilder();
     }
 
+    public void addLibrary(ClassDefinition newClass) {
+        classes.put(newClass.name, newClass);
+    }
+
     @Override
     public void exitProgram(ProgramContext ctx) {
         checkForMainClass(ctx);
@@ -93,6 +97,9 @@ public class SemanticListener extends SEMANTICBaseListener {
             classes.put(classDef.name, classDef);
     }
 
+
+
+
 //region CHECK_TYPES
 
     private void checkTypeCompileTime(ProgramContext ctx) {
@@ -145,7 +152,7 @@ public class SemanticListener extends SEMANTICBaseListener {
 
     private void checkForInheritance(ProgramContext ctx) {
         for (ClassDefinition classDef : classes.values()) {
-            if (!classDef.extend.equals("Object")) {
+            if (!classDef.extend.equals("Object") && !classDef.name.equals("Object")) {
 
                 ClassDefinitionContext err = ctx.classDefinition().stream().filter(x -> x.children.get(1).getText().equals(classDef.name)).findFirst().get();
 
@@ -163,6 +170,7 @@ public class SemanticListener extends SEMANTICBaseListener {
                     // Check if inheritance loop
                     if (classExtension.name.equals(classDef.extend) && classExtension.extend.equals(classDef.name)) {
                         errorOutput.add(fileName + ":" + err.getStart().getLine() + ":" + (err.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - classes '" + classDef.name + "' and '" + classExtension.name + "' cannot extend each other.");
+                        break;
                     }
 
                     // Check if field is already defined
@@ -329,8 +337,17 @@ public class SemanticListener extends SEMANTICBaseListener {
         variablesCache.remove(variablesCache.size()-1);
         variablesCache.remove(variablesCache.size()-1);
 
-        if (!methodType.equals(typeFound)) {
-            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid return type in method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
+        //if (!methodType.equals(typeFound)) {
+        //    errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid return type in method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
+        //}
+
+        if (!methodType.equals("")) {
+            if (isPrimitive(typeFound)) {
+                if (!methodType.equals(typeFound) && !typeFound.equals("") && !methodType.equals(""))
+                    errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid type in initializer of method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
+            } else if (!lookForInheritance(ctx, methodType, typeFound)) {
+                errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid type in initializer of method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
+            }
         }
     }
 
@@ -461,7 +478,7 @@ public class SemanticListener extends SEMANTICBaseListener {
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + typeIfBranch + "' in if branch and '" + typeElseBranch + "' in else branch.");
             }
 
-            if (!isPrimitive(typeIfBranch) && !isPrimitive(typeElseBranch) && !lookForInheritance(ctx, typeIfBranch, typeElseBranch)) {
+            if (!isPrimitive(typeIfBranch) && !isPrimitive(typeElseBranch) && lookForInheritance(ctx, typeIfBranch, typeElseBranch)) {
                 returnType = typeIfBranch;
             }
             else if (!isPrimitive(typeIfBranch) && !isPrimitive(typeElseBranch) && lookForInheritance(ctx, typeElseBranch, typeIfBranch)) {
@@ -525,8 +542,10 @@ public class SemanticListener extends SEMANTICBaseListener {
             errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid variable name. '" + fieldName + "' is a reserved keyword.");
         }
 
+        // Check if type exist
         String letType = ctx.varType().getText();
-        if (variablesCache != null) variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), letType);
+        if (!isPrimitive(ctx.varType().getText()) && !classes.containsKey(letType))
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - class '" + letType + "' is not defined.");
 
         String typeFound = "";
 
@@ -534,6 +553,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         int statOffset = 0;
         if (ctx.statement().size() == 2 || (ctx.statement().size() == 1 && ctx.block() != null)) {
             if (variablesCache != null) variablesCache.add(new HashMap<>());
+            if (variablesCache != null) variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), letType);
             //if (variablesCache != null) variablesCache.get(variablesCache.size()-1).put("self", letType); // Add self TODO : Check later for behaviour
             typeFound = checkStatementType(ctx.statement(statOffset++), variablesCache);
             treeOutput.append(", ");
@@ -550,6 +570,7 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         // Body
         if (variablesCache != null) variablesCache.add(new HashMap<>());
+        if (variablesCache != null) variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), letType);
         //if (variablesCache != null) variablesCache.get(variablesCache.size()-1).put("self", letType); // Add self TODO : Check later for behaviour
         if (ctx.statement(statOffset) != null) {
             typeFound = checkStatementType(ctx.statement(statOffset), variablesCache);
@@ -697,6 +718,8 @@ public class SemanticListener extends SEMANTICBaseListener {
             checkVarValue(value.varValue(), variablesCache);
         else if (value.newObj() != null)
             checkNewOperator(value.newObj(), variablesCache);
+        else if (value.ifStatement() != null)
+            checkIfStatementType(value.ifStatement(), variablesCache, true);
         else if (value.OBJECT_IDENTIFIER() != null) {
             String typeFound = checkVariableCacheForIdentifier(value.OBJECT_IDENTIFIER(), variablesCache);
             treeOutput.append(value.OBJECT_IDENTIFIER().getText() + " : " + typeFound);
@@ -758,9 +781,10 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         if (ctx.singleCallMethod(0).caller().size() == 0) {
             lastCallerType = currentClass.name;
-            treeOutput.append("self");
+            treeOutput.append("self : " + currentClass.name);
         } else if (ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER() != null) {
             lastCallerType = checkVariableCacheForIdentifier(ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER(), variablesCache);
+            treeOutput.append(ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER().getText() + " : " + lastCallerType);
         } else if (ctx.singleCallMethod(0).caller(0).newObj() != null) {
             lastCallerType = checkNewOperator(ctx.singleCallMethod(0).caller(0).newObj(), variablesCache);
         }
@@ -807,8 +831,24 @@ public class SemanticListener extends SEMANTICBaseListener {
     private String checkCallFunction(SingleCallMethodContext ctx, String lastCallerType, ArrayList<Map<String, String>> variablesCache) {
         for (int i = 0; i < ctx.callFunction().size(); i++) {
             treeOutput.append(ctx.callFunction(i).OBJECT_IDENTIFIER().getText());
-            if (classes.containsKey(lastCallerType) && classes.get(lastCallerType).methods.containsKey(ctx.callFunction(i).OBJECT_IDENTIFIER().getText())) {
-                MethodDefinition methodToCheck = classes.get(lastCallerType).methods.get(ctx.callFunction(i).OBJECT_IDENTIFIER().getText());
+
+            String classToCheck = lastCallerType;
+            boolean isClassMethodFound = false;
+            while(true) {
+
+                if (classes.containsKey(classToCheck)) {
+                    if (classes.get(classToCheck).methods.containsKey(ctx.callFunction(i).OBJECT_IDENTIFIER().getText())) {
+                        isClassMethodFound = true;
+                        break;
+                    }
+                    classToCheck = classes.get(classToCheck).extend;
+                } else {
+                    break;
+                }
+            }
+
+            if (isClassMethodFound) {
+                MethodDefinition methodToCheck = classes.get(classToCheck).methods.get(ctx.callFunction(i).OBJECT_IDENTIFIER().getText());
                 lastCallerType = methodToCheck.type;
                 //Check arguments
                 if (methodToCheck.formals.values().size() != ctx.callFunction(i).argument().size()) {
@@ -832,13 +872,20 @@ public class SemanticListener extends SEMANTICBaseListener {
                         argType = checkNewOperator(arg.newObj(), variablesCache);
                     } else if (arg.OBJECT_IDENTIFIER() != null) {
                         argType = checkVariableCacheForIdentifier(arg.OBJECT_IDENTIFIER(), variablesCache);
+                        treeOutput.append(arg.OBJECT_IDENTIFIER().getText() + " : " + argType);
                     } else if (arg.varValue() != null) {
                         argType = checkVarValue(arg.varValue(), variablesCache);
                     }
 
-                    if (!formal.type.equals(argType)) {
+
+                    if (isPrimitive(argType)) {
+                        if (!formal.type.equals(argType))
+                            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method call '" + methodToCheck.name + "()' argument's #" + j + " is of type '" + argType + "'. Expecting '" + formal.type + "'.");
+                    }
+                    else if (!lookForInheritance(ctx, formal.type, argType)) {
                         errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method call '" + methodToCheck.name + "()' argument's #" + j + " is of type '" + argType + "'. Expecting '" + formal.type + "'.");
                     }
+
 
                     treeOutput.append(", ");
                 }
@@ -914,27 +961,31 @@ public class SemanticListener extends SEMANTICBaseListener {
         return typeFound;
     }
 
-    private boolean lookForInheritance(ParserRuleContext ctx, String varType, String typeFound) {
+    private boolean lookForInheritance(ParserRuleContext ctx, String parent, String child) {
 
-            ClassDefinition classToCheck =  classes.get(typeFound);
+            ClassDefinition classToCheck =  classes.get(child);
             if (classToCheck != null) {
                 while (true) {
 
-                    if (varType.equals(classToCheck.name) && !varType.equals("")) {
+                    if (parent.equals(classToCheck.name) && !parent.equals("")) {
                         return true;
                     }
 
-                    if (classToCheck.extend.equals("Object"))
-                        break;
+                    //if (classToCheck.extend.equals("Object"))
+                    //    break;
+                    // TODO : Check if empty extend of object make crash
                     if (classes.containsKey(classToCheck.extend))
                         classToCheck = classes.get(classToCheck.extend);
-                    else {
-                        errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - class '" + typeFound + "' is not defined.");
+                    else if (classToCheck.extend.equals("")) {
+                        break;
+                    } else {
+                        errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - class '" + child + "' is not defined.");
+                        break;
                     }
 
                 }
             } else {
-                errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - class '" + typeFound + "' is not defined.");
+                errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - class '" + child + "' is not defined.");
             }
 
         return false;
