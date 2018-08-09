@@ -16,11 +16,11 @@ class Main {
 
     test: Main ;
 
-    main(x: bool) : int32 {
+    main() : int32 {
 
 
-        (new Cons).tail.ll.length(main(x), x, (new List).length(), "", 1+(new Cons).head()).isNil();
-        main(true);
+        (new Cons).tail.ll.length(main(), true, (new List).length(), "", 1+(new Cons).head()).isNil();
+        main();
 
         0
     }
@@ -37,7 +37,9 @@ class Cons {
         head <- hd;
         tail <- tl;
 
-        let p : Main <- new Main in new Main;
+        let p : Cons <- self in new Cons;
+
+        p <- self;
 
         self
     }

@@ -114,8 +114,8 @@ public class SemanticListener extends SEMANTICBaseListener {
     }
 
     private void checkForMainClass(ProgramContext ctx) {
-        if (!classes.containsKey("Main") || !classes.get("Main").methods.containsKey("main") || !classes.get("Main").methods.get("main").type.equals("int32")) {
-            errorOutput.add(fileName + ":" + 1 + ":" + 1 + ":" + " semantic error - a vsop program must define a Main class with a main method of type int32");
+        if (!classes.containsKey("Main") || !classes.get("Main").methods.containsKey("main") || !classes.get("Main").methods.get("main").type.equals("int32") || !classes.get("Main").methods.get("main").formals.isEmpty()) {
+            errorOutput.add(fileName + ":" + 1 + ":" + 1 + ":" + " semantic error - a vsop program must define a Main class with a main method of type int32 without any arguments");
         }
     }
 
