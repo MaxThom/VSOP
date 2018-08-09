@@ -19,7 +19,7 @@ public class SemanticListener extends SEMANTICBaseListener {
     private ClassDefinition currentClass;
     private String fileName;
 
-    public String treeOutput;
+    public StringBuilder treeOutput;
     public ArrayList<String> errorOutput;
 
     public SemanticListener(String fileName) {
@@ -27,7 +27,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         errorOutput = new ArrayList<>();
         currentClass = null;
         this.fileName = fileName;
-        treeOutput = "";
+        treeOutput = new StringBuilder();
     }
 
     @Override
@@ -37,7 +37,8 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         checkTypeCompileTime(ctx);
 
-        this.treeOutput = handleProgram(ctx).toString();
+        System.out.println(treeOutput.toString());
+        this.treeOutput = handleProgram(ctx);
     }
 
     @Override
@@ -96,21 +97,45 @@ public class SemanticListener extends SEMANTICBaseListener {
 //region CHECK_TYPES
 
     private void checkTypeCompileTime(ProgramContext ctx) {
+        treeOutput.append("[");
+
         for (ClassDefinitionContext classDef : ctx.classDefinition()) {
+            // Class info
+            treeOutput.append("Class(");
+            treeOutput.append(classDef.TYPE_IDENTIFIER(0).getText());
+            treeOutput.append(", ");
+            treeOutput.append(classDef.TYPE_IDENTIFIER(1) != null ? classDef.TYPE_IDENTIFIER(1).getText() : "Object");
+
             currentClass = classes.get(classDef.TYPE_IDENTIFIER(0).getText());
             List<FieldContext> fields = classDef.children.stream().filter(x -> x instanceof  FieldContext).map(x -> (FieldContext) x).collect(Collectors.toList());
             List<MethodDefinitionContext> methods = classDef.children.stream().filter(x -> x instanceof  MethodDefinitionContext).map(x -> (MethodDefinitionContext) x).collect(Collectors.toList());
 
+            // Fields
+            treeOutput.append(", [");
             for (FieldContext field: fields) {
                 checkFieldDefinition(field);
+                treeOutput.append(", ");
             }
+            if (classDef.field().size() > 0) treeOutput.delete(treeOutput.length()-2, treeOutput.length());
+            treeOutput.append("]");
 
             currentClass.classInitialized = true;
 
+            // Methods
+            treeOutput.append(", [");
             for (MethodDefinitionContext method: methods) {
                 checkMethodDefinition(method);
+                treeOutput.append(", ");
             }
+            if (classDef.methodDefinition().size() > 0) treeOutput.delete(treeOutput.length()-2, treeOutput.length());
+            treeOutput.append("]");
+
+            treeOutput.append(")");
+            treeOutput.append(", ");
         }
+
+        if ( ctx.classDefinition().size() > 0) treeOutput.delete(treeOutput.length()-2, treeOutput.length());
+        treeOutput.append("]");
     }
 
     private void checkForMainClass(ProgramContext ctx) {
@@ -183,6 +208,12 @@ public class SemanticListener extends SEMANTICBaseListener {
     }
 
     private void checkFieldDefinition(FieldContext ctx) {
+        treeOutput.append("Field(");
+        treeOutput.append(ctx.OBJECT_IDENTIFIER().getText());
+        treeOutput.append(", ");
+        treeOutput.append(ctx.varType().getText());
+
+
         ArrayList<Map<String, String>> variablesCache = new ArrayList<>();
         String fieldName = ctx.OBJECT_IDENTIFIER().getText();
         if (fieldName.equals("self")) {
@@ -205,9 +236,11 @@ public class SemanticListener extends SEMANTICBaseListener {
             if (variablesCache != null) variablesCache.add(new HashMap<>());
             typeFound = checkStatementType(ctx.statement(), variablesCache);
             if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
+            treeOutput.append(", ");
         }
         else if (ctx.block() != null) {
             typeFound = checkBlockType(ctx.block(), variablesCache);
+            treeOutput.append(", ");
         }
         else
             fieldType = "";
@@ -224,9 +257,17 @@ public class SemanticListener extends SEMANTICBaseListener {
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - cannot initialize field '" + ctx.OBJECT_IDENTIFIER() + "' with self class. Object is not yet initialized.");
             }
         }
+
+        treeOutput.append(")");
     }
 
     private void checkMethodDefinition(MethodDefinitionContext ctx) {
+        //Method Info
+        treeOutput.append("Method(");
+        treeOutput.append(ctx.OBJECT_IDENTIFIER());
+        treeOutput.append(", ");
+
+
         ArrayList<Map<String, String>> variablesCache = new ArrayList<>();
         String methodType = ctx.varType().getText();
         String typeFound = null;
@@ -256,6 +297,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
 
         // Add formals
+        treeOutput.append("[");
         variablesCache.add(new HashMap<>());
         for (FormalDefinition formal : currentClass.methods.get(ctx.OBJECT_IDENTIFIER().getText()).formals.values()) {
             if (formal.name.equals("self"))
@@ -264,11 +306,23 @@ public class SemanticListener extends SEMANTICBaseListener {
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - class '" + formal.type + "' is not defined.");
 
             variablesCache.get(variablesCache.size()-1).put(formal.name, formal.type);
+            treeOutput.append(formal.name);
+            treeOutput.append(" : ");
+            treeOutput.append(formal.type);
+            treeOutput.append(", ");
         }
+        if (ctx.formal().size() > 0) treeOutput.delete(treeOutput.length()-2, treeOutput.length());
+        treeOutput.append("]");
+
+        treeOutput.append(", ");
+        treeOutput.append(methodType);
+        treeOutput.append(", ");
 
         if (ctx.block() != null) {
             typeFound = checkBlockType(ctx.block(), variablesCache);
         }
+
+        treeOutput.append(")");
 
         variablesCache.remove(variablesCache.size()-1);
         variablesCache.remove(variablesCache.size()-1);
@@ -276,10 +330,12 @@ public class SemanticListener extends SEMANTICBaseListener {
         if (!methodType.equals(typeFound)) {
             errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid return type in method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
         }
-
     }
 
     private String checkBlockType(BlockContext ctx, ArrayList<Map<String, String>> variablesCache) {
+        if (ctx.children.size() > 3)
+            treeOutput.append("[");
+
         String typeFound = "unit";
         if (variablesCache != null) variablesCache.add(new HashMap<>());
 
@@ -294,7 +350,7 @@ public class SemanticListener extends SEMANTICBaseListener {
                 } else if (child instanceof StatementContext) {
                     checkStatementType((StatementContext) child, variablesCache);
                 }
-
+                treeOutput.append(", ");
             }
         }
 
@@ -312,6 +368,11 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
 
         if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
+
+        if (treeOutput.length() > 1) treeOutput.delete(treeOutput.length()-2, treeOutput.length());
+        if (ctx.children.size() > 3) {
+            treeOutput.append("]");
+        }
 
         return typeFound;
     }
