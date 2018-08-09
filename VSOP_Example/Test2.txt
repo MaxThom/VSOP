@@ -19,13 +19,22 @@ class Main {
     main() : int32 {
 
 
+        (new Cons).init(1, new List);
         (new Cons).tail.ll.length(main(), true, (new List).length(), "", 1+(new Cons).head()).isNil();
+        print("List has length ").printInt32(2).print("\n");
+
         main();
 
         0
     }
 
+    print(txt: string) : Main {
+        self
+    }
 
+    printInt32(txt: int32) : Main {
+        self
+    }
 
 }
 

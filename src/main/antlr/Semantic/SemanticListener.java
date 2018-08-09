@@ -2,12 +2,10 @@ package Semantic;
 
 
 import VSOP.Semantic.SEMANTICBaseListener;
-import jdk.nashorn.internal.ir.Block;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.time.temporal.ValueRange;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,8 +35,8 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         checkTypeCompileTime(ctx);
 
-        System.out.println(treeOutput.toString());
-        this.treeOutput = handleProgram(ctx);
+        //System.out.println(treeOutput.toString());
+        //this.treeOutput = handleProgram(ctx);
     }
 
     @Override
@@ -54,8 +52,9 @@ public class SemanticListener extends SEMANTICBaseListener {
         for (MethodDefinitionContext method: methods) {
             MethodDefinition methodDef = new MethodDefinition(method.OBJECT_IDENTIFIER().getText(), method.varType().getText());
 
+            int formalPos = 0;
             for (FormalContext formal : method.formal()) {
-                FormalDefinition formalDef = new FormalDefinition(formal.OBJECT_IDENTIFIER().getText(), formal.varType().getText());
+                FormalDefinition formalDef = new FormalDefinition(formal.OBJECT_IDENTIFIER().getText(), formal.varType().getText(), formalPos++);
 
                 // Check for same formal name
                 if (methodDef.formals.containsKey(formalDef.name)) {
@@ -233,14 +232,14 @@ public class SemanticListener extends SEMANTICBaseListener {
         variablesCache.get(variablesCache.size()-1).put("self", currentClass.name);
 
         if (ctx.statement() != null) {
+            treeOutput.append(", ");
             if (variablesCache != null) variablesCache.add(new HashMap<>());
             typeFound = checkStatementType(ctx.statement(), variablesCache);
             if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
-            treeOutput.append(", ");
         }
         else if (ctx.block() != null) {
-            typeFound = checkBlockType(ctx.block(), variablesCache);
             treeOutput.append(", ");
+            typeFound = checkBlockType(ctx.block(), variablesCache);
         }
         else
             fieldType = "";
@@ -299,7 +298,10 @@ public class SemanticListener extends SEMANTICBaseListener {
         // Add formals
         treeOutput.append("[");
         variablesCache.add(new HashMap<>());
-        for (FormalDefinition formal : currentClass.methods.get(ctx.OBJECT_IDENTIFIER().getText()).formals.values()) {
+
+        List<FormalDefinition> formals = new ArrayList<>(currentClass.methods.get(ctx.OBJECT_IDENTIFIER().getText()).formals.values());
+        Collections.sort(formals, Comparator.comparingInt(FormalDefinition::getPosition));
+        for (FormalDefinition formal : formals) {
             if (formal.name.equals("self"))
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid formal name. '" + formal.name + "' is a reserved keyword.");
             else if (!isPrimitive(formal.type) && !classes.containsKey(formal.type))
@@ -339,7 +341,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         String typeFound = "unit";
         if (variablesCache != null) variablesCache.add(new HashMap<>());
 
-        for (int i = 0; i < ctx.children.size()-1 ; i++) {
+        for (int i = 0; i < ctx.children.size()-2 ; i++) {
             if (ctx.children.get(i) instanceof ParserRuleContext) {
                 ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
 
@@ -369,9 +371,9 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
 
-        if (treeOutput.length() > 1) treeOutput.delete(treeOutput.length()-2, treeOutput.length());
+
         if (ctx.children.size() > 3) {
-            treeOutput.append("]");
+            treeOutput.append("] : " + typeFound);
         }
 
         return typeFound;
@@ -389,15 +391,16 @@ public class SemanticListener extends SEMANTICBaseListener {
         } else if (ctx.let() != null) {
             typeFound = checkLetStatementType(ctx.let(), variablesCache);
         } else if (ctx.unOperation() != null) {
-
+            typeFound = checkUnOperation(ctx.unOperation(), variablesCache);
         } else if (ctx.binaryOperation() != null) {
-            typeFound = checkBinaryOperation(ctx.binaryOperation());
+            typeFound = checkBinaryOperation(ctx.binaryOperation(), variablesCache);
         } else if (ctx.callMethod() != null) {
             typeFound = checkCallMethod(ctx.callMethod(), variablesCache);
         } else if (ctx.newObj() != null) {
             typeFound = checkNewOperator(ctx.newObj(), variablesCache);
         } else if (ctx.OBJECT_IDENTIFIER() != null) {
             typeFound = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
+            treeOutput.append(ctx.OBJECT_IDENTIFIER().getText() + " : " + typeFound);
         } else if (ctx.statement() != null) {
             typeFound = checkStatementType(ctx.statement(), variablesCache);
         } else if (ctx.varValue() != null) {
@@ -408,6 +411,9 @@ public class SemanticListener extends SEMANTICBaseListener {
     }
 
     private String checkIfStatementType(IfStatementContext ctx, ArrayList<Map<String, String>> variablesCache, boolean displayError) {
+        treeOutput.append("If(");
+
+        boolean onlyIf = false, onlyElse = false;
         String returnType = "";
         String typeIfBranch = "";
         String typeElseBranch = "";
@@ -418,44 +424,72 @@ public class SemanticListener extends SEMANTICBaseListener {
             if (displayError && !conditionType.equals("bool")) {
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + conditionType + "'. Required type is 'bool'.");
             }
+
+            if (ctx.ifStat().statement(0).getText().equals("true"))
+                onlyIf = true;
+            else if (ctx.ifStat().statement(0).getText().equals("false"))
+                onlyElse = true;
         }
 
         // Get If branch type
         if (variablesCache != null) variablesCache.add(new HashMap<>());
         if (ctx.ifStat().statement(1) != null) {
+            treeOutput.append(", ");
             typeIfBranch = checkStatementType(ctx.ifStat().statement(1), variablesCache);
         } else if (ctx.ifStat().block() != null) {
+            treeOutput.append(", ");
             typeIfBranch = checkBlockType(ctx.ifStat().block(), variablesCache);
         }
-        if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
+        if (variablesCache != null) variablesCache.remove(variablesCache.size() - 1);
 
         // Get Else branch type
         if (ctx.elseStat() != null) {
+            treeOutput.append(", ");
             if (variablesCache != null) variablesCache.add(new HashMap<>());
             if (ctx.elseStat().statement() != null) {
                 typeElseBranch = checkStatementType(ctx.elseStat().statement(), variablesCache);
             } else if (ctx.elseStat().block() != null) {
                 typeElseBranch = checkBlockType(ctx.elseStat().block(), variablesCache);
             }
-            if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
+            if (variablesCache != null) variablesCache.remove(variablesCache.size() - 1);
         } else {
             typeElseBranch = "unit";
         }
 
-        if (displayError && !typeIfBranch.equals(typeElseBranch) && (!typeIfBranch.equals("unit") && !typeElseBranch.equals("unit")) && !lookForInheritance(ctx, typeIfBranch, typeElseBranch) && !lookForInheritance(ctx, typeElseBranch, typeIfBranch)) {
-            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + typeIfBranch + "' in if branch and '" + typeElseBranch + "' in else branch.");
-        }
+        //if (!onlyIf && !onlyElse) {
+            if (displayError && !typeIfBranch.equals(typeElseBranch) && (!typeIfBranch.equals("unit") && !typeElseBranch.equals("unit")) && !lookForInheritance(ctx, typeIfBranch, typeElseBranch) && !lookForInheritance(ctx, typeElseBranch, typeIfBranch)) {
+                errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + typeIfBranch + "' in if branch and '" + typeElseBranch + "' in else branch.");
+            }
 
-        if (typeIfBranch.equals("unit") || typeElseBranch.equals("unit")) {
-            returnType = "unit";
-        } else {
-            returnType = typeIfBranch;
-        }
+            if (!isPrimitive(typeIfBranch) && !isPrimitive(typeElseBranch) && !lookForInheritance(ctx, typeIfBranch, typeElseBranch)) {
+                returnType = typeIfBranch;
+            }
+            else if (!isPrimitive(typeIfBranch) && !isPrimitive(typeElseBranch) && lookForInheritance(ctx, typeElseBranch, typeIfBranch)) {
+                returnType = typeElseBranch;
+            }
+            else if (typeIfBranch.equals("unit") || typeElseBranch.equals("unit")) {
+                returnType = "unit";
+            } else {
+                returnType = typeIfBranch;
+            }
+        /*} else {
+            if (onlyIf)
+                returnType = typeIfBranch;
+            else if (onlyElse)
+                returnType = typeElseBranch;
+        }*/
+
+
+
+        treeOutput.append(")");
+        treeOutput.append(" : ");
+        treeOutput.append(returnType);
 
         return returnType;
     }
 
     private String checkWhileStatementType(WhileStatementContext ctx, ArrayList<Map<String, String>> variablesCache) {
+        treeOutput.append("While(");
         String returnType = "unit";
 
         if (ctx.statement(0) != null) {
@@ -467,16 +501,25 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         if (variablesCache != null) variablesCache.add(new HashMap<>());
         if (ctx.statement(1) != null) {
+            treeOutput.append(", ");
             checkStatementType(ctx.statement(1), variablesCache);
         } else if (ctx.block() != null) {
+            treeOutput.append(", ");
             checkBlockType(ctx.block(), variablesCache);
         }
         if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
 
+        treeOutput.append(") : unit");
         return returnType;
     }
 
     private String checkLetStatementType(LetContext ctx, ArrayList<Map<String, String>> variablesCache) {
+        treeOutput.append("Let(");
+        treeOutput.append(ctx.OBJECT_IDENTIFIER().getText());
+        treeOutput.append(", ");
+        treeOutput.append(ctx.varType().getText());
+        treeOutput.append(", ");
+
         String fieldName = ctx.OBJECT_IDENTIFIER().getText();
         if (fieldName.equals("self")) {
             errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid variable name. '" + fieldName + "' is a reserved keyword.");
@@ -487,12 +530,13 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         String typeFound = "";
 
+        // Initializer
         int statOffset = 0;
         if (ctx.statement().size() == 2 || (ctx.statement().size() == 1 && ctx.block() != null)) {
             if (variablesCache != null) variablesCache.add(new HashMap<>());
             //if (variablesCache != null) variablesCache.get(variablesCache.size()-1).put("self", letType); // Add self TODO : Check later for behaviour
             typeFound = checkStatementType(ctx.statement(statOffset++), variablesCache);
-
+            treeOutput.append(", ");
 
             if (isPrimitive(typeFound)) {
                 if (!typeFound.equals(letType))
@@ -504,8 +548,9 @@ public class SemanticListener extends SEMANTICBaseListener {
             if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
         }
 
+        // Body
         if (variablesCache != null) variablesCache.add(new HashMap<>());
-        if (variablesCache != null) variablesCache.get(variablesCache.size()-1).put("self", letType); // Add self TODO : Check later for behaviour
+        //if (variablesCache != null) variablesCache.get(variablesCache.size()-1).put("self", letType); // Add self TODO : Check later for behaviour
         if (ctx.statement(statOffset) != null) {
             typeFound = checkStatementType(ctx.statement(statOffset), variablesCache);
         } else if (ctx.block() != null) {
@@ -513,33 +558,160 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
         if (variablesCache != null) variablesCache.remove(variablesCache.size()-1);
 
-        if (isPrimitive(typeFound)) {
+        /*if (isPrimitive(typeFound)) {
             if (!typeFound.equals(letType))
                 errorOutput.add(fileName + ":" + ctx.statement(0).getStart().getLine() + ":" + (ctx.statement(0).getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid type in body of let statement. Found '" + typeFound + "'. Expected type is '" + letType + "'.");
         }  else if (!lookForInheritance(ctx, letType, typeFound)) {
             errorOutput.add(fileName + ":" + ctx.statement(0).getStart().getLine() + ":" + (ctx.statement(0).getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid type in body of let statement. Found '" + typeFound + "'. Expected type is '" + letType + "'.");
-        }
+        }*/
 
-        return letType;
+        treeOutput.append(") : " + typeFound);
+        return typeFound;
     }
 
-    private String checkBinaryOperation(BinaryOperationContext ctx) {
+    private String checkBinaryOperation(BinaryOperationContext ctx, ArrayList<Map<String, String>> variablesCache) {
         String typeFound = "";
 
         if (ctx.AND_OPERATOR().size() > 0)
             typeFound = "bool";
         else if (ctx.condition(0).CONDITIONAL_OPERATOR().size() > 0)
             typeFound = "bool";
+        else if (ctx.condition(0) != null && ctx.condition(0).term(0) != null &&
+                 ctx.condition(0).term(0).factor(0) != null && ctx.condition(0).term(0).factor(0).value(0) != null &&
+                 ctx.condition(0).term(0).factor(0).value(0).unOperation() != null &&
+                 !ctx.condition(0).term(0).factor(0).value(0).unOperation().getText().substring(0, 1).equals("-"))
+            typeFound = "bool";
         else
             typeFound = "int32";
+
+        handleBinaryOperation2(ctx, variablesCache);
 
         return typeFound;
     }
 
+    private void handleBinaryOperation2(BinaryOperationContext binOp, ArrayList<Map<String, String>> variablesCache) {
+        if (binOp.condition().size() == 1) {
+            handleCondition2(binOp.condition(0), variablesCache);
+        } else {
+
+            for (int i = binOp.AND_OPERATOR().size()-1 ; i >= 0; i--) {
+                treeOutput.append("BinOp(");
+                treeOutput.append(binOp.AND_OPERATOR(i).getText());
+                treeOutput.append(", ");
+            }
+
+            handleCondition2(binOp.condition(0), variablesCache);
+
+            for (int j = 1 ; j < binOp.AND_OPERATOR().size(); j++) {
+                treeOutput.append(", ");
+                handleCondition2(binOp.condition(j), variablesCache);
+                treeOutput.append(") : bool");
+            }
+
+            treeOutput.append(", ");
+            handleCondition2(binOp.condition(binOp.AND_OPERATOR().size()), variablesCache);
+            treeOutput.append(") : bool");
+        }
+    }
+
+    private void handleCondition2(ConditionContext cond, ArrayList<Map<String, String>> variablesCache) {
+        if (cond.term().size() == 1) {
+            handleTerm2(cond.term(0), variablesCache);
+        } else {
+
+            for (int i = cond.CONDITIONAL_OPERATOR().size()-1 ; i >= 0; i--) {
+                treeOutput.append("BinOp(");
+                treeOutput.append(cond.CONDITIONAL_OPERATOR(i).getText());
+                treeOutput.append(", ");
+            }
+
+            handleTerm2(cond.term(0), variablesCache);
+
+            for (int j = 1 ; j < cond.CONDITIONAL_OPERATOR().size(); j++) {
+                treeOutput.append(", ");
+                handleTerm2(cond.term(j), variablesCache);
+                treeOutput.append(") : bool");
+            }
+
+            treeOutput.append(", ");
+            handleTerm2(cond.term(cond.CONDITIONAL_OPERATOR().size()), variablesCache);
+            treeOutput.append(") : bool");
+        }
+    }
+
+    private void handleTerm2(TermContext term, ArrayList<Map<String, String>> variablesCache) {
+        if (term.factor().size() == 1) {
+            handleFactor2(term.factor(0), variablesCache);
+        } else {
+            for (int i = term.termOperator().size()-1 ; i >= 0; i--) {
+                treeOutput.append("BinOp(");
+                treeOutput.append(term.termOperator(i).getText());
+                treeOutput.append(", ");
+            }
+
+           handleFactor2(term.factor(0), variablesCache);
+
+            for (int j = 1 ; j < term.termOperator().size(); j++) {
+                treeOutput.append(", ");
+                handleFactor2(term.factor(j), variablesCache);
+                treeOutput.append(") : int32");
+            }
+
+            treeOutput.append(", ");
+            handleFactor2(term.factor(term.termOperator().size()), variablesCache);
+            treeOutput.append(") : int32");
+        }
+    }
+
+    private void handleFactor2(FactorContext factor, ArrayList<Map<String, String>> variablesCache) {
+        if (factor.value().size() == 1) {
+            handleValue2(factor.value(0), variablesCache);
+        } else {
+
+            for (int i = factor.FACTOR_OPERATOR().size()-1 ; i >= 0; i--) {
+                treeOutput.append("BinOp(");
+                treeOutput.append(factor.FACTOR_OPERATOR(i).getText());
+                treeOutput.append(", ");
+            }
+
+            handleValue2(factor.value(0), variablesCache);
+
+            for (int j = 1 ; j < factor.FACTOR_OPERATOR().size(); j++) {
+                treeOutput.append(", ");
+                handleValue2(factor.value(j), variablesCache);
+                treeOutput.append(") : int32");
+            }
+
+            treeOutput.append(", ");
+            handleValue2(factor.value(factor.FACTOR_OPERATOR().size()), variablesCache);
+            treeOutput.append(") : int32");
+        }
+    }
+
+    private void handleValue2(ValueContext value, ArrayList<Map<String, String>> variablesCache) {
+        if (value.unOperation() != null)
+            checkUnOperation(value.unOperation(), variablesCache);
+        else if (value.callMethod() != null)
+            checkCallMethod(value.callMethod(), variablesCache);
+        else if (value.varValue() != null)
+            checkVarValue(value.varValue(), variablesCache);
+        else if (value.newObj() != null)
+            checkNewOperator(value.newObj(), variablesCache);
+        else if (value.OBJECT_IDENTIFIER() != null) {
+            String typeFound = checkVariableCacheForIdentifier(value.OBJECT_IDENTIFIER(), variablesCache);
+            treeOutput.append(value.OBJECT_IDENTIFIER().getText() + " : " + typeFound);
+
+        }
+    }
+
     private String checkAssignOperation(AssignContext ctx, ArrayList<Map<String, String>> variablesCache) {
+        String varType = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
+        treeOutput.append("Assign(");
+        treeOutput.append(ctx.OBJECT_IDENTIFIER().getText());
+        treeOutput.append(", ");
         String typeFound = "";
 
-        String varType = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
+
         if (ctx.statement() != null) {
             typeFound = checkStatementType(ctx.statement(), variablesCache);
         }
@@ -551,22 +723,42 @@ public class SemanticListener extends SEMANTICBaseListener {
             errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - cannot assign '" + typeFound + "' to variable '" + ctx.OBJECT_IDENTIFIER().getText() + "' of type '" + varType + "'.");
         }
 
+        treeOutput.append(")" + " : " + varType);
         return typeFound;
     }
 
     private String checkNewOperator(NewObjContext ctx, ArrayList<Map<String, String>> variablesCache) {
+        treeOutput.append("New(");
+        treeOutput.append(ctx.TYPE_IDENTIFIER().getText());
+        treeOutput.append(") : ");
+        treeOutput.append(ctx.TYPE_IDENTIFIER().getText());
+
         // Check if class exist
-        if (!classes.containsKey(ctx.TYPE_IDENTIFIER().getText()))
+        if (!classes.containsKey(ctx.TYPE_IDENTIFIER().getText()) && !ctx.TYPE_IDENTIFIER().getText().equals("Object"))
             errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - class '" + ctx.TYPE_IDENTIFIER().getText() + "' is not defined.");
 
         return ctx.TYPE_IDENTIFIER().getText();
     }
 
     private String checkCallMethod(CallMethodContext ctx, ArrayList<Map<String, String>> variablesCache) {
+        if (!(ctx.parent.parent instanceof BlockContext) && ctx.singleCallMethod().size() > 1) {
+            treeOutput.append("[");
+        }
+
+        for (SingleCallMethodContext call : ctx.singleCallMethod()) {
+            for (int i = 0; i < call.callFunction().size(); i++) {
+                treeOutput.append("Call(");
+            }
+            for (int i = 0; i < call.caller().size(); i++) {
+                //treeOutput.append("Call(");
+            }
+        }
+
         String lastCallerType = "";
 
-        if (ctx.singleCallMethod(0).caller().size() == 0){
+        if (ctx.singleCallMethod(0).caller().size() == 0) {
             lastCallerType = currentClass.name;
+            treeOutput.append("self");
         } else if (ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER() != null) {
             lastCallerType = checkVariableCacheForIdentifier(ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER(), variablesCache);
         } else if (ctx.singleCallMethod(0).caller(0).newObj() != null) {
@@ -575,17 +767,25 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         int firstOffset = 1;
         for (SingleCallMethodContext call : ctx.singleCallMethod()) {
-            lastCallerType = checkSingleCallMethod(call, lastCallerType, firstOffset, variablesCache);
+
+
+            lastCallerType = checkCaller(call, lastCallerType, firstOffset, variablesCache);
+            treeOutput.append(", ");
             lastCallerType = checkCallFunction(call, lastCallerType, variablesCache);
             firstOffset = 0;
+        }
+
+        if (!(ctx.parent.parent instanceof BlockContext) && ctx.singleCallMethod().size() > 1) {
+            treeOutput.append("]");
         }
 
         return lastCallerType;
     }
 
-    private String checkSingleCallMethod(SingleCallMethodContext ctx, String typeFoundForCaller, int firstOffset, ArrayList<Map<String, String>> variablesCache) {
+    private String checkCaller(SingleCallMethodContext ctx, String typeFoundForCaller, int firstOffset, ArrayList<Map<String, String>> variablesCache) {
 
         for (int i = firstOffset; i < ctx.caller().size(); i++) {
+            treeOutput.append(".");
             // Grab next
             if (ctx.caller(i).OBJECT_IDENTIFIER() != null) {
                 if (classes.containsKey(typeFoundForCaller) && classes.get(typeFoundForCaller).fields.containsKey(ctx.caller(i).OBJECT_IDENTIFIER().getText()))
@@ -594,30 +794,38 @@ public class SemanticListener extends SEMANTICBaseListener {
                     errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - field '" + ctx.caller(i).OBJECT_IDENTIFIER().getText() + "' does not exist in class '" + typeFoundForCaller + "'.");
                     break;
                 }
-            } else if (ctx.caller(i).newObj() != null)
+                treeOutput.append(ctx.caller(i).OBJECT_IDENTIFIER().getText() + " : " + typeFoundForCaller);
+            } else if (ctx.caller(i).newObj() != null) {
                 typeFoundForCaller = checkNewOperator(ctx.caller(i).newObj(), variablesCache);
+            }
         }
-
+        //treeOutput.delete(treeOutput.length()-1, treeOutput.length());
 
         return typeFoundForCaller;
     }
 
     private String checkCallFunction(SingleCallMethodContext ctx, String lastCallerType, ArrayList<Map<String, String>> variablesCache) {
         for (int i = 0; i < ctx.callFunction().size(); i++) {
+            treeOutput.append(ctx.callFunction(i).OBJECT_IDENTIFIER().getText());
             if (classes.containsKey(lastCallerType) && classes.get(lastCallerType).methods.containsKey(ctx.callFunction(i).OBJECT_IDENTIFIER().getText())) {
-                MethodDefinition methodToCheck =classes.get(lastCallerType).methods.get(ctx.callFunction(i).OBJECT_IDENTIFIER().getText());
+                MethodDefinition methodToCheck = classes.get(lastCallerType).methods.get(ctx.callFunction(i).OBJECT_IDENTIFIER().getText());
                 lastCallerType = methodToCheck.type;
                 //Check arguments
                 if (methodToCheck.formals.values().size() != ctx.callFunction(i).argument().size()) {
                     errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method call '" + methodToCheck.name + "()' has a different number of arguments then is definition.");
-                    break;
+                    //break;
                 }
+
+                treeOutput.append(", [");
+
+                List<FormalDefinition> formals = new ArrayList<>(methodToCheck.formals.values());
+                Collections.sort(formals, Comparator.comparingInt(FormalDefinition::getPosition));
                 int j = 0;
-                for (FormalDefinition formal : methodToCheck.formals.values()) {
+                for (FormalDefinition formal : formals) {
                     ArgumentContext arg = ctx.callFunction(i).argument(j++);
                     String argType = "";
                     if (arg.binaryOperation() != null) {
-                        argType = checkBinaryOperation(arg.binaryOperation());
+                        argType = checkBinaryOperation(arg.binaryOperation(), variablesCache);
                     } else if (arg.callMethod() != null) {
                         argType = checkCallMethod(arg.callMethod(), variablesCache);
                     } else if (arg.newObj() != null) {
@@ -631,18 +839,48 @@ public class SemanticListener extends SEMANTICBaseListener {
                     if (!formal.type.equals(argType)) {
                         errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method call '" + methodToCheck.name + "()' argument's #" + j + " is of type '" + argType + "'. Expecting '" + formal.type + "'.");
                     }
+
+                    treeOutput.append(", ");
                 }
+                if (methodToCheck.formals.values().size() > 0) treeOutput.delete(treeOutput.length()-2, treeOutput.length());
+                treeOutput.append("]");
+
+                treeOutput.append(") : " + methodToCheck.type + ", ");
             } else {
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method '" + ctx.callFunction(i).OBJECT_IDENTIFIER().getText() + "' does not exist in class '" + lastCallerType + "'.");
-                break;
+                //break;
             }
+
         }
+        treeOutput.delete(treeOutput.length()-2, treeOutput.length());
 
         return lastCallerType;
     }
 
+    private String checkUnOperation(UnOperationContext unOp, ArrayList<Map<String, String>> variablesCache) {
+        String typeFound = "";
+        treeOutput.append("UnOp(");
+        treeOutput.append(unOp.unOperator().getText());
+        treeOutput.append(", ");
+
+        if (unOp.statement() != null)
+            checkStatementType(unOp.statement(), variablesCache);
+        //else if (unOp.condition() != null)
+        //    handleCondition2(unOp.condition(), variablesCache);
+
+        if (unOp.unOperator().getText().equals("-"))
+            typeFound = "int32";
+        else
+            typeFound = "bool";
+        treeOutput.append(") : " + typeFound);
+
+        return typeFound;
+    }
+
     private String checkVarValue(VarValueContext ctx, ArrayList<Map<String, String>> variablesCache) {
         String typeFound = "";
+
+
         if (ctx.integer() != null) {
             typeFound = "int32";
         } else if (ctx.STRING() != null) {
@@ -653,21 +891,27 @@ public class SemanticListener extends SEMANTICBaseListener {
             typeFound = "unit";
         }
 
+        treeOutput.append(ctx.getText() + " : " + typeFound);
+
         return typeFound;
     }
 
     private String checkVariableCacheForIdentifier(TerminalNode identifier, ArrayList<Map<String, String>> variablesCache) {
+        String typeFound = "";
+
         if (variablesCache != null) {
             for (int i = variablesCache.size() - 1; i >= 0; i--) {
                 if (variablesCache.get(i).containsKey(identifier.getText())) {
-                    return variablesCache.get(i).get(identifier.getText());
+                    typeFound = variablesCache.get(i).get(identifier.getText());
+                    break;
                 }
             }
         }
 
-        errorOutput.add(fileName + ":" + identifier.getSymbol().getLine() + ":" + (identifier.getSymbol().getCharPositionInLine() + 1) + ":" + " semantic error - variable '" + identifier.getText() + "' not defined.");
+        if (typeFound.equals(""))
+            errorOutput.add(fileName + ":" + identifier.getSymbol().getLine() + ":" + (identifier.getSymbol().getCharPositionInLine() + 1) + ":" + " semantic error - variable '" + identifier.getText() + "' not defined.");
 
-        return "";
+        return typeFound;
     }
 
     private boolean lookForInheritance(ParserRuleContext ctx, String varType, String typeFound) {
@@ -925,8 +1169,8 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
 
         output.append(")");
-        output.append(" : ");
-        output.append(checkIfStatementType(ifStatement, null,false));
+        output.append(" : bool");
+        //output.append(checkIfStatementType(ifStatement, null,false));
 
         return output;
     }
@@ -996,8 +1240,8 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         if (unOp.statement() != null)
             output.append(handleStatement(unOp.statement()));
-        else if (unOp.condition() != null)
-            output.append(handleCondition(unOp.condition()));
+        //else if (unOp.condition() != null)
+        //    output.append(handleCondition(unOp.condition()));
 
         output.append(")");
 
@@ -1230,10 +1474,8 @@ public class SemanticListener extends SEMANTICBaseListener {
             output.append(handleUnOperation(value.unOperation()));
         else if (value.callMethod() != null)
             output.append(handleCallMethod(value.callMethod()));
-        //else if (value.varValue() != null)
-            //output.append(handleVarValue(value.varValue()));
-        else if (value.integer() != null)
-            output.append(value.integer().getText() + " : int32");
+        else if (value.varValue() != null)
+            output.append(handleVarValue(value.varValue()));
         else
             output.append(value.getChild(0).getText());
 

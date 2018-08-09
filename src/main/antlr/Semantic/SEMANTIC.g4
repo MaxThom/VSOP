@@ -31,9 +31,9 @@ grammar SEMANTIC;
     condition               : term (CONDITIONAL_OPERATOR term)* | ('(' term (CONDITIONAL_OPERATOR term)* ')') ;
     term                    : factor (termOperator factor)* | ('(' factor (termOperator factor)* ')') ;
     factor                  : (value (FACTOR_OPERATOR value)*) | ('(' value (FACTOR_OPERATOR value)* ')') ;
-    value                   : unOperation | OBJECT_IDENTIFIER | integer | callMethod;
+    value                   : unOperation | OBJECT_IDENTIFIER | varValue | callMethod | newObj;
 
-    unOperation             : unOperator (condition | statement) ;
+    unOperation             : unOperator (statement) ;
 
     newObj                  : 'new' TYPE_IDENTIFIER ;
 

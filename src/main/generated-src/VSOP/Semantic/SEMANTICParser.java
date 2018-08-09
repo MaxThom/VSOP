@@ -2074,11 +2074,14 @@ public class SEMANTICParser extends Parser {
 			return getRuleContext(UnOperationContext.class,0);
 		}
 		public TerminalNode OBJECT_IDENTIFIER() { return getToken(SEMANTICParser.OBJECT_IDENTIFIER, 0); }
-		public IntegerContext integer() {
-			return getRuleContext(IntegerContext.class,0);
+		public VarValueContext varValue() {
+			return getRuleContext(VarValueContext.class,0);
 		}
 		public CallMethodContext callMethod() {
 			return getRuleContext(CallMethodContext.class,0);
+		}
+		public NewObjContext newObj() {
+			return getRuleContext(NewObjContext.class,0);
 		}
 		public ValueContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -2098,7 +2101,7 @@ public class SEMANTICParser extends Parser {
 		ValueContext _localctx = new ValueContext(_ctx, getState());
 		enterRule(_localctx, 44, RULE_value);
 		try {
-			setState(348);
+			setState(349);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,42,_ctx) ) {
 			case 1:
@@ -2119,7 +2122,7 @@ public class SEMANTICParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(346);
-				integer();
+				varValue();
 				}
 				break;
 			case 4:
@@ -2127,6 +2130,13 @@ public class SEMANTICParser extends Parser {
 				{
 				setState(347);
 				callMethod();
+				}
+				break;
+			case 5:
+				enterOuterAlt(_localctx, 5);
+				{
+				setState(348);
+				newObj();
 				}
 				break;
 			}
@@ -2145,9 +2155,6 @@ public class SEMANTICParser extends Parser {
 	public static class UnOperationContext extends ParserRuleContext {
 		public UnOperatorContext unOperator() {
 			return getRuleContext(UnOperatorContext.class,0);
-		}
-		public ConditionContext condition() {
-			return getRuleContext(ConditionContext.class,0);
 		}
 		public StatementContext statement() {
 			return getRuleContext(StatementContext.class,0);
@@ -2172,23 +2179,11 @@ public class SEMANTICParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(350);
+			setState(351);
 			unOperator();
-			setState(353);
-			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,43,_ctx) ) {
-			case 1:
-				{
-				setState(351);
-				condition();
-				}
-				break;
-			case 2:
-				{
-				setState(352);
-				statement();
-				}
-				break;
+			{
+			setState(352);
+			statement();
 			}
 			}
 		}
@@ -2225,9 +2220,9 @@ public class SEMANTICParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(355);
+			setState(354);
 			match(T__18);
-			setState(356);
+			setState(355);
 			match(TYPE_IDENTIFIER);
 			}
 		}
@@ -2266,7 +2261,7 @@ public class SEMANTICParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(358);
+			setState(357);
 			_la = _input.LA(1);
 			if ( !(_la==UN_OPERATOR || _la==NEGATIVE_OPERATOR) ) {
 			_errHandler.recoverInline(this);
@@ -2313,7 +2308,7 @@ public class SEMANTICParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(360);
+			setState(359);
 			_la = _input.LA(1);
 			if ( !(_la==TERM_OPERATOR || _la==NEGATIVE_OPERATOR) ) {
 			_errHandler.recoverInline(this);
@@ -2360,13 +2355,13 @@ public class SEMANTICParser extends Parser {
 		ComparaiserContext _localctx = new ComparaiserContext(_ctx, getState());
 		enterRule(_localctx, 54, RULE_comparaiser);
 		try {
-			setState(365);
+			setState(364);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case OBJECT_IDENTIFIER:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(362);
+				setState(361);
 				match(OBJECT_IDENTIFIER);
 				}
 				break;
@@ -2375,14 +2370,14 @@ public class SEMANTICParser extends Parser {
 			case INTEGER_DEC:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(363);
+				setState(362);
 				integer();
 				}
 				break;
 			case STRING:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(364);
+				setState(363);
 				match(STRING);
 				}
 				break;
@@ -2426,7 +2421,7 @@ public class SEMANTICParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(367);
+			setState(366);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << INTEGER_BIN) | (1L << INTEGER_HEX) | (1L << INTEGER_DEC))) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -2472,7 +2467,7 @@ public class SEMANTICParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(369);
+			setState(368);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__19) | (1L << T__20) | (1L << T__21) | (1L << T__22) | (1L << TYPE_IDENTIFIER))) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -2519,27 +2514,27 @@ public class SEMANTICParser extends Parser {
 		VarValueContext _localctx = new VarValueContext(_ctx, getState());
 		enterRule(_localctx, 60, RULE_varValue);
 		try {
-			setState(376);
+			setState(375);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__23:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(371);
+				setState(370);
 				match(T__23);
 				}
 				break;
 			case T__24:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(372);
+				setState(371);
 				match(T__24);
 				}
 				break;
 			case STRING:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(373);
+				setState(372);
 				match(STRING);
 				}
 				break;
@@ -2548,14 +2543,14 @@ public class SEMANTICParser extends Parser {
 			case INTEGER_DEC:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(374);
+				setState(373);
 				integer();
 				}
 				break;
 			case VOID_OPERATOR:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(375);
+				setState(374);
 				match(VOID_OPERATOR);
 				}
 				break;
@@ -2575,7 +2570,7 @@ public class SEMANTICParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3-\u017d\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3-\u017c\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -2602,31 +2597,31 @@ public class SEMANTICParser extends Parser {
 		"\13\26\3\26\3\26\3\26\3\26\3\26\7\26\u013d\n\26\f\26\16\26\u0140\13\26"+
 		"\3\26\3\26\5\26\u0144\n\26\3\27\3\27\3\27\7\27\u0149\n\27\f\27\16\27\u014c"+
 		"\13\27\3\27\3\27\3\27\3\27\7\27\u0152\n\27\f\27\16\27\u0155\13\27\3\27"+
-		"\3\27\5\27\u0159\n\27\3\30\3\30\3\30\3\30\5\30\u015f\n\30\3\31\3\31\3"+
-		"\31\5\31\u0164\n\31\3\32\3\32\3\32\3\33\3\33\3\34\3\34\3\35\3\35\3\35"+
-		"\5\35\u0170\n\35\3\36\3\36\3\37\3\37\3 \3 \3 \3 \3 \5 \u017b\n \3 \2\2"+
-		"!\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>\2\6"+
-		"\4\2\34\34!!\4\2\36\36!!\3\2&(\4\2\26\31**\2\u019f\2A\3\2\2\2\4S\3\2\2"+
-		"\2\6U\3\2\2\2\bf\3\2\2\2\nv\3\2\2\2\f\u008e\3\2\2\2\16\u0092\3\2\2\2\20"+
-		"\u00a8\3\2\2\2\22\u00ad\3\2\2\2\24\u00bd\3\2\2\2\26\u00c1\3\2\2\2\30\u00da"+
-		"\3\2\2\2\32\u00dc\3\2\2\2\34\u00e0\3\2\2\2\36\u00e7\3\2\2\2 \u00eb\3\2"+
-		"\2\2\"\u00f2\3\2\2\2$\u00f7\3\2\2\2&\u0117\3\2\2\2(\u012c\3\2\2\2*\u0143"+
-		"\3\2\2\2,\u0158\3\2\2\2.\u015e\3\2\2\2\60\u0160\3\2\2\2\62\u0165\3\2\2"+
-		"\2\64\u0168\3\2\2\2\66\u016a\3\2\2\28\u016f\3\2\2\2:\u0171\3\2\2\2<\u0173"+
-		"\3\2\2\2>\u017a\3\2\2\2@B\5\b\5\2A@\3\2\2\2BC\3\2\2\2CA\3\2\2\2CD\3\2"+
-		"\2\2D\3\3\2\2\2ET\5\32\16\2FT\5\36\20\2GT\5\34\17\2HT\5$\23\2IT\5\20\t"+
-		"\2JT\5\62\32\2KT\7)\2\2LT\5> \2MN\7\3\2\2NO\5\4\3\2OP\7\4\2\2PT\3\2\2"+
-		"\2QT\5&\24\2RT\5\60\31\2SE\3\2\2\2SF\3\2\2\2SG\3\2\2\2SH\3\2\2\2SI\3\2"+
-		"\2\2SJ\3\2\2\2SK\3\2\2\2SL\3\2\2\2SM\3\2\2\2SQ\3\2\2\2SR\3\2\2\2T\5\3"+
-		"\2\2\2Ub\7\5\2\2Vc\5\4\3\2WX\5\4\3\2XY\7\6\2\2Y]\3\2\2\2Z]\5\34\17\2["+
-		"]\5\36\20\2\\W\3\2\2\2\\Z\3\2\2\2\\[\3\2\2\2]^\3\2\2\2^\\\3\2\2\2^_\3"+
-		"\2\2\2_`\3\2\2\2`a\5\4\3\2ac\3\2\2\2bV\3\2\2\2b\\\3\2\2\2bc\3\2\2\2cd"+
-		"\3\2\2\2de\7\7\2\2e\7\3\2\2\2fg\7\b\2\2gj\7*\2\2hi\7\t\2\2ik\7*\2\2jh"+
-		"\3\2\2\2jk\3\2\2\2kl\3\2\2\2lq\7\5\2\2mp\5\n\6\2np\5\16\b\2om\3\2\2\2"+
-		"on\3\2\2\2ps\3\2\2\2qo\3\2\2\2qr\3\2\2\2rt\3\2\2\2sq\3\2\2\2tu\7\7\2\2"+
-		"u\t\3\2\2\2v\u0088\7)\2\2w\u0084\7\3\2\2xy\5\f\7\2yz\7\n\2\2z|\3\2\2\2"+
-		"{x\3\2\2\2|}\3\2\2\2}{\3\2\2\2}~\3\2\2\2~\177\3\2\2\2\177\u0080\5\f\7"+
-		"\2\u0080\u0085\3\2\2\2\u0081\u0083\5\f\7\2\u0082\u0081\3\2\2\2\u0082\u0083"+
+		"\3\27\5\27\u0159\n\27\3\30\3\30\3\30\3\30\3\30\5\30\u0160\n\30\3\31\3"+
+		"\31\3\31\3\32\3\32\3\32\3\33\3\33\3\34\3\34\3\35\3\35\3\35\5\35\u016f"+
+		"\n\35\3\36\3\36\3\37\3\37\3 \3 \3 \3 \3 \5 \u017a\n \3 \2\2!\2\4\6\b\n"+
+		"\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>\2\6\4\2\34\34!"+
+		"!\4\2\36\36!!\3\2&(\4\2\26\31**\2\u019e\2A\3\2\2\2\4S\3\2\2\2\6U\3\2\2"+
+		"\2\bf\3\2\2\2\nv\3\2\2\2\f\u008e\3\2\2\2\16\u0092\3\2\2\2\20\u00a8\3\2"+
+		"\2\2\22\u00ad\3\2\2\2\24\u00bd\3\2\2\2\26\u00c1\3\2\2\2\30\u00da\3\2\2"+
+		"\2\32\u00dc\3\2\2\2\34\u00e0\3\2\2\2\36\u00e7\3\2\2\2 \u00eb\3\2\2\2\""+
+		"\u00f2\3\2\2\2$\u00f7\3\2\2\2&\u0117\3\2\2\2(\u012c\3\2\2\2*\u0143\3\2"+
+		"\2\2,\u0158\3\2\2\2.\u015f\3\2\2\2\60\u0161\3\2\2\2\62\u0164\3\2\2\2\64"+
+		"\u0167\3\2\2\2\66\u0169\3\2\2\28\u016e\3\2\2\2:\u0170\3\2\2\2<\u0172\3"+
+		"\2\2\2>\u0179\3\2\2\2@B\5\b\5\2A@\3\2\2\2BC\3\2\2\2CA\3\2\2\2CD\3\2\2"+
+		"\2D\3\3\2\2\2ET\5\32\16\2FT\5\36\20\2GT\5\34\17\2HT\5$\23\2IT\5\20\t\2"+
+		"JT\5\62\32\2KT\7)\2\2LT\5> \2MN\7\3\2\2NO\5\4\3\2OP\7\4\2\2PT\3\2\2\2"+
+		"QT\5&\24\2RT\5\60\31\2SE\3\2\2\2SF\3\2\2\2SG\3\2\2\2SH\3\2\2\2SI\3\2\2"+
+		"\2SJ\3\2\2\2SK\3\2\2\2SL\3\2\2\2SM\3\2\2\2SQ\3\2\2\2SR\3\2\2\2T\5\3\2"+
+		"\2\2Ub\7\5\2\2Vc\5\4\3\2WX\5\4\3\2XY\7\6\2\2Y]\3\2\2\2Z]\5\34\17\2[]\5"+
+		"\36\20\2\\W\3\2\2\2\\Z\3\2\2\2\\[\3\2\2\2]^\3\2\2\2^\\\3\2\2\2^_\3\2\2"+
+		"\2_`\3\2\2\2`a\5\4\3\2ac\3\2\2\2bV\3\2\2\2b\\\3\2\2\2bc\3\2\2\2cd\3\2"+
+		"\2\2de\7\7\2\2e\7\3\2\2\2fg\7\b\2\2gj\7*\2\2hi\7\t\2\2ik\7*\2\2jh\3\2"+
+		"\2\2jk\3\2\2\2kl\3\2\2\2lq\7\5\2\2mp\5\n\6\2np\5\16\b\2om\3\2\2\2on\3"+
+		"\2\2\2ps\3\2\2\2qo\3\2\2\2qr\3\2\2\2rt\3\2\2\2sq\3\2\2\2tu\7\7\2\2u\t"+
+		"\3\2\2\2v\u0088\7)\2\2w\u0084\7\3\2\2xy\5\f\7\2yz\7\n\2\2z|\3\2\2\2{x"+
+		"\3\2\2\2|}\3\2\2\2}{\3\2\2\2}~\3\2\2\2~\177\3\2\2\2\177\u0080\5\f\7\2"+
+		"\u0080\u0085\3\2\2\2\u0081\u0083\5\f\7\2\u0082\u0081\3\2\2\2\u0082\u0083"+
 		"\3\2\2\2\u0083\u0085\3\2\2\2\u0084{\3\2\2\2\u0084\u0082\3\2\2\2\u0085"+
 		"\u0086\3\2\2\2\u0086\u0089\7\4\2\2\u0087\u0089\7\"\2\2\u0088w\3\2\2\2"+
 		"\u0088\u0087\3\2\2\2\u0089\u008a\3\2\2\2\u008a\u008b\7\13\2\2\u008b\u008c"+
@@ -2697,22 +2692,21 @@ public class SEMANTICParser extends Parser {
 		"\u014f\3\2\2\2\u0152\u0155\3\2\2\2\u0153\u0151\3\2\2\2\u0153\u0154\3\2"+
 		"\2\2\u0154\u0156\3\2\2\2\u0155\u0153\3\2\2\2\u0156\u0157\7\4\2\2\u0157"+
 		"\u0159\3\2\2\2\u0158\u0145\3\2\2\2\u0158\u014d\3\2\2\2\u0159-\3\2\2\2"+
-		"\u015a\u015f\5\60\31\2\u015b\u015f\7)\2\2\u015c\u015f\5:\36\2\u015d\u015f"+
-		"\5\20\t\2\u015e\u015a\3\2\2\2\u015e\u015b\3\2\2\2\u015e\u015c\3\2\2\2"+
-		"\u015e\u015d\3\2\2\2\u015f/\3\2\2\2\u0160\u0163\5\64\33\2\u0161\u0164"+
-		"\5(\25\2\u0162\u0164\5\4\3\2\u0163\u0161\3\2\2\2\u0163\u0162\3\2\2\2\u0164"+
-		"\61\3\2\2\2\u0165\u0166\7\25\2\2\u0166\u0167\7*\2\2\u0167\63\3\2\2\2\u0168"+
-		"\u0169\t\2\2\2\u0169\65\3\2\2\2\u016a\u016b\t\3\2\2\u016b\67\3\2\2\2\u016c"+
-		"\u0170\7)\2\2\u016d\u0170\5:\36\2\u016e\u0170\7+\2\2\u016f\u016c\3\2\2"+
-		"\2\u016f\u016d\3\2\2\2\u016f\u016e\3\2\2\2\u01709\3\2\2\2\u0171\u0172"+
-		"\t\4\2\2\u0172;\3\2\2\2\u0173\u0174\t\5\2\2\u0174=\3\2\2\2\u0175\u017b"+
-		"\7\32\2\2\u0176\u017b\7\33\2\2\u0177\u017b\7+\2\2\u0178\u017b\5:\36\2"+
-		"\u0179\u017b\7\"\2\2\u017a\u0175\3\2\2\2\u017a\u0176\3\2\2\2\u017a\u0177"+
-		"\3\2\2\2\u017a\u0178\3\2\2\2\u017a\u0179\3\2\2\2\u017b?\3\2\2\2\60CS\\"+
-		"^bjoq}\u0082\u0084\u0088\u0098\u009a\u00a4\u00a8\u00ad\u00b5\u00bd\u00c8"+
-		"\u00cd\u00cf\u00d3\u00da\u00e5\u00e9\u00f0\u00f5\u00fd\u0102\u0109\u0112"+
-		"\u0117\u011e\u0127\u012c\u0134\u013e\u0143\u014a\u0153\u0158\u015e\u0163"+
-		"\u016f\u017a";
+		"\u015a\u0160\5\60\31\2\u015b\u0160\7)\2\2\u015c\u0160\5> \2\u015d\u0160"+
+		"\5\20\t\2\u015e\u0160\5\62\32\2\u015f\u015a\3\2\2\2\u015f\u015b\3\2\2"+
+		"\2\u015f\u015c\3\2\2\2\u015f\u015d\3\2\2\2\u015f\u015e\3\2\2\2\u0160/"+
+		"\3\2\2\2\u0161\u0162\5\64\33\2\u0162\u0163\5\4\3\2\u0163\61\3\2\2\2\u0164"+
+		"\u0165\7\25\2\2\u0165\u0166\7*\2\2\u0166\63\3\2\2\2\u0167\u0168\t\2\2"+
+		"\2\u0168\65\3\2\2\2\u0169\u016a\t\3\2\2\u016a\67\3\2\2\2\u016b\u016f\7"+
+		")\2\2\u016c\u016f\5:\36\2\u016d\u016f\7+\2\2\u016e\u016b\3\2\2\2\u016e"+
+		"\u016c\3\2\2\2\u016e\u016d\3\2\2\2\u016f9\3\2\2\2\u0170\u0171\t\4\2\2"+
+		"\u0171;\3\2\2\2\u0172\u0173\t\5\2\2\u0173=\3\2\2\2\u0174\u017a\7\32\2"+
+		"\2\u0175\u017a\7\33\2\2\u0176\u017a\7+\2\2\u0177\u017a\5:\36\2\u0178\u017a"+
+		"\7\"\2\2\u0179\u0174\3\2\2\2\u0179\u0175\3\2\2\2\u0179\u0176\3\2\2\2\u0179"+
+		"\u0177\3\2\2\2\u0179\u0178\3\2\2\2\u017a?\3\2\2\2/CS\\^bjoq}\u0082\u0084"+
+		"\u0088\u0098\u009a\u00a4\u00a8\u00ad\u00b5\u00bd\u00c8\u00cd\u00cf\u00d3"+
+		"\u00da\u00e5\u00e9\u00f0\u00f5\u00fd\u0102\u0109\u0112\u0117\u011e\u0127"+
+		"\u012c\u0134\u013e\u0143\u014a\u0153\u0158\u015f\u016e\u0179";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
