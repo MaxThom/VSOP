@@ -15,14 +15,12 @@ import static VSOP.Semantic.SEMANTICParser.*;
 
 public class SemanticListener extends SEMANTICBaseListener {
 
-
-    public Map<String, ClassDefinition> classes;
+    private Map<String, ClassDefinition> classes;
     private ClassDefinition currentClass;
     private String fileName;
+
     public String treeOutput;
     public ArrayList<String> errorOutput;
-
-    public Boolean lexicalError = false;
 
     public SemanticListener(String fileName) {
         classes = new HashMap<>();
@@ -95,42 +93,7 @@ public class SemanticListener extends SEMANTICBaseListener {
             classes.put(classDef.name, classDef);
     }
 
-    @Override
-    public void exitField(FieldContext ctx) {
-        //checkFieldDefinition(ctx);
-    }
-
-    @Override
-    public void exitMethodDefinition(MethodDefinitionContext ctx) {
-        /*VariableType methodType = stringToVarType(ctx.varType().getText());
-        VariableType typeFound = null;
-
-        if (ctx.block() != null) {
-            typeFound = checkBlockType(ctx.block());
-        }
-
-        if (methodType != typeFound) {
-            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - invalid return type in method '" + ctx.OBJECT_IDENTIFIER() + "'. Expecting '" + methodType + "', found '" + typeFound + "'.");
-        }*/
-    }
-
-
-    @Override
-    public void exitIfStatement(IfStatementContext ctx) {
-        //checkIfStatementType(ctx, true);
-    }
-
-    @Override
-    public void exitWhileStatement(WhileStatementContext ctx) {
-        //checkWhileStatementType(ctx);
-    }
-
-    @Override
-    public void exitLet(LetContext ctx) {
-        //checkLetStatementType(ctx);
-    }
-
-
+//region CHECK_TYPES
 
     private void checkTypeCompileTime(ProgramContext ctx) {
         for (ClassDefinitionContext classDef : ctx.classDefinition()) {
@@ -147,38 +110,6 @@ public class SemanticListener extends SEMANTICBaseListener {
             for (MethodDefinitionContext method: methods) {
                 checkMethodDefinition(method);
             }
-        }
-    }
-
-
-    private boolean isPrimitive(String varType) {
-        switch (varType) {
-            case "int32":
-                return true;
-            case "unit":
-                return true;
-            case "bool":
-                return true;
-            case "string":
-                return true;
-            default:
-                return false;
-        }
-    }
-
-
-    private String defaultVarValue(String varType) {
-        switch (varType) {
-            case "int32":
-                return "0";
-            case "unit":
-                return "()";
-            case "bool":
-                return "false";
-            case "string":
-                return "\"\"";
-            default:
-                return "null";
         }
     }
 
@@ -401,9 +332,9 @@ public class SemanticListener extends SEMANTICBaseListener {
         } else if (ctx.binaryOperation() != null) {
             typeFound = checkBinaryOperation(ctx.binaryOperation());
         } else if (ctx.callMethod() != null) {
-
+            typeFound = checkCallMethod(ctx.callMethod(), variablesCache);
         } else if (ctx.newObj() != null) {
-            typeFound = ctx.newObj().TYPE_IDENTIFIER().getText();
+            typeFound = checkNewOperator(ctx.newObj(), variablesCache);
         } else if (ctx.OBJECT_IDENTIFIER() != null) {
             typeFound = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
         } else if (ctx.statement() != null) {
@@ -571,6 +502,67 @@ public class SemanticListener extends SEMANTICBaseListener {
         return typeFound;
     }
 
+    private String checkNewOperator(NewObjContext ctx, ArrayList<Map<String, String>> variablesCache) {
+        // Check if class exist
+        if (!classes.containsKey(ctx.TYPE_IDENTIFIER().getText()))
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - class '" + ctx.TYPE_IDENTIFIER().getText() + "' is not defined.");
+
+        return ctx.TYPE_IDENTIFIER().getText();
+    }
+
+    private String checkCallMethod(CallMethodContext ctx, ArrayList<Map<String, String>> variablesCache) {
+        String lastCallerType = "";
+
+        if (ctx.singleCallMethod(0).caller().size() == 0){
+            lastCallerType = currentClass.name;
+        } else if (ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER() != null) {
+            lastCallerType = checkVariableCacheForIdentifier(ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER(), variablesCache);
+        } else if (ctx.singleCallMethod(0).caller(0).newObj() != null) {
+            lastCallerType = checkNewOperator(ctx.singleCallMethod(0).caller(0).newObj(), variablesCache);
+        }
+
+        int firstOffset = 1;
+        for (SingleCallMethodContext call : ctx.singleCallMethod()) {
+            lastCallerType = checkSingleCallMethod(call, lastCallerType, firstOffset, variablesCache);
+            lastCallerType = checkCallFunction(call, lastCallerType, variablesCache);
+            firstOffset = 0;
+        }
+
+        return lastCallerType;
+    }
+
+    private String checkSingleCallMethod(SingleCallMethodContext ctx, String typeFoundForCaller, int firstOffset, ArrayList<Map<String, String>> variablesCache) {
+
+        for (int i = firstOffset; i < ctx.caller().size(); i++) {
+            // Grab next
+            if (ctx.caller(i).OBJECT_IDENTIFIER() != null) {
+                if (classes.containsKey(typeFoundForCaller) && classes.get(typeFoundForCaller).fields.containsKey(ctx.caller(i).OBJECT_IDENTIFIER().getText()))
+                    typeFoundForCaller = classes.get(typeFoundForCaller).fields.get(ctx.caller(i).OBJECT_IDENTIFIER().getText()).type;
+                else {
+                    errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - field '" + ctx.caller(i).OBJECT_IDENTIFIER().getText() + "' does not exist in class '" + typeFoundForCaller + "'.");
+                    break;
+                }
+            } else if (ctx.caller(i).newObj() != null)
+                typeFoundForCaller = checkNewOperator(ctx.caller(i).newObj(), variablesCache);
+        }
+
+
+        return typeFoundForCaller;
+    }
+
+    private String checkCallFunction(SingleCallMethodContext ctx, String lastCallerType, ArrayList<Map<String, String>> variablesCache) {
+        for (int i = 0; i < ctx.callFunction().size(); i++) {
+            if (classes.containsKey(lastCallerType) && classes.get(lastCallerType).methods.containsKey(ctx.callFunction(i).OBJECT_IDENTIFIER().getText())) {
+                lastCallerType = classes.get(lastCallerType).methods.get(ctx.callFunction(i).OBJECT_IDENTIFIER().getText()).type;
+            } else {
+                errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method '" + ctx.callFunction(i).OBJECT_IDENTIFIER().getText() + "' does not exist in class '" + lastCallerType + "'.");
+                break;
+            }
+        }
+
+        return lastCallerType;
+    }
+
     private String checkVariableCacheForIdentifier(TerminalNode identifier, ArrayList<Map<String, String>> variablesCache) {
         if (variablesCache != null) {
             for (int i = variablesCache.size() - 1; i >= 0; i--) {
@@ -611,6 +603,37 @@ public class SemanticListener extends SEMANTICBaseListener {
         return false;
     }
 
+    private boolean isPrimitive(String varType) {
+        switch (varType) {
+            case "int32":
+                return true;
+            case "unit":
+                return true;
+            case "bool":
+                return true;
+            case "string":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private String defaultVarValue(String varType) {
+        switch (varType) {
+            case "int32":
+                return "0";
+            case "unit":
+                return "()";
+            case "bool":
+                return "false";
+            case "string":
+                return "\"\"";
+            default:
+                return "null";
+        }
+    }
+
+//endregion
 
 //region WRITE_ABSTRACT_TREE
 
@@ -920,16 +943,6 @@ public class SemanticListener extends SEMANTICBaseListener {
     private StringBuilder handleSingleCallMethod(SingleCallMethodContext singleCall) {
         StringBuilder output = new StringBuilder();
 
-        /*if (singleCall.caller().size() == 0) {
-
-            for (int i = 0; i < singleCall.callFunction().size() ; i++) {
-                output.append("Call(self, ");
-                output.append(handleCallFunction(singleCall.callFunction(i)));
-                output.append("), ");
-            }
-            output.delete(output.length()-2, output.length());
-        } else {*/
-
         for (int i = singleCall.callFunction().size()-1; i >= 0 ; i--) {
             output.append("Call(");
         }
@@ -951,12 +964,6 @@ public class SemanticListener extends SEMANTICBaseListener {
             output.append("), ");
         }
         output.delete(output.length()-2, output.length());
-
-        // }
-
-
-
-
 
         return output;
     }
@@ -1162,4 +1169,5 @@ public class SemanticListener extends SEMANTICBaseListener {
     }
 
 //endregion
+
 }

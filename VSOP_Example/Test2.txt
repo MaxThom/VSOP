@@ -1,15 +1,27 @@
 
+class LinkedList {
+    length() : List { new List }
+}
+
 class List {
-isNil() : bool { true }
-length() : int32 { 0 }
+
+    ll: LinkedList;
+
+    isNil() : bool { true }
+    length() : int32 { 0 }
 }
 
 
 class Main {
 
-    test: Main <- self;
+    test: Main ;
 
-    main() : int32 { 0 }
+    main() : int32 {
+        (new Cons).tail.ll.length().ee.isNil();
+        main();
+
+        0
+    }
 
 
 
@@ -23,7 +35,7 @@ class Cons {
         head <- hd;
         tail <- tl;
 
-        let p : Main <- self in self;
+        let p : Main <- new Main in new Main;
 
         self
     }
