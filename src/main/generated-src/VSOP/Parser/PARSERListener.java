@@ -188,66 +188,6 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitLet(PARSERParser.LetContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#binaryOperation}.
-	 * @param ctx the parse tree
-	 */
-	void enterBinaryOperation(PARSERParser.BinaryOperationContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#binaryOperation}.
-	 * @param ctx the parse tree
-	 */
-	void exitBinaryOperation(PARSERParser.BinaryOperationContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link PARSERParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void enterCondition(PARSERParser.ConditionContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void exitCondition(PARSERParser.ConditionContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link PARSERParser#term}.
-	 * @param ctx the parse tree
-	 */
-	void enterTerm(PARSERParser.TermContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#term}.
-	 * @param ctx the parse tree
-	 */
-	void exitTerm(PARSERParser.TermContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link PARSERParser#factor}.
-	 * @param ctx the parse tree
-	 */
-	void enterFactor(PARSERParser.FactorContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#factor}.
-	 * @param ctx the parse tree
-	 */
-	void exitFactor(PARSERParser.FactorContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link PARSERParser#value}.
-	 * @param ctx the parse tree
-	 */
-	void enterValue(PARSERParser.ValueContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#value}.
-	 * @param ctx the parse tree
-	 */
-	void exitValue(PARSERParser.ValueContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link PARSERParser#unOperation}.
-	 * @param ctx the parse tree
-	 */
-	void enterUnOperation(PARSERParser.UnOperationContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link PARSERParser#unOperation}.
-	 * @param ctx the parse tree
-	 */
-	void exitUnOperation(PARSERParser.UnOperationContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link PARSERParser#newObj}.
 	 * @param ctx the parse tree
 	 */
@@ -258,15 +198,95 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitNewObj(PARSERParser.NewObjContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#unOperator}.
+	 * Enter a parse tree produced by {@link PARSERParser#binaryOperation}.
 	 * @param ctx the parse tree
 	 */
-	void enterUnOperator(PARSERParser.UnOperatorContext ctx);
+	void enterBinaryOperation(PARSERParser.BinaryOperationContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link PARSERParser#unOperator}.
+	 * Exit a parse tree produced by {@link PARSERParser#binaryOperation}.
 	 * @param ctx the parse tree
 	 */
-	void exitUnOperator(PARSERParser.UnOperatorContext ctx);
+	void exitBinaryOperation(PARSERParser.BinaryOperationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#expr1}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr1(PARSERParser.Expr1Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#expr1}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr1(PARSERParser.Expr1Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#expr2}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr2(PARSERParser.Expr2Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#expr2}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr2(PARSERParser.Expr2Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#expr3}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr3(PARSERParser.Expr3Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#expr3}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr3(PARSERParser.Expr3Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#expr4}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr4(PARSERParser.Expr4Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#expr4}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr4(PARSERParser.Expr4Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#expr5}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr5(PARSERParser.Expr5Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#expr5}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr5(PARSERParser.Expr5Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#expr6}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr6(PARSERParser.Expr6Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#expr6}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr6(PARSERParser.Expr6Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#expr7}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr7(PARSERParser.Expr7Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#expr7}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr7(PARSERParser.Expr7Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#expr8}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr8(PARSERParser.Expr8Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#expr8}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr8(PARSERParser.Expr8Context ctx);
 	/**
 	 * Enter a parse tree produced by {@link PARSERParser#termOperator}.
 	 * @param ctx the parse tree
@@ -278,15 +298,25 @@ public interface PARSERListener extends ParseTreeListener {
 	 */
 	void exitTermOperator(PARSERParser.TermOperatorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link PARSERParser#comparaiser}.
+	 * Enter a parse tree produced by {@link PARSERParser#factorOperator}.
 	 * @param ctx the parse tree
 	 */
-	void enterComparaiser(PARSERParser.ComparaiserContext ctx);
+	void enterFactorOperator(PARSERParser.FactorOperatorContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link PARSERParser#comparaiser}.
+	 * Exit a parse tree produced by {@link PARSERParser#factorOperator}.
 	 * @param ctx the parse tree
 	 */
-	void exitComparaiser(PARSERParser.ComparaiserContext ctx);
+	void exitFactorOperator(PARSERParser.FactorOperatorContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link PARSERParser#comparatorOperator}.
+	 * @param ctx the parse tree
+	 */
+	void enterComparatorOperator(PARSERParser.ComparatorOperatorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link PARSERParser#comparatorOperator}.
+	 * @param ctx the parse tree
+	 */
+	void exitComparatorOperator(PARSERParser.ComparatorOperatorContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link PARSERParser#integer}.
 	 * @param ctx the parse tree

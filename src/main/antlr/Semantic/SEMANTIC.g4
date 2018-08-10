@@ -32,7 +32,6 @@ grammar SEMANTIC;
     term                    : factor (termOperator factor)* | ('(' factor (termOperator factor)* ')') ;
     factor                  : (value (FACTOR_OPERATOR value)*) | ('(' value (FACTOR_OPERATOR value)* ')') ;
     value                   : unOperation | OBJECT_IDENTIFIER | varValue | callMethod | newObj | ifStatement;
-    //value                   : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | unOperation;
 
     unOperation             : unOperator (statement) ;
 

@@ -1058,21 +1058,6 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
     }
 
-    private String defaultVarValue(String varType) {
-        switch (varType) {
-            case "int32":
-                return "0";
-            case "unit":
-                return "()";
-            case "bool":
-                return "false";
-            case "string":
-                return "\"\"";
-            default:
-                return "null";
-        }
-    }
-
 //endregion
 
 //region WRITE_ABSTRACT_TREE

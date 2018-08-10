@@ -637,8 +637,8 @@ public class TESTParser extends Parser {
 	}
 
 	public static class Expr8Context extends ParserRuleContext {
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class,0);
+		public Expr1Context expr1() {
+			return getRuleContext(Expr1Context.class,0);
 		}
 		public VarValueContext varValue() {
 			return getRuleContext(VarValueContext.class,0);
@@ -670,7 +670,7 @@ public class TESTParser extends Parser {
 				setState(91);
 				match(T__0);
 				setState(92);
-				expression();
+				expr1(0);
 				setState(93);
 				match(T__1);
 				}
@@ -1020,7 +1020,7 @@ public class TESTParser extends Parser {
 		"\2NL\3\2\2\2OP\7\n\2\2PU\5\16\b\2QR\7\21\2\2RU\5\16\b\2SU\5\20\t\2TO\3"+
 		"\2\2\2TQ\3\2\2\2TS\3\2\2\2U\17\3\2\2\2VW\5\22\n\2WX\7\7\2\2XY\5\20\t\2"+
 		"Y\\\3\2\2\2Z\\\5\22\n\2[V\3\2\2\2[Z\3\2\2\2\\\21\3\2\2\2]^\7\3\2\2^_\5"+
-		"\2\2\2_`\7\4\2\2`c\3\2\2\2ac\5\32\16\2b]\3\2\2\2ba\3\2\2\2c\23\3\2\2\2"+
+		"\4\3\2_`\7\4\2\2`c\3\2\2\2ac\5\32\16\2b]\3\2\2\2ba\3\2\2\2c\23\3\2\2\2"+
 		"de\t\2\2\2e\25\3\2\2\2fg\t\3\2\2g\27\3\2\2\2hi\t\4\2\2i\31\3\2\2\2jo\7"+
 		"\5\2\2ko\7\6\2\2lo\7\27\2\2mo\5\34\17\2nj\3\2\2\2nk\3\2\2\2nl\3\2\2\2"+
 		"nm\3\2\2\2o\33\3\2\2\2pq\t\5\2\2q\35\3\2\2\2\13(.\65@LT[bn";

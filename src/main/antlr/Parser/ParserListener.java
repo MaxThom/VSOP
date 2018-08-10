@@ -177,8 +177,8 @@ public class ParserListener extends PARSERBaseListener {
             output.append(handleWhileStatement(statement.whileStatement()));
         } else if (statement.let() != null) {
             output.append(handleLet(statement.let()));
-        } else if (statement.unOperation() != null) {
-            output.append(handleUnOperation(statement.unOperation()));
+        //} else if (statement.unOperation() != null) {
+            //output.append(handleUnOperation(statement.unOperation()));
         } else if (statement.binaryOperation() != null) {
             output.append(handleBinaryOperation(statement.binaryOperation()));
         } else if (statement.callMethod() != null) {
@@ -280,9 +280,9 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
-    private StringBuilder handleUnOperation(UnOperationContext unOp) {
+    private StringBuilder handleUnOperation(ParserRuleContext unOp) {
         StringBuilder output = new StringBuilder();
-        output.append("UnOp(");
+        /*output.append("UnOp(");
         output.append(unOp.unOperator().getText());
         output.append(", ");
 
@@ -291,7 +291,7 @@ public class ParserListener extends PARSERBaseListener {
         else if (unOp.condition() != null)
             output.append(handleCondition(unOp.condition()));
 
-        output.append(")");
+        output.append(")");*/
 
         return output;
     }
@@ -419,129 +419,148 @@ public class ParserListener extends PARSERBaseListener {
     private StringBuilder handleBinaryOperation(BinaryOperationContext binOp) {
         StringBuilder output = new StringBuilder();
 
-        if (binOp.condition().size() == 1) {
-            output.append(handleCondition(binOp.condition(0)));
-        } else {
-
-            for (int i = binOp.AND_OPERATOR().size()-1 ; i >= 0; i--) {
-                output.append("BinOp(");
-                output.append(binOp.AND_OPERATOR(i).getText());
-                output.append(", ");
-            }
-
-            output.append(handleCondition(binOp.condition(0)));
-
-            for (int j = 1 ; j < binOp.AND_OPERATOR().size(); j++) {
-                output.append(", ");
-                output.append(handleCondition(binOp.condition(j)));
-                output.append(")");
-            }
-
-            output.append(", ");
-            output.append(handleCondition(binOp.condition(binOp.AND_OPERATOR().size())));
-            output.append(")");
-        }
+        output.append(handleExpr1(binOp.expr1()));
 
         return output;
     }
 
-    private StringBuilder handleCondition(ConditionContext cond) {
+    private StringBuilder handleExpr1(Expr1Context expr1) {
         StringBuilder output = new StringBuilder();
 
-        if (cond.term().size() == 1) {
-            output.append(handleTerm(cond.term(0)));
-        } else {
 
-            for (int i = cond.CONDITIONAL_OPERATOR().size()-1 ; i >= 0; i--) {
-                output.append("BinOp(");
-                output.append(cond.CONDITIONAL_OPERATOR(i).getText());
-                output.append(", ");
-            }
-
-            output.append(handleTerm(cond.term(0)));
-
-            for (int j = 1 ; j < cond.CONDITIONAL_OPERATOR().size(); j++) {
-                output.append(", ");
-                output.append(handleTerm(cond.term(j)));
-                output.append(")");
-            }
-
+        if (expr1.expr1() != null) {
+            output.append("BinOp(");
+            output.append(expr1.AND().getText());
             output.append(", ");
-            output.append(handleTerm(cond.term(cond.CONDITIONAL_OPERATOR().size())));
+            output.append(handleExpr1(expr1.expr1()));
+            output.append(", ");
+            output.append(handleExpr2(expr1.expr2()));
             output.append(")");
-        }
+        } else
+            output.append(handleExpr2(expr1.expr2()));
+
 
         return output;
     }
 
-    private StringBuilder handleTerm(TermContext term) {
+    private StringBuilder handleExpr2(Expr2Context expr2) {
         StringBuilder output = new StringBuilder();
 
-        if (term.factor().size() == 1) {
-            output.append(handleFactor(term.factor(0)));
-        } else {
-            for (int i = term.termOperator().size()-1 ; i >= 0; i--) {
-                output.append("BinOp(");
-                output.append(term.termOperator(i).getText());
-                output.append(", ");
-            }
-
-            output.append(handleFactor(term.factor(0)));
-
-            for (int j = 1 ; j < term.termOperator().size(); j++) {
-                output.append(", ");
-                output.append(handleFactor(term.factor(j)));
-                output.append(")");
-            }
-
+        if (expr2.expr2() != null) {
+            output.append("UnOp(");
+            output.append(expr2.NOT().getText());
             output.append(", ");
-            output.append(handleFactor(term.factor(term.termOperator().size())));
+            output.append(handleExpr2(expr2.expr2()));
             output.append(")");
-        }
+        } else
+            output.append(handleExpr3(expr2.expr3()));
 
         return output;
     }
 
-    private StringBuilder handleFactor(FactorContext factor) {
+    private StringBuilder handleExpr3(Expr3Context expr3) {
         StringBuilder output = new StringBuilder();
 
-        if (factor.value().size() == 1) {
-            output.append(handleValue(factor.value(0)));
-        } else {
-
-            for (int i = factor.FACTOR_OPERATOR().size()-1 ; i >= 0; i--) {
-                output.append("BinOp(");
-                output.append(factor.FACTOR_OPERATOR(i).getText());
-                output.append(", ");
-            }
-
-            output.append(handleValue(factor.value(0)));
-
-            for (int j = 1 ; j < factor.FACTOR_OPERATOR().size(); j++) {
-                output.append(", ");
-                output.append(handleValue(factor.value(j)));
-                output.append(")");
-            }
-
+        if (expr3.comparatorOperator() != null) {
+            output.append("BinOp(");
+            output.append(expr3.comparatorOperator().getText());
             output.append(", ");
-            output.append(handleValue(factor.value(factor.FACTOR_OPERATOR().size())));
+            output.append(handleExpr4(expr3.expr4(0)));
+            output.append(", ");
+            output.append(handleExpr4(expr3.expr4(1)));
             output.append(")");
-        }
+        } else
+            output.append(handleExpr4(expr3.expr4(0)));
 
         return output;
     }
 
-    private StringBuilder handleValue(ValueContext value) {
+    private StringBuilder handleExpr4(Expr4Context expr4) {
         StringBuilder output = new StringBuilder();
 
-        if (value.unOperation() != null)
-            output.append(handleUnOperation(value.unOperation()));
-        else if (value.callMethod() != null)
-            output.append(handleCallMethod(value.callMethod()));
-        else
-            output.append(value.getChild(0).getText());
+        if (expr4.termOperator() != null) {
+            output.append("BinOp(");
+            output.append(expr4.termOperator().getText());
+            output.append(", ");
+            output.append(handleExpr4(expr4.expr4()));
+            output.append(", ");
+            output.append(handleExpr5(expr4.expr5()));
+            output.append(")");
+        } else
+            output.append(handleExpr5(expr4.expr5()));
+
         return output;
     }
+
+    private StringBuilder handleExpr5(Expr5Context expr5) {
+        StringBuilder output = new StringBuilder();
+
+        if (expr5.factorOperator() != null) {
+            output.append("BinOp(");
+            output.append(expr5.factorOperator().getText());
+            output.append(", ");
+            output.append(handleExpr5(expr5.expr5()));
+            output.append(", ");
+            output.append(handleExpr6(expr5.expr6()));
+            output.append(")");
+        } else
+            output.append(handleExpr6(expr5.expr6()));
+
+        return output;
+    }
+
+    private StringBuilder handleExpr6(Expr6Context expr6) {
+        StringBuilder output = new StringBuilder();
+
+        if (expr6.expr6() != null) {
+            output.append("UnOp(");
+            output.append(expr6.MINUS() != null ? expr6.MINUS().getText() : expr6.ISNULL().getText());
+            output.append(", ");
+            output.append(handleExpr6(expr6.expr6()));
+            output.append(")");
+        } else
+            output.append(handleExpr7(expr6.expr7()));
+
+        return output;
+    }
+
+    private StringBuilder handleExpr7(Expr7Context expr7) {
+        StringBuilder output = new StringBuilder();
+
+        if (expr7.POW() != null) {
+            output.append("BinOp(");
+            output.append(expr7.POW().getText());
+            output.append(", ");
+            output.append(handleExpr8(expr7.expr8()));
+            output.append(", ");
+            output.append(handleExpr7(expr7.expr7()));
+            output.append(")");
+        } else
+            output.append(handleExpr8(expr7.expr8()));
+
+        return output;
+    }
+
+    private StringBuilder handleExpr8(Expr8Context expr8) {
+        StringBuilder output = new StringBuilder();
+
+        if (expr8.expr1() != null)
+            output.append(handleExpr1(expr8.expr1()));
+        else if (expr8.varValue() != null)
+            output.append(expr8.varValue().getText());
+        else if (expr8.OBJECT_IDENTIFIER() != null)
+            output.append(expr8.OBJECT_IDENTIFIER().getText());
+        else if (expr8.callMethod() != null)
+            output.append(handleCallMethod(expr8.callMethod()));
+        else if (expr8.newObj() != null)
+            output.append(handleNewObj(expr8.newObj()));
+        else if (expr8.ifStatement() != null)
+            output.append(handleIfStatement(expr8.ifStatement()));
+
+        return output;
+    }
+
+
 
 
 }

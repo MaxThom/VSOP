@@ -9,7 +9,7 @@ grammar TEST;
     expr5                   : expr5 factorOperator expr6 | expr6 ;
     expr6                   : MINUS expr6 | ISNULL expr6 | expr7 ;
     expr7                   : expr8 POW expr7 | expr8 ;
-    expr8                   : '(' expression ')' |  varValue ;
+    expr8                   : '(' expr1 ')' |  varValue ;
 
 
     termOperator            : MINUS | PLUS ;
