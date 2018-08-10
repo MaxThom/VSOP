@@ -16,109 +16,109 @@ public class TESTBaseListener implements TESTListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterProgram(TESTParser.ProgramContext ctx) { }
+	@Override public void enterExpression(TESTParser.ExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitProgram(TESTParser.ProgramContext ctx) { }
+	@Override public void exitExpression(TESTParser.ExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBinaryOperation(TESTParser.BinaryOperationContext ctx) { }
+	@Override public void enterExpr1(TESTParser.Expr1Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitBinaryOperation(TESTParser.BinaryOperationContext ctx) { }
+	@Override public void exitExpr1(TESTParser.Expr1Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCondition(TESTParser.ConditionContext ctx) { }
+	@Override public void enterExpr2(TESTParser.Expr2Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCondition(TESTParser.ConditionContext ctx) { }
+	@Override public void exitExpr2(TESTParser.Expr2Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTerm(TESTParser.TermContext ctx) { }
+	@Override public void enterExpr3(TESTParser.Expr3Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTerm(TESTParser.TermContext ctx) { }
+	@Override public void exitExpr3(TESTParser.Expr3Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFactor(TESTParser.FactorContext ctx) { }
+	@Override public void enterExpr4(TESTParser.Expr4Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFactor(TESTParser.FactorContext ctx) { }
+	@Override public void exitExpr4(TESTParser.Expr4Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterValue(TESTParser.ValueContext ctx) { }
+	@Override public void enterExpr5(TESTParser.Expr5Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitValue(TESTParser.ValueContext ctx) { }
+	@Override public void exitExpr5(TESTParser.Expr5Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterUnOperation(TESTParser.UnOperationContext ctx) { }
+	@Override public void enterExpr6(TESTParser.Expr6Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitUnOperation(TESTParser.UnOperationContext ctx) { }
+	@Override public void exitExpr6(TESTParser.Expr6Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterNewObj(TESTParser.NewObjContext ctx) { }
+	@Override public void enterExpr7(TESTParser.Expr7Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitNewObj(TESTParser.NewObjContext ctx) { }
+	@Override public void exitExpr7(TESTParser.Expr7Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterUnOperator(TESTParser.UnOperatorContext ctx) { }
+	@Override public void enterExpr8(TESTParser.Expr8Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitUnOperator(TESTParser.UnOperatorContext ctx) { }
+	@Override public void exitExpr8(TESTParser.Expr8Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -136,37 +136,25 @@ public class TESTBaseListener implements TESTListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterComparaiser(TESTParser.ComparaiserContext ctx) { }
+	@Override public void enterFactorOperator(TESTParser.FactorOperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitComparaiser(TESTParser.ComparaiserContext ctx) { }
+	@Override public void exitFactorOperator(TESTParser.FactorOperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterInteger(TESTParser.IntegerContext ctx) { }
+	@Override public void enterComparatorOperator(TESTParser.ComparatorOperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitInteger(TESTParser.IntegerContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterVarType(TESTParser.VarTypeContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitVarType(TESTParser.VarTypeContext ctx) { }
+	@Override public void exitComparatorOperator(TESTParser.ComparatorOperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -179,6 +167,18 @@ public class TESTBaseListener implements TESTListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitVarValue(TESTParser.VarValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterInteger(TESTParser.IntegerContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInteger(TESTParser.IntegerContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

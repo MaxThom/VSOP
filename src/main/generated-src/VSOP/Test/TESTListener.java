@@ -8,95 +8,95 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  */
 public interface TESTListener extends ParseTreeListener {
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#program}.
+	 * Enter a parse tree produced by {@link TESTParser#expression}.
 	 * @param ctx the parse tree
 	 */
-	void enterProgram(TESTParser.ProgramContext ctx);
+	void enterExpression(TESTParser.ExpressionContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#program}.
+	 * Exit a parse tree produced by {@link TESTParser#expression}.
 	 * @param ctx the parse tree
 	 */
-	void exitProgram(TESTParser.ProgramContext ctx);
+	void exitExpression(TESTParser.ExpressionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#binaryOperation}.
+	 * Enter a parse tree produced by {@link TESTParser#expr1}.
 	 * @param ctx the parse tree
 	 */
-	void enterBinaryOperation(TESTParser.BinaryOperationContext ctx);
+	void enterExpr1(TESTParser.Expr1Context ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#binaryOperation}.
+	 * Exit a parse tree produced by {@link TESTParser#expr1}.
 	 * @param ctx the parse tree
 	 */
-	void exitBinaryOperation(TESTParser.BinaryOperationContext ctx);
+	void exitExpr1(TESTParser.Expr1Context ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#condition}.
+	 * Enter a parse tree produced by {@link TESTParser#expr2}.
 	 * @param ctx the parse tree
 	 */
-	void enterCondition(TESTParser.ConditionContext ctx);
+	void enterExpr2(TESTParser.Expr2Context ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#condition}.
+	 * Exit a parse tree produced by {@link TESTParser#expr2}.
 	 * @param ctx the parse tree
 	 */
-	void exitCondition(TESTParser.ConditionContext ctx);
+	void exitExpr2(TESTParser.Expr2Context ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#term}.
+	 * Enter a parse tree produced by {@link TESTParser#expr3}.
 	 * @param ctx the parse tree
 	 */
-	void enterTerm(TESTParser.TermContext ctx);
+	void enterExpr3(TESTParser.Expr3Context ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#term}.
+	 * Exit a parse tree produced by {@link TESTParser#expr3}.
 	 * @param ctx the parse tree
 	 */
-	void exitTerm(TESTParser.TermContext ctx);
+	void exitExpr3(TESTParser.Expr3Context ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#factor}.
+	 * Enter a parse tree produced by {@link TESTParser#expr4}.
 	 * @param ctx the parse tree
 	 */
-	void enterFactor(TESTParser.FactorContext ctx);
+	void enterExpr4(TESTParser.Expr4Context ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#factor}.
+	 * Exit a parse tree produced by {@link TESTParser#expr4}.
 	 * @param ctx the parse tree
 	 */
-	void exitFactor(TESTParser.FactorContext ctx);
+	void exitExpr4(TESTParser.Expr4Context ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#value}.
+	 * Enter a parse tree produced by {@link TESTParser#expr5}.
 	 * @param ctx the parse tree
 	 */
-	void enterValue(TESTParser.ValueContext ctx);
+	void enterExpr5(TESTParser.Expr5Context ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#value}.
+	 * Exit a parse tree produced by {@link TESTParser#expr5}.
 	 * @param ctx the parse tree
 	 */
-	void exitValue(TESTParser.ValueContext ctx);
+	void exitExpr5(TESTParser.Expr5Context ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#unOperation}.
+	 * Enter a parse tree produced by {@link TESTParser#expr6}.
 	 * @param ctx the parse tree
 	 */
-	void enterUnOperation(TESTParser.UnOperationContext ctx);
+	void enterExpr6(TESTParser.Expr6Context ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#unOperation}.
+	 * Exit a parse tree produced by {@link TESTParser#expr6}.
 	 * @param ctx the parse tree
 	 */
-	void exitUnOperation(TESTParser.UnOperationContext ctx);
+	void exitExpr6(TESTParser.Expr6Context ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#newObj}.
+	 * Enter a parse tree produced by {@link TESTParser#expr7}.
 	 * @param ctx the parse tree
 	 */
-	void enterNewObj(TESTParser.NewObjContext ctx);
+	void enterExpr7(TESTParser.Expr7Context ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#newObj}.
+	 * Exit a parse tree produced by {@link TESTParser#expr7}.
 	 * @param ctx the parse tree
 	 */
-	void exitNewObj(TESTParser.NewObjContext ctx);
+	void exitExpr7(TESTParser.Expr7Context ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#unOperator}.
+	 * Enter a parse tree produced by {@link TESTParser#expr8}.
 	 * @param ctx the parse tree
 	 */
-	void enterUnOperator(TESTParser.UnOperatorContext ctx);
+	void enterExpr8(TESTParser.Expr8Context ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#unOperator}.
+	 * Exit a parse tree produced by {@link TESTParser#expr8}.
 	 * @param ctx the parse tree
 	 */
-	void exitUnOperator(TESTParser.UnOperatorContext ctx);
+	void exitExpr8(TESTParser.Expr8Context ctx);
 	/**
 	 * Enter a parse tree produced by {@link TESTParser#termOperator}.
 	 * @param ctx the parse tree
@@ -108,35 +108,25 @@ public interface TESTListener extends ParseTreeListener {
 	 */
 	void exitTermOperator(TESTParser.TermOperatorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#comparaiser}.
+	 * Enter a parse tree produced by {@link TESTParser#factorOperator}.
 	 * @param ctx the parse tree
 	 */
-	void enterComparaiser(TESTParser.ComparaiserContext ctx);
+	void enterFactorOperator(TESTParser.FactorOperatorContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#comparaiser}.
+	 * Exit a parse tree produced by {@link TESTParser#factorOperator}.
 	 * @param ctx the parse tree
 	 */
-	void exitComparaiser(TESTParser.ComparaiserContext ctx);
+	void exitFactorOperator(TESTParser.FactorOperatorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link TESTParser#integer}.
+	 * Enter a parse tree produced by {@link TESTParser#comparatorOperator}.
 	 * @param ctx the parse tree
 	 */
-	void enterInteger(TESTParser.IntegerContext ctx);
+	void enterComparatorOperator(TESTParser.ComparatorOperatorContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link TESTParser#integer}.
+	 * Exit a parse tree produced by {@link TESTParser#comparatorOperator}.
 	 * @param ctx the parse tree
 	 */
-	void exitInteger(TESTParser.IntegerContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link TESTParser#varType}.
-	 * @param ctx the parse tree
-	 */
-	void enterVarType(TESTParser.VarTypeContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link TESTParser#varType}.
-	 * @param ctx the parse tree
-	 */
-	void exitVarType(TESTParser.VarTypeContext ctx);
+	void exitComparatorOperator(TESTParser.ComparatorOperatorContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link TESTParser#varValue}.
 	 * @param ctx the parse tree
@@ -147,4 +137,14 @@ public interface TESTListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitVarValue(TESTParser.VarValueContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link TESTParser#integer}.
+	 * @param ctx the parse tree
+	 */
+	void enterInteger(TESTParser.IntegerContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link TESTParser#integer}.
+	 * @param ctx the parse tree
+	 */
+	void exitInteger(TESTParser.IntegerContext ctx);
 }
