@@ -188,66 +188,6 @@ public interface SEMANTICListener extends ParseTreeListener {
 	 */
 	void exitLet(SEMANTICParser.LetContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SEMANTICParser#binaryOperation}.
-	 * @param ctx the parse tree
-	 */
-	void enterBinaryOperation(SEMANTICParser.BinaryOperationContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SEMANTICParser#binaryOperation}.
-	 * @param ctx the parse tree
-	 */
-	void exitBinaryOperation(SEMANTICParser.BinaryOperationContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SEMANTICParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void enterCondition(SEMANTICParser.ConditionContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SEMANTICParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void exitCondition(SEMANTICParser.ConditionContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SEMANTICParser#term}.
-	 * @param ctx the parse tree
-	 */
-	void enterTerm(SEMANTICParser.TermContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SEMANTICParser#term}.
-	 * @param ctx the parse tree
-	 */
-	void exitTerm(SEMANTICParser.TermContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SEMANTICParser#factor}.
-	 * @param ctx the parse tree
-	 */
-	void enterFactor(SEMANTICParser.FactorContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SEMANTICParser#factor}.
-	 * @param ctx the parse tree
-	 */
-	void exitFactor(SEMANTICParser.FactorContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SEMANTICParser#value}.
-	 * @param ctx the parse tree
-	 */
-	void enterValue(SEMANTICParser.ValueContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SEMANTICParser#value}.
-	 * @param ctx the parse tree
-	 */
-	void exitValue(SEMANTICParser.ValueContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SEMANTICParser#unOperation}.
-	 * @param ctx the parse tree
-	 */
-	void enterUnOperation(SEMANTICParser.UnOperationContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SEMANTICParser#unOperation}.
-	 * @param ctx the parse tree
-	 */
-	void exitUnOperation(SEMANTICParser.UnOperationContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link SEMANTICParser#newObj}.
 	 * @param ctx the parse tree
 	 */
@@ -258,15 +198,95 @@ public interface SEMANTICListener extends ParseTreeListener {
 	 */
 	void exitNewObj(SEMANTICParser.NewObjContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SEMANTICParser#unOperator}.
+	 * Enter a parse tree produced by {@link SEMANTICParser#binaryOperation}.
 	 * @param ctx the parse tree
 	 */
-	void enterUnOperator(SEMANTICParser.UnOperatorContext ctx);
+	void enterBinaryOperation(SEMANTICParser.BinaryOperationContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link SEMANTICParser#unOperator}.
+	 * Exit a parse tree produced by {@link SEMANTICParser#binaryOperation}.
 	 * @param ctx the parse tree
 	 */
-	void exitUnOperator(SEMANTICParser.UnOperatorContext ctx);
+	void exitBinaryOperation(SEMANTICParser.BinaryOperationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#expr1}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr1(SEMANTICParser.Expr1Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#expr1}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr1(SEMANTICParser.Expr1Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#expr2}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr2(SEMANTICParser.Expr2Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#expr2}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr2(SEMANTICParser.Expr2Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#expr3}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr3(SEMANTICParser.Expr3Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#expr3}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr3(SEMANTICParser.Expr3Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#expr4}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr4(SEMANTICParser.Expr4Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#expr4}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr4(SEMANTICParser.Expr4Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#expr5}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr5(SEMANTICParser.Expr5Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#expr5}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr5(SEMANTICParser.Expr5Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#expr6}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr6(SEMANTICParser.Expr6Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#expr6}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr6(SEMANTICParser.Expr6Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#expr7}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr7(SEMANTICParser.Expr7Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#expr7}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr7(SEMANTICParser.Expr7Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#expr8}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr8(SEMANTICParser.Expr8Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#expr8}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr8(SEMANTICParser.Expr8Context ctx);
 	/**
 	 * Enter a parse tree produced by {@link SEMANTICParser#termOperator}.
 	 * @param ctx the parse tree
@@ -278,15 +298,25 @@ public interface SEMANTICListener extends ParseTreeListener {
 	 */
 	void exitTermOperator(SEMANTICParser.TermOperatorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SEMANTICParser#comparaiser}.
+	 * Enter a parse tree produced by {@link SEMANTICParser#factorOperator}.
 	 * @param ctx the parse tree
 	 */
-	void enterComparaiser(SEMANTICParser.ComparaiserContext ctx);
+	void enterFactorOperator(SEMANTICParser.FactorOperatorContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link SEMANTICParser#comparaiser}.
+	 * Exit a parse tree produced by {@link SEMANTICParser#factorOperator}.
 	 * @param ctx the parse tree
 	 */
-	void exitComparaiser(SEMANTICParser.ComparaiserContext ctx);
+	void exitFactorOperator(SEMANTICParser.FactorOperatorContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#comparatorOperator}.
+	 * @param ctx the parse tree
+	 */
+	void enterComparatorOperator(SEMANTICParser.ComparatorOperatorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#comparatorOperator}.
+	 * @param ctx the parse tree
+	 */
+	void exitComparatorOperator(SEMANTICParser.ComparatorOperatorContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SEMANTICParser#integer}.
 	 * @param ctx the parse tree

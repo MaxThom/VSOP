@@ -40,15 +40,13 @@ grammar PARSER;
     expr7                   : <assoc=right> expr8 POW expr7 | expr8 ;
     expr8                   : '(' expr1 ')' |  varValue | OBJECT_IDENTIFIER | callMethod | newObj | ifStatement ;
 
-
     termOperator            : MINUS | PLUS ;
     factorOperator          : MULTI | DIV ;
     comparatorOperator      : LOWER | LOWER_EQUAL | EQUAL ;
 
-
     integer                 : INTEGER_HEX | INTEGER_DEC | INTEGER_BIN ;
     varType                 : 'bool' | 'int32' | 'string' | 'unit' | TYPE_IDENTIFIER ;
-    varValue                : 'true' | 'false' | STRING | integer  ;
+    varValue                : 'true' | 'false' | STRING | integer  | VOID_OPERATOR;
 
 
 

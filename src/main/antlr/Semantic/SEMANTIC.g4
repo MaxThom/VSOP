@@ -2,7 +2,7 @@ grammar SEMANTIC;
 @header {package VSOP.Semantic;}
     program                 : (classDefinition)+ ;
 
-    statement               : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation | unOperation;
+    statement               : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation;
     block                   : '{' (((statement | block) | (((statement ';') | whileStatement | ifStatement)+ (statement | block) ))?) '}' ;
 
     classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}' ;
@@ -16,7 +16,6 @@ grammar SEMANTIC;
     callFunction            : OBJECT_IDENTIFIER (('(' (((argument ',')+ argument) | argument?) ')') | ('()')) ;
     argument                : OBJECT_IDENTIFIER | varValue | callMethod | newObj | binaryOperation;
 
-
     assign                  : OBJECT_IDENTIFIER '<-' statement ;
 
     whileStatement          : 'while' statement 'do' (statement | block) ;
@@ -27,30 +26,41 @@ grammar SEMANTIC;
 
     let                     : 'let' OBJECT_IDENTIFIER ':' varType ('<-' statement)? 'in' (statement | block) ;
 
-    binaryOperation         : condition (AND_OPERATOR condition)* | ('(' condition (AND_OPERATOR condition)* ')') ;
-    condition               : term (CONDITIONAL_OPERATOR term)* | ('(' term (CONDITIONAL_OPERATOR term)* ')') ;
-    term                    : factor (termOperator factor)* | ('(' factor (termOperator factor)* ')') ;
-    factor                  : (value (FACTOR_OPERATOR value)*) | ('(' value (FACTOR_OPERATOR value)* ')') ;
-    value                   : unOperation | OBJECT_IDENTIFIER | varValue | callMethod | newObj | ifStatement;
-
-    unOperation             : unOperator (statement) ;
-
     newObj                  : 'new' TYPE_IDENTIFIER ;
 
-    unOperator              : UN_OPERATOR | NEGATIVE_OPERATOR ;
-    termOperator            : TERM_OPERATOR | NEGATIVE_OPERATOR ;
-    comparaiser             : OBJECT_IDENTIFIER | integer | STRING ;
+    binaryOperation         : expr1 ;
+    expr1                   : expr1 AND expr2 | expr2 ;
+    expr2                   : <assoc=right> NOT expr2 | expr3 ;
+    expr3                   : expr4 comparatorOperator expr4 | expr4 ;
+    expr4                   : expr4 termOperator expr5 | expr5 ;
+    expr5                   : expr5 factorOperator expr6 | expr6 ;
+    expr6                   : <assoc=right> MINUS expr6 | <assoc=right> ISNULL expr6 | expr7 ;
+    expr7                   : <assoc=right> expr8 POW expr7 | expr8 ;
+    expr8                   : '(' expr1 ')' |  varValue | OBJECT_IDENTIFIER | callMethod | newObj | ifStatement ;
+
+    termOperator            : MINUS | PLUS ;
+    factorOperator          : MULTI | DIV ;
+    comparatorOperator      : LOWER | LOWER_EQUAL | EQUAL ;
+
     integer                 : INTEGER_HEX | INTEGER_DEC | INTEGER_BIN ;
     varType                 : 'bool' | 'int32' | 'string' | 'unit' | TYPE_IDENTIFIER ;
     varValue                : 'true' | 'false' | STRING | integer  | VOID_OPERATOR;
 
 
-    UN_OPERATOR             : 'not' | 'isnull' ;
-    FACTOR_OPERATOR         : 'd zzdqasdw' ;
-    TERM_OPERATOR           : '+' | '*' | '/' | '^';
-    AND_OPERATOR            : 'and' ;
-    CONDITIONAL_OPERATOR    : '=' | '<' | '<=' ;
-    NEGATIVE_OPERATOR       : '-' ;
+    POW                     : '^' ;
+    MULTI                   : '*' ;
+    DIV                     : '/' ;
+    MINUS                   : '-' ;
+    PLUS                    : '+' ;
+
+    LOWER_EQUAL             : '<=' ;
+    EQUAL                   : '=' ;
+    LOWER                   : '<' ;
+
+    AND                     : 'and' ;
+    NOT                     : 'not' ;
+    ISNULL                  : 'isnull' ;
+
     VOID_OPERATOR           : '()' ;
 
     MULTILINE_OPEN_COMMENT  : '(*' ;

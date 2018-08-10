@@ -415,8 +415,6 @@ public class SemanticListener extends SEMANTICBaseListener {
             typeFound = checkWhileStatementType(ctx.whileStatement(), variablesCache);
         } else if (ctx.let() != null) {
             typeFound = checkLetStatementType(ctx.let(), variablesCache);
-        } else if (ctx.unOperation() != null) {
-            typeFound = checkUnOperation(ctx.unOperation(), variablesCache);
         } else if (ctx.binaryOperation() != null) {
             typeFound = checkBinaryOperation(ctx.binaryOperation(), variablesCache);
         } else if (ctx.callMethod() != null) {
@@ -598,7 +596,182 @@ public class SemanticListener extends SEMANTICBaseListener {
         return typeFound;
     }
 
-    private String checkBinaryOperation(BinaryOperationContext ctx, ArrayList<Map<String, String>> variablesCache) {
+    private String checkBinaryOperation(BinaryOperationContext binOp, ArrayList<Map<String, String>> variablesCache) {
+
+        return handleExpr1(binOp.expr1(), variablesCache);
+    }
+
+
+    private String handleExpr1(Expr1Context expr1, ArrayList<Map<String, String>> variablesCache) {
+
+        if (expr1.expr1() != null) {
+            treeOutput.append("BinOp(");
+            treeOutput.append(expr1.AND().getText());
+            treeOutput.append(", ");
+            String type1 = handleExpr1(expr1.expr1(), variablesCache);
+            treeOutput.append(", ");
+            String type2 = handleExpr2(expr1.expr2(), variablesCache);
+            treeOutput.append(") : bool");
+
+            if (!type1.equals("bool"))
+                errorOutput.add(fileName + ":" + expr1.getStart().getLine() + ":" + (expr1.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'bool' in and statement. Found '" + type1 + "' on left side.");
+            if (!type2.equals("bool"))
+                errorOutput.add(fileName + ":" + expr1.getStart().getLine() + ":" + (expr1.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'bool' in and statement. Found '" + type2 + "' on right side.");
+        } else
+           return handleExpr2(expr1.expr2(), variablesCache);
+
+        return "bool";
+    }
+
+    private String handleExpr2(Expr2Context expr2, ArrayList<Map<String, String>> variablesCache) {
+
+        if (expr2.expr2() != null) {
+            treeOutput.append("UnOp(");
+            treeOutput.append(expr2.NOT().getText());
+            treeOutput.append(", ");
+            String type1 = handleExpr2(expr2.expr2(), variablesCache);
+            treeOutput.append(") : bool");
+
+            if (!type1.equals("bool"))
+                errorOutput.add(fileName + ":" + expr2.getStart().getLine() + ":" + (expr2.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'bool' in not statement. Found '" + type1 + "'.");
+        } else
+            return handleExpr3(expr2.expr3(), variablesCache);
+
+        return "bool";
+    }
+
+    private String handleExpr3(Expr3Context expr3, ArrayList<Map<String, String>> variablesCache) {
+
+        if (expr3.comparatorOperator() != null) {
+            treeOutput.append("BinOp(");
+            treeOutput.append(expr3.comparatorOperator().getText());
+            treeOutput.append(", ");
+            String type1 = handleExpr4(expr3.expr4(0), variablesCache);
+            treeOutput.append(", ");
+            String type2 = handleExpr4(expr3.expr4(1), variablesCache);
+            treeOutput.append(") : bool");
+
+            if (!type1.equals(type2))
+                errorOutput.add(fileName + ":" + expr3.getStart().getLine() + ":" + (expr3.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting same type on each side. Found '" + type1 + "' on left side and '" + type2 + "' on right side.");
+        } else
+           return handleExpr4(expr3.expr4(0), variablesCache);
+
+        return "bool";
+    }
+
+    private String handleExpr4(Expr4Context expr4, ArrayList<Map<String, String>> variablesCache) {
+
+        if (expr4.termOperator() != null) {
+            treeOutput.append("BinOp(");
+            treeOutput.append(expr4.termOperator().getText());
+            treeOutput.append(", ");
+            String type1 = handleExpr4(expr4.expr4(), variablesCache);
+            treeOutput.append(", ");
+            String type2 = handleExpr5(expr4.expr5(), variablesCache);
+            treeOutput.append(") : int32");
+
+            if (!type1.equals("int32"))
+                errorOutput.add(fileName + ":" + expr4.getStart().getLine() + ":" + (expr4.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic statement. Found '" + type1 + "' on left side.");
+            if (!type2.equals("int32"))
+                errorOutput.add(fileName + ":" + expr4.getStart().getLine() + ":" + (expr4.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic statement. Found '" + type2 + "' on right side.");
+        } else
+            return handleExpr5(expr4.expr5(), variablesCache);
+
+        return "int32";
+    }
+
+    private String handleExpr5(Expr5Context expr5, ArrayList<Map<String, String>> variablesCache) {
+
+        if (expr5.factorOperator() != null) {
+            treeOutput.append("BinOp(");
+            treeOutput.append(expr5.factorOperator().getText());
+            treeOutput.append(", ");
+            String type1 = handleExpr5(expr5.expr5(), variablesCache);
+            treeOutput.append(", ");
+            String type2 = handleExpr6(expr5.expr6(), variablesCache);
+            treeOutput.append(") : int32");
+
+            if (!type1.equals("int32"))
+                errorOutput.add(fileName + ":" + expr5.getStart().getLine() + ":" + (expr5.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic statement. Found '" + type1 + "' on left side.");
+            if (!type2.equals("int32"))
+                errorOutput.add(fileName + ":" + expr5.getStart().getLine() + ":" + (expr5.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic statement. Found '" + type2 + "' on right side.");
+        } else
+            return handleExpr6(expr5.expr6(), variablesCache);
+
+        return "int32";
+    }
+
+    private String handleExpr6(Expr6Context expr6, ArrayList<Map<String, String>> variablesCache) {
+        String returnType = "";
+
+        if (expr6.expr6() != null) {
+            String operator = expr6.MINUS() != null ? expr6.MINUS().getText() : expr6.ISNULL().getText();
+            String type = "";
+            returnType = expr6.MINUS() != null ? "int32" : "bool";
+            treeOutput.append("UnOp(");
+            treeOutput.append(operator);
+            treeOutput.append(", ");
+            type = handleExpr6(expr6.expr6(), variablesCache);
+            treeOutput.append(") : " + returnType);
+
+
+            if (operator.equals("isnull") && isPrimitive(type)) {
+                errorOutput.add(fileName + ":" + expr6.getStart().getLine() + ":" + (expr6.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expected type in isnull operator is 'Object'. Found '" + type + "'.");
+            } else if (operator.equals("-") && !type.equals("int32")) {
+                errorOutput.add(fileName + ":" + expr6.getStart().getLine() + ":" + (expr6.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expected type in - operator is 'int32'. Found '" + type + "'.");
+            }
+
+        } else
+            return handleExpr7(expr6.expr7(), variablesCache);
+
+        return returnType;
+    }
+
+    private String handleExpr7(Expr7Context expr7, ArrayList<Map<String, String>> variablesCache) {
+
+        if (expr7.POW() != null) {
+            treeOutput.append("BinOp(");
+            treeOutput.append(expr7.POW().getText());
+            treeOutput.append(", ");
+            String type1 = handleExpr8(expr7.expr8(), variablesCache);
+            treeOutput.append(", ");
+            String type2 = handleExpr7(expr7.expr7(), variablesCache);
+            treeOutput.append(") : int32");
+
+            if (!type1.equals("int32"))
+                errorOutput.add(fileName + ":" + expr7.getStart().getLine() + ":" + (expr7.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic statement. Found '" + type1 + "' on left side.");
+            if (!type2.equals("int32"))
+                errorOutput.add(fileName + ":" + expr7.getStart().getLine() + ":" + (expr7.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic statement. Found '" + type2 + "' on right side.");
+        } else
+            return handleExpr8(expr7.expr8(), variablesCache);
+
+        return "int32";
+    }
+
+    private String handleExpr8(Expr8Context expr8, ArrayList<Map<String, String>> variablesCache) {
+
+        if (expr8.expr1() != null)
+            return handleExpr1(expr8.expr1(), variablesCache);
+        else if (expr8.callMethod() != null)
+            return checkCallMethod(expr8.callMethod(), variablesCache);
+        else if (expr8.varValue() != null)
+            return checkVarValue(expr8.varValue(), variablesCache);
+        else if (expr8.newObj() != null)
+            return checkNewOperator(expr8.newObj(), variablesCache);
+        else if (expr8.ifStatement() != null)
+            return checkIfStatementType(expr8.ifStatement(), variablesCache, true);
+        else if (expr8.OBJECT_IDENTIFIER() != null) {
+            String typeFound = checkVariableCacheForIdentifier(expr8.OBJECT_IDENTIFIER(), variablesCache);
+            treeOutput.append(expr8.OBJECT_IDENTIFIER().getText() + " : " + typeFound);
+            return typeFound;
+        }
+
+        return "";
+
+
+    }
+
+   /* private String checkBinaryOperation(BinaryOperationContext ctx, ArrayList<Map<String, String>> variablesCache) {
         String typeFound = "";
 
         if (ctx.AND_OPERATOR().size() > 0)
@@ -768,7 +941,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         }
 
         return "";
-    }
+    }*/
 
     private String checkAssignOperation(AssignContext ctx, ArrayList<Map<String, String>> variablesCache) {
         String varType = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
@@ -950,7 +1123,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         return lastCallerType;
     }
 
-    private String checkUnOperation(UnOperationContext ctx, ArrayList<Map<String, String>> variablesCache) {
+    /*private String checkUnOperation(UnOperationContext ctx, ArrayList<Map<String, String>> variablesCache) {
         String typeFound = "";
         treeOutput.append("UnOp(");
         treeOutput.append(ctx.unOperator().getText());
@@ -974,7 +1147,7 @@ public class SemanticListener extends SEMANTICBaseListener {
         treeOutput.append(") : " + typeFound);
 
         return typeFound;
-    }
+    }*/
 
     private String checkVarValue(VarValueContext ctx, ArrayList<Map<String, String>> variablesCache) {
         String typeFound = "";
@@ -1060,539 +1233,6 @@ public class SemanticListener extends SEMANTICBaseListener {
 
 //endregion
 
-//region WRITE_ABSTRACT_TREE
 
-    private StringBuilder handleProgram(ProgramContext ctx) {
-
-        StringBuilder output = new StringBuilder();
-        output.append("[");
-
-        for (ClassDefinitionContext classDef : ctx.classDefinition()) {
-            output.append(handleClass(classDef));
-            output.append(", ");
-        }
-        if ( ctx.classDefinition().size() > 0) output.delete(output.length()-2, output.length());
-
-        output.append("]");
-
-        return output;
-    }
-
-    private StringBuilder handleClass(ClassDefinitionContext classDef) {
-
-        // Class Info
-        StringBuilder output = new StringBuilder();
-        output.append("Class(");
-        output.append(classDef.TYPE_IDENTIFIER(0).getText());
-        output.append(", ");
-        output.append(classDef.TYPE_IDENTIFIER(1) != null ? classDef.TYPE_IDENTIFIER(1).getText() : "Object");
-
-        // Fields
-        output.append(", [");
-        for (FieldContext field : classDef.field()) {
-            output.append(handleField(field));
-            output.append(", ");
-        }
-        if (classDef.field().size() > 0) output.delete(output.length()-2, output.length());
-        output.append("]");
-
-        // Methods
-        output.append(", [");
-        for (MethodDefinitionContext method : classDef.methodDefinition()) {
-            output.append(handleMethod(method));
-            output.append(", ");
-        }
-        if (classDef.methodDefinition().size() > 0) output.delete(output.length()-2, output.length());
-        output.append("]");
-        output.append(")");
-
-        return output;
-    }
-
-    private StringBuilder handleField(FieldContext field) {
-        StringBuilder output = new StringBuilder();
-        output.append("Field(");
-        output.append(field.OBJECT_IDENTIFIER().getText());
-        output.append(", ");
-        output.append(field.varType().getText());
-
-        if (field.statement() != null) {
-            output.append(", ");
-            output.append(handleStatement(field.statement()));
-        }
-        else if (field.block() != null) {
-            output.append(", ");
-            output.append(handleBlock(field.block()));
-        } else {
-            /*output.append(", ");
-            output.append(defaultVarValue(field.varType().getText()));
-            output.append(" : ");
-            output.append(field.varType().getText());*/
-        }
-
-        output.append(")");
-        return output;
-    }
-
-    private StringBuilder handleMethod(MethodDefinitionContext method) {
-        StringBuilder output = new StringBuilder();
-        //Method Info
-        output.append("Method(");
-        output.append(method.OBJECT_IDENTIFIER());
-        output.append(", ");
-        output.append("[");
-
-        for (FormalContext formal : method.formal()) {
-            output.append(handleFormal(formal));
-            output.append(", ");
-        }
-
-        if (method.formal().size() > 0) output.delete(output.length()-2, output.length());
-        output.append("]");
-
-        output.append(", ");
-        output.append(method.varType().getText());
-        output.append(", ");
-        output.append(handleBlock(method.block()));
-        output.append(")");
-
-        return output;
-    }
-
-    private StringBuilder handleFormal(FormalContext formal) {
-        StringBuilder output = new StringBuilder();
-
-        output.append(formal.OBJECT_IDENTIFIER().getText());
-        output.append(" : ");
-        output.append(formal.varType().getText());
-
-        return output;
-    }
-
-    private StringBuilder handleBlock(BlockContext block) {
-        StringBuilder output = new StringBuilder();
-        StringBuilder temp = new StringBuilder();
-        int countStat = 0;
-        for (ParseTree child : block.children) {
-
-            if (child instanceof ParserRuleContext) {
-                countStat++;
-
-                if (child instanceof StatementContext) {
-                    temp.append(handleStatement((StatementContext) child));
-                } else if (child instanceof IfStatementContext) {
-                    temp.append(handleIfStatement((IfStatementContext) child));
-                } else if (child instanceof WhileStatementContext) {
-                    temp.append(handleWhileStatement((WhileStatementContext) child));
-                }
-
-                temp.append(", ");
-            }
-        }
-
-        if (countStat > 1) {
-            output.append("[");
-            if (temp.length() > 1) temp.delete(temp.length()-2, temp.length());
-            output.append(temp);
-            output.append("]");
-        } else {
-            if (temp.length() > 1) temp.delete(temp.length()-2, temp.length());
-            output.append(temp);
-        }
-
-        return output;
-    }
-
-    private StringBuilder handleStatement(StatementContext statement) {
-        StringBuilder output = new StringBuilder();
-
-        if (statement.assign() != null) {
-            output.append(handleAssign(statement.assign()));
-        } else if (statement.ifStatement() != null) {
-            output.append(handleIfStatement(statement.ifStatement()));
-        } else if (statement.whileStatement() != null) {
-            output.append(handleWhileStatement(statement.whileStatement()));
-        } else if (statement.let() != null) {
-            output.append(handleLet(statement.let()));
-        } else if (statement.unOperation() != null) {
-            output.append(handleUnOperation(statement.unOperation()));
-        } else if (statement.binaryOperation() != null) {
-            output.append(handleBinaryOperation(statement.binaryOperation()));
-        } else if (statement.callMethod() != null) {
-            output.append(handleCallMethod(statement.callMethod()));
-        } else if (statement.newObj() != null) {
-            output.append(handleNewObj(statement.newObj()));
-        } else if (statement.OBJECT_IDENTIFIER() != null) {
-            output.append(statement.OBJECT_IDENTIFIER().getText());
-        } else if (statement.varValue() != null) {
-            output.append(handleVarValue(statement.varValue()));
-        } else if (statement.statement() != null) {
-            output.append(handleStatement(statement.statement()));
-        }
-
-        return output;
-    }
-
-    private StringBuilder handleIfStatement(IfStatementContext ifStatement) {
-        StringBuilder output = new StringBuilder();
-        output.append("If(");
-        output.append(handleStatement(ifStatement.ifStat().statement(0)));
-
-
-        if (ifStatement.ifStat().statement(1) != null) {
-            output.append(", ");
-            output.append(handleStatement(ifStatement.ifStat().statement(1)));
-        } else if (ifStatement.ifStat().block() != null) {
-            output.append(", ");
-            output.append(handleBlock(ifStatement.ifStat().block()));
-        }
-
-        if (ifStatement.elseStat() != null) {
-            output.append(", ");
-            if (ifStatement.elseStat().statement() != null) {
-                output.append(handleStatement(ifStatement.elseStat().statement()));
-            } else if (ifStatement.elseStat().block() != null) {
-                output.append(handleBlock(ifStatement.elseStat().block()));
-            }
-        }
-
-        output.append(")");
-        output.append(" : bool");
-        //output.append(checkIfStatementType(ifStatement, null,false));
-
-        return output;
-    }
-
-    private StringBuilder handleWhileStatement(WhileStatementContext whileStatement) {
-        StringBuilder output = new StringBuilder();
-        output.append("While(");
-        output.append(handleStatement(whileStatement.statement(0)));
-
-
-        if (whileStatement.statement(1) != null) {
-            output.append(", ");
-            output.append(handleStatement(whileStatement.statement(1)));
-        } else if (whileStatement.block() != null) {
-            output.append(", ");
-            output.append(handleBlock(whileStatement.block()));
-        }
-
-        output.append(") : unit");
-        return output;
-    }
-
-    private StringBuilder handleAssign(AssignContext assign) {
-        StringBuilder output = new StringBuilder();
-        output.append("Assign(");
-        output.append(assign.OBJECT_IDENTIFIER().getText());
-        output.append(", ");
-
-        if (assign.statement() != null) {
-            output.append(handleStatement(assign.statement()));
-        }
-
-        output.append(")");
-        return output;
-    }
-
-    private StringBuilder handleLet(LetContext let) {
-        StringBuilder output = new StringBuilder();
-        output.append("Let(");
-        output.append(let.OBJECT_IDENTIFIER().getText());
-        output.append(", ");
-        output.append(let.varType().getText());
-        output.append(", ");
-
-        int statOffset = 0;
-        if (let.statement().size() == 2 || (let.block() != null && let.statement().size() == 1)) {
-            output.append(handleStatement(let.statement(statOffset++)));
-            output.append(", ");
-        }
-
-        if (let.block() != null) {
-            output.append(handleBlock(let.block()));
-        } else {
-            output.append(handleStatement(let.statement(statOffset)));
-        }
-
-
-        output.append(") : " + let.varType().getText());
-        return output;
-    }
-
-    private StringBuilder handleUnOperation(UnOperationContext unOp) {
-        StringBuilder output = new StringBuilder();
-        output.append("UnOp(");
-        output.append(unOp.unOperator().getText());
-        output.append(", ");
-
-        if (unOp.statement() != null)
-            output.append(handleStatement(unOp.statement()));
-        //else if (unOp.condition() != null)
-        //    output.append(handleCondition(unOp.condition()));
-
-        output.append(")");
-
-        return output;
-    }
-
-    private StringBuilder handleNewObj(NewObjContext obj) {
-        StringBuilder output = new StringBuilder();
-        output.append("New(");
-        output.append(obj.TYPE_IDENTIFIER().getText());
-        output.append(")");
-
-        return output;
-    }
-
-    private StringBuilder handleCallMethod(CallMethodContext call) {
-        StringBuilder output = new StringBuilder();
-
-        if (!(call.parent.parent instanceof BlockContext) && call.singleCallMethod().size() > 1) {
-            output.append("[");
-        }
-
-        for (int i = 0; i < call.singleCallMethod().size(); i++) {
-            output.append(handleSingleCallMethod(call.singleCallMethod(i)));
-            output.append(", ");
-        }
-        output.delete(output.length()-2, output.length());
-
-        if (!(call.parent.parent instanceof BlockContext) && call.singleCallMethod().size() > 1) {
-            output.append("]");
-        }
-
-        return output;
-    }
-
-    private StringBuilder handleSingleCallMethod(SingleCallMethodContext singleCall) {
-        StringBuilder output = new StringBuilder();
-
-        for (int i = singleCall.callFunction().size()-1; i >= 0 ; i--) {
-            output.append("Call(");
-        }
-
-        if (singleCall.caller().size() == 0) {
-            output.append("self, ");
-        }
-        else {
-            for (int i = 0; i < singleCall.caller().size() ; i++) {
-                output.append(handleCaller(singleCall.caller(i)) + ".");
-            }
-
-            output.delete(output.length()-1, output.length());
-            output.append(", ");
-        }
-
-        for (int i = 0; i < singleCall.callFunction().size() ; i++) {
-            output.append(handleCallFunction(singleCall.callFunction(i)));
-            output.append("), ");
-        }
-        output.delete(output.length()-2, output.length());
-
-        return output;
-    }
-
-    private StringBuilder handleCallFunction(CallFunctionContext callFunc) {
-        StringBuilder output = new StringBuilder();
-
-        output.append(callFunc.OBJECT_IDENTIFIER().getText());
-        output.append(", [");
-
-        for (ArgumentContext arg : callFunc.argument()) {
-            output.append(handleArgument(arg));
-            output.append(", ");
-        }
-
-        if (callFunc.argument().size() > 0) output.delete(output.length()-2, output.length());
-        output.append("]");
-
-        return output;
-    }
-
-    private StringBuilder handleCaller(CallerContext caller) {
-        StringBuilder output = new StringBuilder();
-
-        if (caller.newObj() != null) {
-            output.append(handleNewObj(caller.newObj()));
-        } else if (caller.OBJECT_IDENTIFIER() != null) {
-            output.append(caller.OBJECT_IDENTIFIER().getText());
-        }
-
-        return output;
-    }
-
-    private StringBuilder handleArgument(ArgumentContext arg) {
-        StringBuilder output = new StringBuilder();
-
-        if (arg.callMethod() != null) {
-            output.append(handleCallMethod(arg.callMethod()));
-        } else if (arg.newObj() != null) {
-            output.append(handleNewObj(arg.newObj()));
-        } else if (arg.OBJECT_IDENTIFIER() != null) {
-            output.append(arg.OBJECT_IDENTIFIER().getText());
-        } else if (arg.varValue() != null) {
-            output.append(arg.varValue().getText());
-        }  else if (arg.binaryOperation() != null) {
-            output.append(handleBinaryOperation(arg.binaryOperation()));
-        }
-
-        return output;
-    }
-
-    private StringBuilder handleBinaryOperation(BinaryOperationContext binOp) {
-        StringBuilder output = new StringBuilder();
-
-        if (binOp.condition().size() == 1) {
-            output.append(handleCondition(binOp.condition(0)));
-        } else {
-
-            for (int i = binOp.AND_OPERATOR().size()-1 ; i >= 0; i--) {
-                output.append("BinOp(");
-                output.append(binOp.AND_OPERATOR(i).getText());
-                output.append(", ");
-            }
-
-            output.append(handleCondition(binOp.condition(0)));
-
-            for (int j = 1 ; j < binOp.AND_OPERATOR().size(); j++) {
-                output.append(", ");
-                output.append(handleCondition(binOp.condition(j)));
-                output.append(") : bool");
-            }
-
-            output.append(", ");
-            output.append(handleCondition(binOp.condition(binOp.AND_OPERATOR().size())));
-            output.append(") : bool");
-        }
-
-        return output;
-    }
-
-    private StringBuilder handleCondition(ConditionContext cond) {
-        StringBuilder output = new StringBuilder();
-
-        if (cond.term().size() == 1) {
-            output.append(handleTerm(cond.term(0)));
-        } else {
-
-            for (int i = cond.CONDITIONAL_OPERATOR().size()-1 ; i >= 0; i--) {
-                output.append("BinOp(");
-                output.append(cond.CONDITIONAL_OPERATOR(i).getText());
-                output.append(", ");
-            }
-
-            output.append(handleTerm(cond.term(0)));
-
-            for (int j = 1 ; j < cond.CONDITIONAL_OPERATOR().size(); j++) {
-                output.append(", ");
-                output.append(handleTerm(cond.term(j)));
-                output.append(") : bool");
-            }
-
-            output.append(", ");
-            output.append(handleTerm(cond.term(cond.CONDITIONAL_OPERATOR().size())));
-            output.append(") : bool");
-        }
-
-        return output;
-    }
-
-    private StringBuilder handleTerm(TermContext term) {
-        StringBuilder output = new StringBuilder();
-
-        if (term.factor().size() == 1) {
-            output.append(handleFactor(term.factor(0)));
-        } else {
-            for (int i = term.termOperator().size()-1 ; i >= 0; i--) {
-                output.append("BinOp(");
-                output.append(term.termOperator(i).getText());
-                output.append(", ");
-            }
-
-            output.append(handleFactor(term.factor(0)));
-
-            for (int j = 1 ; j < term.termOperator().size(); j++) {
-                output.append(", ");
-                output.append(handleFactor(term.factor(j)));
-                output.append(") : int32");
-            }
-
-            output.append(", ");
-            output.append(handleFactor(term.factor(term.termOperator().size())));
-            output.append(") : int32");
-        }
-
-        return output;
-    }
-
-    private StringBuilder handleFactor(FactorContext factor) {
-        StringBuilder output = new StringBuilder();
-
-        if (factor.value().size() == 1) {
-            output.append(handleValue(factor.value(0)));
-        } else {
-
-            for (int i = factor.FACTOR_OPERATOR().size()-1 ; i >= 0; i--) {
-                output.append("BinOp(");
-                output.append(factor.FACTOR_OPERATOR(i).getText());
-                output.append(", ");
-            }
-
-            output.append(handleValue(factor.value(0)));
-
-            for (int j = 1 ; j < factor.FACTOR_OPERATOR().size(); j++) {
-                output.append(", ");
-                output.append(handleValue(factor.value(j)));
-                output.append(") : int32");
-            }
-
-            output.append(", ");
-            output.append(handleValue(factor.value(factor.FACTOR_OPERATOR().size())));
-            output.append(") : int32");
-        }
-
-        return output;
-    }
-
-    private StringBuilder handleValue(ValueContext value) {
-        StringBuilder output = new StringBuilder();
-
-        if (value.unOperation() != null)
-            output.append(handleUnOperation(value.unOperation()));
-        else if (value.callMethod() != null)
-            output.append(handleCallMethod(value.callMethod()));
-        else if (value.varValue() != null)
-            output.append(handleVarValue(value.varValue()));
-        else
-            output.append(value.getChild(0).getText());
-
-        return output;
-    }
-
-    private StringBuilder handleVarValue(VarValueContext varValue) {
-        StringBuilder output = new StringBuilder();
-        output.append(varValue.getText());
-
-        if (varValue.STRING() != null)
-            output.append(" : string");
-        else if (varValue.integer() != null)
-            output.append(" : int32");
-        else if (varValue.VOID_OPERATOR() != null)
-            output.append(" : unit");
-        else
-            output.append(" : bool");
-
-        return output;
-    }
-
-    private StringBuilder handleObjectIdentifier(ValueContext value) {
-        StringBuilder output = new StringBuilder();
-
-
-        return output;
-    }
-
-//endregion
 
 }

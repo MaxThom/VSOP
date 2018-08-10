@@ -367,6 +367,7 @@ public class PARSERParser extends Parser {
 				case MINUS:
 				case NOT:
 				case ISNULL:
+				case VOID_OPERATOR:
 				case INTEGER_BIN:
 				case INTEGER_HEX:
 				case INTEGER_DEC:
@@ -446,6 +447,7 @@ public class PARSERParser extends Parser {
 				case MINUS:
 				case NOT:
 				case ISNULL:
+				case VOID_OPERATOR:
 				case INTEGER_BIN:
 				case INTEGER_HEX:
 				case INTEGER_DEC:
@@ -815,6 +817,7 @@ public class PARSERParser extends Parser {
 				case MINUS:
 				case NOT:
 				case ISNULL:
+				case VOID_OPERATOR:
 				case INTEGER_BIN:
 				case INTEGER_HEX:
 				case INTEGER_DEC:
@@ -1161,7 +1164,7 @@ public class PARSERParser extends Parser {
 					setState(213);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
-					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__0) | (1L << T__13) | (1L << T__18) | (1L << T__23) | (1L << T__24) | (1L << MINUS) | (1L << NOT) | (1L << ISNULL) | (1L << INTEGER_BIN) | (1L << INTEGER_HEX) | (1L << INTEGER_DEC) | (1L << OBJECT_IDENTIFIER) | (1L << STRING))) != 0)) {
+					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__0) | (1L << T__13) | (1L << T__18) | (1L << T__23) | (1L << T__24) | (1L << MINUS) | (1L << NOT) | (1L << ISNULL) | (1L << VOID_OPERATOR) | (1L << INTEGER_BIN) | (1L << INTEGER_HEX) | (1L << INTEGER_DEC) | (1L << OBJECT_IDENTIFIER) | (1L << STRING))) != 0)) {
 						{
 						setState(212);
 						argument();
@@ -1376,6 +1379,7 @@ public class PARSERParser extends Parser {
 			case MINUS:
 			case NOT:
 			case ISNULL:
+			case VOID_OPERATOR:
 			case INTEGER_BIN:
 			case INTEGER_HEX:
 			case INTEGER_DEC:
@@ -1509,6 +1513,7 @@ public class PARSERParser extends Parser {
 			case MINUS:
 			case NOT:
 			case ISNULL:
+			case VOID_OPERATOR:
 			case INTEGER_BIN:
 			case INTEGER_HEX:
 			case INTEGER_DEC:
@@ -1583,6 +1588,7 @@ public class PARSERParser extends Parser {
 			case MINUS:
 			case NOT:
 			case ISNULL:
+			case VOID_OPERATOR:
 			case INTEGER_BIN:
 			case INTEGER_HEX:
 			case INTEGER_DEC:
@@ -1685,6 +1691,7 @@ public class PARSERParser extends Parser {
 			case MINUS:
 			case NOT:
 			case ISNULL:
+			case VOID_OPERATOR:
 			case INTEGER_BIN:
 			case INTEGER_HEX:
 			case INTEGER_DEC:
@@ -1919,6 +1926,7 @@ public class PARSERParser extends Parser {
 			case T__24:
 			case MINUS:
 			case ISNULL:
+			case VOID_OPERATOR:
 			case INTEGER_BIN:
 			case INTEGER_HEX:
 			case INTEGER_DEC:
@@ -2222,6 +2230,7 @@ public class PARSERParser extends Parser {
 			case T__18:
 			case T__23:
 			case T__24:
+			case VOID_OPERATOR:
 			case INTEGER_BIN:
 			case INTEGER_HEX:
 			case INTEGER_DEC:
@@ -2646,6 +2655,7 @@ public class PARSERParser extends Parser {
 		public IntegerContext integer() {
 			return getRuleContext(IntegerContext.class,0);
 		}
+		public TerminalNode VOID_OPERATOR() { return getToken(PARSERParser.VOID_OPERATOR, 0); }
 		public VarValueContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2664,7 +2674,7 @@ public class PARSERParser extends Parser {
 		VarValueContext _localctx = new VarValueContext(_ctx, getState());
 		enterRule(_localctx, 66, RULE_varValue);
 		try {
-			setState(359);
+			setState(360);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__23:
@@ -2695,6 +2705,13 @@ public class PARSERParser extends Parser {
 				{
 				setState(358);
 				integer();
+				}
+				break;
+			case VOID_OPERATOR:
+				enterOuterAlt(_localctx, 5);
+				{
+				setState(359);
+				match(VOID_OPERATOR);
 				}
 				break;
 			default:
@@ -2746,7 +2763,7 @@ public class PARSERParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\62\u016c\4\2\t\2"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\62\u016d\4\2\t\2"+
 		"\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -2773,16 +2790,16 @@ public class PARSERParser extends Parser {
 		"\n\32\f\32\16\32\u0141\13\32\3\33\3\33\3\33\3\33\3\33\5\33\u0148\n\33"+
 		"\3\34\3\34\3\34\3\34\3\34\5\34\u014f\n\34\3\35\3\35\3\35\3\35\3\35\3\35"+
 		"\3\35\3\35\3\35\5\35\u015a\n\35\3\36\3\36\3\37\3\37\3 \3 \3!\3!\3\"\3"+
-		"\"\3#\3#\3#\3#\5#\u016a\n#\3#\2\5*\60\62$\2\4\6\b\n\f\16\20\22\24\26\30"+
-		"\32\34\36 \"$&(*,.\60\62\64\668:<>@BD\2\7\3\2\37 \3\2\35\36\3\2!#\3\2"+
-		"+-\4\2\26\31//\2\u0186\2G\3\2\2\2\4X\3\2\2\2\6Z\3\2\2\2\bp\3\2\2\2\n\u0080"+
-		"\3\2\2\2\f\u0098\3\2\2\2\16\u009c\3\2\2\2\20\u00b2\3\2\2\2\22\u00b7\3"+
-		"\2\2\2\24\u00c7\3\2\2\2\26\u00cb\3\2\2\2\30\u00e4\3\2\2\2\32\u00e6\3\2"+
-		"\2\2\34\u00ea\3\2\2\2\36\u00f1\3\2\2\2 \u00f5\3\2\2\2\"\u00fc\3\2\2\2"+
-		"$\u0101\3\2\2\2&\u010e\3\2\2\2(\u0111\3\2\2\2*\u0113\3\2\2\2,\u0121\3"+
-		"\2\2\2.\u0128\3\2\2\2\60\u012a\3\2\2\2\62\u0136\3\2\2\2\64\u0147\3\2\2"+
-		"\2\66\u014e\3\2\2\28\u0159\3\2\2\2:\u015b\3\2\2\2<\u015d\3\2\2\2>\u015f"+
-		"\3\2\2\2@\u0161\3\2\2\2B\u0163\3\2\2\2D\u0169\3\2\2\2FH\5\b\5\2GF\3\2"+
+		"\"\3#\3#\3#\3#\3#\5#\u016b\n#\3#\2\5*\60\62$\2\4\6\b\n\f\16\20\22\24\26"+
+		"\30\32\34\36 \"$&(*,.\60\62\64\668:<>@BD\2\7\3\2\37 \3\2\35\36\3\2!#\3"+
+		"\2+-\4\2\26\31//\2\u0188\2G\3\2\2\2\4X\3\2\2\2\6Z\3\2\2\2\bp\3\2\2\2\n"+
+		"\u0080\3\2\2\2\f\u0098\3\2\2\2\16\u009c\3\2\2\2\20\u00b2\3\2\2\2\22\u00b7"+
+		"\3\2\2\2\24\u00c7\3\2\2\2\26\u00cb\3\2\2\2\30\u00e4\3\2\2\2\32\u00e6\3"+
+		"\2\2\2\34\u00ea\3\2\2\2\36\u00f1\3\2\2\2 \u00f5\3\2\2\2\"\u00fc\3\2\2"+
+		"\2$\u0101\3\2\2\2&\u010e\3\2\2\2(\u0111\3\2\2\2*\u0113\3\2\2\2,\u0121"+
+		"\3\2\2\2.\u0128\3\2\2\2\60\u012a\3\2\2\2\62\u0136\3\2\2\2\64\u0147\3\2"+
+		"\2\2\66\u014e\3\2\2\28\u0159\3\2\2\2:\u015b\3\2\2\2<\u015d\3\2\2\2>\u015f"+
+		"\3\2\2\2@\u0161\3\2\2\2B\u0163\3\2\2\2D\u016a\3\2\2\2FH\5\b\5\2GF\3\2"+
 		"\2\2HI\3\2\2\2IG\3\2\2\2IJ\3\2\2\2J\3\3\2\2\2KY\5\32\16\2LY\5\36\20\2"+
 		"MY\5\34\17\2NY\5$\23\2OY\5\20\t\2PY\5&\24\2QY\7.\2\2RY\5D#\2ST\7\3\2\2"+
 		"TU\5\4\3\2UV\7\4\2\2VY\3\2\2\2WY\5(\25\2XK\3\2\2\2XL\3\2\2\2XM\3\2\2\2"+
@@ -2868,12 +2885,13 @@ public class PARSERParser extends Parser {
 		"\2\2\2\u0159\u0156\3\2\2\2\u0159\u0157\3\2\2\2\u0159\u0158\3\2\2\2\u015a"+
 		"9\3\2\2\2\u015b\u015c\t\2\2\2\u015c;\3\2\2\2\u015d\u015e\t\3\2\2\u015e"+
 		"=\3\2\2\2\u015f\u0160\t\4\2\2\u0160?\3\2\2\2\u0161\u0162\t\5\2\2\u0162"+
-		"A\3\2\2\2\u0163\u0164\t\6\2\2\u0164C\3\2\2\2\u0165\u016a\7\32\2\2\u0166"+
-		"\u016a\7\33\2\2\u0167\u016a\7\60\2\2\u0168\u016a\5@!\2\u0169\u0165\3\2"+
-		"\2\2\u0169\u0166\3\2\2\2\u0169\u0167\3\2\2\2\u0169\u0168\3\2\2\2\u016a"+
-		"E\3\2\2\2+IX]dfjlty{\u0087\u008c\u008e\u0092\u00a2\u00a4\u00ae\u00b2\u00b7"+
-		"\u00bf\u00c7\u00d2\u00d7\u00d9\u00dd\u00e4\u00ef\u00f3\u00fa\u00ff\u0107"+
-		"\u010c\u011b\u0121\u0128\u0133\u013f\u0147\u014e\u0159\u0169";
+		"A\3\2\2\2\u0163\u0164\t\6\2\2\u0164C\3\2\2\2\u0165\u016b\7\32\2\2\u0166"+
+		"\u016b\7\33\2\2\u0167\u016b\7\60\2\2\u0168\u016b\5@!\2\u0169\u016b\7\'"+
+		"\2\2\u016a\u0165\3\2\2\2\u016a\u0166\3\2\2\2\u016a\u0167\3\2\2\2\u016a"+
+		"\u0168\3\2\2\2\u016a\u0169\3\2\2\2\u016bE\3\2\2\2+IX]dfjlty{\u0087\u008c"+
+		"\u008e\u0092\u00a2\u00a4\u00ae\u00b2\u00b7\u00bf\u00c7\u00d2\u00d7\u00d9"+
+		"\u00dd\u00e4\u00ef\u00f3\u00fa\u00ff\u0107\u010c\u011b\u0121\u0128\u0133"+
+		"\u013f\u0147\u014e\u0159\u016a";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
