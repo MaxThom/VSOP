@@ -366,7 +366,9 @@ public class SemanticListener extends SEMANTICBaseListener {
             if (ctx.children.get(i) instanceof ParserRuleContext) {
                 ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
 
-                if (child instanceof IfStatementContext) {
+                if (child instanceof BlockContext) {
+                    checkBlockType((BlockContext) child, variablesCache);
+                } else if (child instanceof IfStatementContext) {
                     checkIfStatementType((IfStatementContext) child, variablesCache, true);
                 } else if (child instanceof WhileStatementContext) {
                     checkWhileStatementType((WhileStatementContext) child, variablesCache);
@@ -382,7 +384,9 @@ public class SemanticListener extends SEMANTICBaseListener {
             if (ctx.children.get(i) instanceof ParserRuleContext) {
                 ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
 
-                if (child instanceof StatementContext) {
+                if (child instanceof BlockContext) {
+                    typeFound = checkBlockType((BlockContext) child, variablesCache);
+                } else if (child instanceof StatementContext) {
                     typeFound = checkStatementType((StatementContext) child, variablesCache);
                 }
 

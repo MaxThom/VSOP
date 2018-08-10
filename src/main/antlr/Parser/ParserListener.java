@@ -139,7 +139,9 @@ public class ParserListener extends PARSERBaseListener {
             if (child instanceof ParserRuleContext) {
                 countStat++;
 
-                if (child instanceof StatementContext) {
+                if (child instanceof BlockContext) {
+                    temp.append(handleBlock((BlockContext) child));
+                } else if (child instanceof StatementContext) {
                     temp.append(handleStatement((StatementContext) child));
                 } else if (child instanceof IfStatementContext) {
                     temp.append(handleIfStatement((IfStatementContext) child));

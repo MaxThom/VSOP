@@ -3,17 +3,17 @@ grammar PARSER;
     program                 : (classDefinition)+ ; // | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
 
     statement               : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation | unOperation;
-    block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}';
+    block                   : '{' (((statement | block) | (((statement ';') | whileStatement | ifStatement)+ (statement | block) ))?) '}' ;
 
-    classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}';
+    classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}' ;
 
-    methodDefinition        : OBJECT_IDENTIFIER '(' (((formal ',')+ (formal)) | (formal)?) ')' ':' varType block ;
+    methodDefinition        : OBJECT_IDENTIFIER ('(' ((((formal ',')+ (formal)) | (formal)?) ')') | ('()')) ':' varType block ;
     formal                  : OBJECT_IDENTIFIER ':' varType ;
     field                   : OBJECT_IDENTIFIER ':' varType ('<-' (statement | block))? ';' ;
     callMethod              : (singleCallMethod) | ((singleCallMethod  '.')+ (singleCallMethod));
     singleCallMethod        : (caller)* callFunction ('.' callFunction)* ;
     caller                  : (OBJECT_IDENTIFIER | ('(' newObj ')')) '.';
-    callFunction            : OBJECT_IDENTIFIER '(' (((argument ',')+ argument) | argument?) ')' ;
+    callFunction            : OBJECT_IDENTIFIER (('(' (((argument ',')+ argument) | argument?) ')') | ('()')) ;
     argument                : OBJECT_IDENTIFIER | varValue | callMethod | newObj | binaryOperation;
 
 
@@ -34,7 +34,7 @@ grammar PARSER;
     condition               : term (CONDITIONAL_OPERATOR term)* | ('(' term (CONDITIONAL_OPERATOR term)* ')') ;
     term                    : factor (termOperator factor)* | ('(' factor (termOperator factor)* ')') ;
     factor                  : (value (FACTOR_OPERATOR value)*) | ('(' value (FACTOR_OPERATOR value)* ')') ;
-    value                   : unOperation | OBJECT_IDENTIFIER | varValue | callMethod;
+    value                   : unOperation | OBJECT_IDENTIFIER | varValue | callMethod | VOID_OPERATOR;
 
     unOperation             : unOperator (condition | statement) ;
 
@@ -55,6 +55,7 @@ grammar PARSER;
     AND_OPERATOR            : 'and' ;
     CONDITIONAL_OPERATOR    : '=' | '<' | '<=' ;
     NEGATIVE_OPERATOR       : '-' ;
+    VOID_OPERATOR           : '()' ;
 
     MULTILINE_OPEN_COMMENT  : '(*' ;
     MULTILINE_CLOSE_COMMENT : '*)' ;

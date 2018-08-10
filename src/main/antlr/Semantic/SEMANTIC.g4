@@ -1,11 +1,11 @@
 grammar SEMANTIC;
 @header {package VSOP.Semantic;}
-    program                 : (classDefinition)+ ; // | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
+    program                 : (classDefinition)+ ;
 
     statement               : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation | unOperation;
-    block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}' ;
+    block                   : '{' (((statement | block) | (((statement ';') | whileStatement | ifStatement)+ (statement | block) ))?) '}' ;
 
-    classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}';
+    classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}' ;
 
     methodDefinition        : OBJECT_IDENTIFIER ('(' ((((formal ',')+ (formal)) | (formal)?) ')') | ('()')) ':' varType block ;
     formal                  : OBJECT_IDENTIFIER ':' varType ;
@@ -32,6 +32,7 @@ grammar SEMANTIC;
     term                    : factor (termOperator factor)* | ('(' factor (termOperator factor)* ')') ;
     factor                  : (value (FACTOR_OPERATOR value)*) | ('(' value (FACTOR_OPERATOR value)* ')') ;
     value                   : unOperation | OBJECT_IDENTIFIER | varValue | callMethod | newObj | ifStatement;
+    //value                   : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | unOperation;
 
     unOperation             : unOperator (statement) ;
 
