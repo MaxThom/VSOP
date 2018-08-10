@@ -3,7 +3,7 @@ grammar SEMANTIC;
     program                 : (classDefinition)+ ; // | methodDefinition | statement)+ ; //TODO REMOVE STATEMENT
 
     statement               : assign | ifStatement | whileStatement | let | callMethod | newObj | OBJECT_IDENTIFIER | varValue | ('(' statement ')') | binaryOperation | unOperation;
-    block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}';
+    block                   : '{' (statement | (((statement ';') | whileStatement | ifStatement)+ statement))? '}' ;
 
     classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}';
 

@@ -98,8 +98,6 @@ public class SemanticListener extends SEMANTICBaseListener {
     }
 
 
-
-
 //region CHECK_TYPES
 
     private void checkTypeCompileTime(ProgramContext ctx) {
@@ -157,6 +155,9 @@ public class SemanticListener extends SEMANTICBaseListener {
                 ClassDefinitionContext err = ctx.classDefinition().stream().filter(x -> x.children.get(1).getText().equals(classDef.name)).findFirst().get();
 
                 ClassDefinition classExtension = classDef;
+                ArrayList<String> loopStack = new ArrayList<>();
+                loopStack.add(classDef.name);
+
                 int depth = 0;
                 do {
                     depth++;
@@ -167,11 +168,14 @@ public class SemanticListener extends SEMANTICBaseListener {
 
                     classExtension = classes.get(classExtension.extend);
 
-                    // Check if inheritance loop
-                    if (classExtension.name.equals(classDef.extend) && classExtension.extend.equals(classDef.name)) {
-                        errorOutput.add(fileName + ":" + err.getStart().getLine() + ":" + (err.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - classes '" + classDef.name + "' and '" + classExtension.name + "' cannot extend each other.");
+
+                    ClassDefinition finalClassExtension = classExtension;
+                    List<String> matches = loopStack.stream().filter(it -> it.contains(finalClassExtension.name)).collect(Collectors.toList());
+                    if (matches.size() > 0) {
+                        errorOutput.add(fileName + ":" + err.getStart().getLine() + ":" + (err.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - classes '" + classDef.name + "' and '" + loopStack.get(loopStack.size()-1) + "' cannot extend each other. Cycle detected.");
                         break;
                     }
+                    loopStack.add(classExtension.name);
 
                     // Check if field is already defined
                     for (FieldDefinition fieldDef : classDef.fields.values()) {
@@ -610,9 +614,9 @@ public class SemanticListener extends SEMANTICBaseListener {
         return typeFound;
     }
 
-    private void handleBinaryOperation2(BinaryOperationContext binOp, ArrayList<Map<String, String>> variablesCache) {
+    private String handleBinaryOperation2(BinaryOperationContext binOp, ArrayList<Map<String, String>> variablesCache) {
         if (binOp.condition().size() == 1) {
-            handleCondition2(binOp.condition(0), variablesCache);
+            return handleCondition2(binOp.condition(0), variablesCache);
         } else {
 
             for (int i = binOp.AND_OPERATOR().size()-1 ; i >= 0; i--) {
@@ -621,23 +625,31 @@ public class SemanticListener extends SEMANTICBaseListener {
                 treeOutput.append(", ");
             }
 
-            handleCondition2(binOp.condition(0), variablesCache);
+            String typeFound = handleCondition2(binOp.condition(0), variablesCache);
+            if (!typeFound.equals("bool"))
+                errorOutput.add(fileName + ":" + binOp.getStart().getLine() + ":" + (binOp.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'bool' in compare statement. Found '" + typeFound + "'.");
 
             for (int j = 1 ; j < binOp.AND_OPERATOR().size(); j++) {
                 treeOutput.append(", ");
-                handleCondition2(binOp.condition(j), variablesCache);
+                typeFound = handleCondition2(binOp.condition(j), variablesCache);
+                if (!typeFound.equals("bool"))
+                    errorOutput.add(fileName + ":" + binOp.getStart().getLine() + ":" + (binOp.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'bool' in compare statement. Found '" + typeFound + "'.");
                 treeOutput.append(") : bool");
             }
 
             treeOutput.append(", ");
-            handleCondition2(binOp.condition(binOp.AND_OPERATOR().size()), variablesCache);
+            typeFound = handleCondition2(binOp.condition(binOp.AND_OPERATOR().size()), variablesCache);
+            if (!typeFound.equals("bool"))
+                errorOutput.add(fileName + ":" + binOp.getStart().getLine() + ":" + (binOp.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'bool' in compare statement. Found '" + typeFound + "'.");
             treeOutput.append(") : bool");
         }
+
+        return "bool";
     }
 
-    private void handleCondition2(ConditionContext cond, ArrayList<Map<String, String>> variablesCache) {
+    private String handleCondition2(ConditionContext cond, ArrayList<Map<String, String>> variablesCache) {
         if (cond.term().size() == 1) {
-            handleTerm2(cond.term(0), variablesCache);
+            return handleTerm2(cond.term(0), variablesCache);
         } else {
 
             for (int i = cond.CONDITIONAL_OPERATOR().size()-1 ; i >= 0; i--) {
@@ -646,23 +658,32 @@ public class SemanticListener extends SEMANTICBaseListener {
                 treeOutput.append(", ");
             }
 
-            handleTerm2(cond.term(0), variablesCache);
+            String typeTerm1 = handleTerm2(cond.term(0), variablesCache);
+            String typeTerm2 = "";
+            //if (!typeFound.equals("bool"))
+            //    errorOutput.add(fileName + ":" + cond.getStart().getLine() + ":" + (cond.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'bool' in compare statement. Found '" + typeFound + "'.");
 
             for (int j = 1 ; j < cond.CONDITIONAL_OPERATOR().size(); j++) {
                 treeOutput.append(", ");
-                handleTerm2(cond.term(j), variablesCache);
+                typeTerm2 = handleTerm2(cond.term(j), variablesCache);
+                if (!typeTerm1.equals(typeTerm2))
+                    errorOutput.add(fileName + ":" + cond.getStart().getLine() + ":" + (cond.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting same type on each side. Found '" + typeTerm1 + "' and '" + typeTerm2 + "'.");
                 treeOutput.append(") : bool");
             }
 
             treeOutput.append(", ");
-            handleTerm2(cond.term(cond.CONDITIONAL_OPERATOR().size()), variablesCache);
+            typeTerm2 = handleTerm2(cond.term(cond.CONDITIONAL_OPERATOR().size()), variablesCache);
+            if (!typeTerm1.equals(typeTerm2))
+                errorOutput.add(fileName + ":" + cond.getStart().getLine() + ":" + (cond.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting same type on each side. Found '" + typeTerm1 + "' and '" + typeTerm2 + "'.");
             treeOutput.append(") : bool");
         }
+
+        return "bool";
     }
 
-    private void handleTerm2(TermContext term, ArrayList<Map<String, String>> variablesCache) {
+    private String handleTerm2(TermContext term, ArrayList<Map<String, String>> variablesCache) {
         if (term.factor().size() == 1) {
-            handleFactor2(term.factor(0), variablesCache);
+            return handleFactor2(term.factor(0), variablesCache);
         } else {
             for (int i = term.termOperator().size()-1 ; i >= 0; i--) {
                 treeOutput.append("BinOp(");
@@ -670,23 +691,31 @@ public class SemanticListener extends SEMANTICBaseListener {
                 treeOutput.append(", ");
             }
 
-           handleFactor2(term.factor(0), variablesCache);
+            String typeFound = handleFactor2(term.factor(0), variablesCache);
+            if (!typeFound.equals("int32"))
+                errorOutput.add(fileName + ":" + term.getStart().getLine() + ":" + (term.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic operation. Found '" + typeFound + "'.");
 
             for (int j = 1 ; j < term.termOperator().size(); j++) {
                 treeOutput.append(", ");
-                handleFactor2(term.factor(j), variablesCache);
+                typeFound = handleFactor2(term.factor(j), variablesCache);
+                if (!typeFound.equals("int32"))
+                    errorOutput.add(fileName + ":" + term.getStart().getLine() + ":" + (term.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic operation. Found '" + typeFound + "'.");
                 treeOutput.append(") : int32");
             }
 
             treeOutput.append(", ");
-            handleFactor2(term.factor(term.termOperator().size()), variablesCache);
+            typeFound = handleFactor2(term.factor(term.termOperator().size()), variablesCache);
+            if (!typeFound.equals("int32"))
+                errorOutput.add(fileName + ":" + term.getStart().getLine() + ":" + (term.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic operation. Found '" + typeFound + "'.");
             treeOutput.append(") : int32");
         }
+
+        return "int32";
     }
 
-    private void handleFactor2(FactorContext factor, ArrayList<Map<String, String>> variablesCache) {
+    private String handleFactor2(FactorContext factor, ArrayList<Map<String, String>> variablesCache) {
         if (factor.value().size() == 1) {
-            handleValue2(factor.value(0), variablesCache);
+            return handleValue2(factor.value(0), variablesCache);
         } else {
 
             for (int i = factor.FACTOR_OPERATOR().size()-1 ; i >= 0; i--) {
@@ -695,36 +724,46 @@ public class SemanticListener extends SEMANTICBaseListener {
                 treeOutput.append(", ");
             }
 
-            handleValue2(factor.value(0), variablesCache);
+            String typeFound = handleValue2(factor.value(0), variablesCache);
+            if (!typeFound.equals("int32"))
+                errorOutput.add(fileName + ":" + factor.getStart().getLine() + ":" + (factor.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic operation. Found '" + typeFound + "'.");
 
             for (int j = 1 ; j < factor.FACTOR_OPERATOR().size(); j++) {
                 treeOutput.append(", ");
-                handleValue2(factor.value(j), variablesCache);
+                typeFound = handleValue2(factor.value(j), variablesCache);
+                if (!typeFound.equals("int32"))
+                    errorOutput.add(fileName + ":" + factor.getStart().getLine() + ":" + (factor.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic operation. Found '" + typeFound + "'.");
                 treeOutput.append(") : int32");
             }
 
             treeOutput.append(", ");
-            handleValue2(factor.value(factor.FACTOR_OPERATOR().size()), variablesCache);
+            typeFound = handleValue2(factor.value(factor.FACTOR_OPERATOR().size()), variablesCache);
+            if (!typeFound.equals("int32"))
+                errorOutput.add(fileName + ":" + factor.getStart().getLine() + ":" + (factor.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expecting 'int32' in arithmetic operation. Found '" + typeFound + "'.");
             treeOutput.append(") : int32");
         }
+
+        return "int32";
     }
 
-    private void handleValue2(ValueContext value, ArrayList<Map<String, String>> variablesCache) {
+    private String handleValue2(ValueContext value, ArrayList<Map<String, String>> variablesCache) {
         if (value.unOperation() != null)
-            checkUnOperation(value.unOperation(), variablesCache);
+            return checkUnOperation(value.unOperation(), variablesCache);
         else if (value.callMethod() != null)
-            checkCallMethod(value.callMethod(), variablesCache);
+            return checkCallMethod(value.callMethod(), variablesCache);
         else if (value.varValue() != null)
-            checkVarValue(value.varValue(), variablesCache);
+            return checkVarValue(value.varValue(), variablesCache);
         else if (value.newObj() != null)
-            checkNewOperator(value.newObj(), variablesCache);
+            return checkNewOperator(value.newObj(), variablesCache);
         else if (value.ifStatement() != null)
-            checkIfStatementType(value.ifStatement(), variablesCache, true);
+            return checkIfStatementType(value.ifStatement(), variablesCache, true);
         else if (value.OBJECT_IDENTIFIER() != null) {
             String typeFound = checkVariableCacheForIdentifier(value.OBJECT_IDENTIFIER(), variablesCache);
             treeOutput.append(value.OBJECT_IDENTIFIER().getText() + " : " + typeFound);
-
+            return typeFound;
         }
+
+        return "";
     }
 
     private String checkAssignOperation(AssignContext ctx, ArrayList<Map<String, String>> variablesCache) {
@@ -739,7 +778,10 @@ public class SemanticListener extends SEMANTICBaseListener {
             typeFound = checkStatementType(ctx.statement(), variablesCache);
         }
 
-        if (isPrimitive(typeFound)) {
+        if (ctx.OBJECT_IDENTIFIER().getText().equals("self")) {
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - cannot assign to 'self' variable.");
+        }
+        else if (isPrimitive(typeFound)) {
             if (!varType.equals(typeFound) && !typeFound.equals("") && !varType.equals(""))
                 errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - cannot assign '" + typeFound + "' to variable '" + ctx.OBJECT_IDENTIFIER().getText() + "' of type '" + varType + "'.");
         } else if (!lookForInheritance(ctx, varType, typeFound)) {
@@ -782,6 +824,8 @@ public class SemanticListener extends SEMANTICBaseListener {
         if (ctx.singleCallMethod(0).caller().size() == 0) {
             lastCallerType = currentClass.name;
             treeOutput.append("self : " + currentClass.name);
+            if (!currentClass.classInitialized)
+                errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - cannot use self or call it's own methods in field initializer since the object is not yet initialized.");
         } else if (ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER() != null) {
             lastCallerType = checkVariableCacheForIdentifier(ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER(), variablesCache);
             treeOutput.append(ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER().getText() + " : " + lastCallerType);
@@ -791,8 +835,6 @@ public class SemanticListener extends SEMANTICBaseListener {
 
         int firstOffset = 1;
         for (SingleCallMethodContext call : ctx.singleCallMethod()) {
-
-
             lastCallerType = checkCaller(call, lastCallerType, firstOffset, variablesCache);
             treeOutput.append(", ");
             lastCallerType = checkCallFunction(call, lastCallerType, variablesCache);
@@ -852,8 +894,8 @@ public class SemanticListener extends SEMANTICBaseListener {
                 lastCallerType = methodToCheck.type;
                 //Check arguments
                 if (methodToCheck.formals.values().size() != ctx.callFunction(i).argument().size()) {
-                    errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method call '" + methodToCheck.name + "()' has a different number of arguments then is definition.");
-                    //break;
+                    errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - method call '" + methodToCheck.name + "()' has a different number of arguments then is definition. Expected '" + methodToCheck.formals.values().size() + ". Found '" + ctx.callFunction(i).argument().size() + "'.");
+                    continue;
                 }
 
                 treeOutput.append(", [");
@@ -904,18 +946,24 @@ public class SemanticListener extends SEMANTICBaseListener {
         return lastCallerType;
     }
 
-    private String checkUnOperation(UnOperationContext unOp, ArrayList<Map<String, String>> variablesCache) {
+    private String checkUnOperation(UnOperationContext ctx, ArrayList<Map<String, String>> variablesCache) {
         String typeFound = "";
         treeOutput.append("UnOp(");
-        treeOutput.append(unOp.unOperator().getText());
+        treeOutput.append(ctx.unOperator().getText());
         treeOutput.append(", ");
 
-        if (unOp.statement() != null)
-            checkStatementType(unOp.statement(), variablesCache);
+        if (ctx.statement() != null)
+            typeFound = checkStatementType(ctx.statement(), variablesCache);
         //else if (unOp.condition() != null)
         //    handleCondition2(unOp.condition(), variablesCache);
 
-        if (unOp.unOperator().getText().equals("-"))
+        if (ctx.unOperator().getText().equals("isnull") && isPrimitive(typeFound)) {
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expected type in isnull operator is 'Object'. Found '" + typeFound + "'.");
+        } else if (ctx.unOperator().getText().equals("-") && !typeFound.equals("int32")) {
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - expected type in - operator is 'int32'. Found '" + typeFound + "'.");
+        }
+
+        if (ctx.unOperator().getText().equals("-"))
             typeFound = "int32";
         else
             typeFound = "bool";
