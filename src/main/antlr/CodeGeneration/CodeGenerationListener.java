@@ -99,7 +99,44 @@ public class CodeGenerationListener extends CODEBaseListener {
 //region GENERATE_LLVM
 
     private void generateProgram(ProgramContext ctx) {
-
+        llvmOutput.append("@.printInt = private constant [3 x i8] c\"%d\\00\"\n" +
+                "@.printStr = private constant [3 x i8] c\"%s\\00\"\n" +
+                "@.printlnInt = private constant [4 x i8] c\"%d\\0A\\00\"\n" +
+                "@.printlnStr = private constant [4 x i8] c\"%s\\0A\\00\"\n" +
+                "\n" +
+                "declare i32 @printf(i8*, ...)\n" +
+                "\n" +
+                "define i32 @main() {\n" +
+                "    entry:\n" +
+                "        %x = alloca i32\n" +
+                "        store i32 0, i32* %x\n" +
+                "\n" +
+                "        %x_load = load i32, i32* %x\n" +
+                "        %cond = icmp ne i32 %x_load, 5\n" +
+                "        br i1 %cond, label %while, label %end_while\n" +
+                "\n" +
+                "\n" +
+                "    while:\n" +
+                "        %x2_load = load i32, i32* %x\n" +
+                "        %x2_add = add i32 1, %x2_load\n" +
+                "        store i32 %x2_add, i32* %x\n" +
+                "        call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.printlnInt, i32 0, i32 0), i32 %x2_add)\n" +
+                "\n" +
+                "        %cond2 = icmp ne i32 %x2_add, 5        \n" +
+                "        br i1 %cond2, label %while, label %end_while\n" +
+                "        \n" +
+                "\n" +
+                "    end_while:\n" +
+                "        %str2 = alloca [10 x i8]\n" +
+                "        store [10 x i8] c\"end while\\00\", [10 x i8]* %str2\n" +
+                "        %tmp2 = bitcast [10 x i8]* %str2 to i8*\n" +
+                "        call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.printlnStr, i32 0, i32 0), i8* %tmp2)\n" +
+                "        br label %end\n" +
+                "\n" +
+                "\n" +
+                "    end:\n" +
+                "        ret i32 0\n" +
+                "}");
     }
 
 //endregion
