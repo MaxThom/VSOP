@@ -220,8 +220,8 @@ public class Main {
     private static void createLlvmFile(String fileName, String input, boolean displayVisual) {
         try {
             String name = fileName.substring(0, fileName.lastIndexOf("."));
-            File file = new File("VSOP_Executable/" + name + ".ll");
-            //File file = new File("" + name + ".ll");
+            String path = "";
+            File file = new File(path + name + ".ll");
             Files.deleteIfExists(file.toPath());
             if (!file.createNewFile()) {
                 System.err.println("Can't generate LLVM file : impossible to create file");
@@ -233,52 +233,64 @@ public class Main {
                 writer.write(input);
                 writer.close();
 
-                String cmd = "make generateVSOP FILE=" + name;
+                generateExecutableFinal(name);
                 if (displayVisual) {
                     System.out.println("======================");
                     System.out.println("= CODE EXECUTION =====");
                     System.out.println("======================");
-                    cmd = "make generateExecuteVSOP FILE=" + name;
+                    executeFinal(name);
                 }
-
-
-                Runtime run = Runtime.getRuntime();
-                Process pr = run.exec(cmd);
-                pr.waitFor();
-
-                BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-                String line = "";
-                while ((line = buf.readLine()) != null) {
-                    System.out.println(line);
-                }
-
-                //generateExecutable(name);
             }
         } catch (Exception e) {
             System.err.println("Can't generate LLVM file : " + e.getMessage());
         }
     }
 
-    private static void generateExecutable(String fileName) {
-        String command = "llvm-as -f " + fileName + ".ll -o " + fileName + ".bc" ;
-
+    private static void generateExecutableFinal(String fileName) {
         try
         {
-            String [] envp = { } ;
-            File dir = new File ( System.getProperty("user.dir")) ;
-            Process proc = Runtime.getRuntime().exec(command, envp, dir);
+            String command = "llvm-as -f " + fileName + ".ll -o " + fileName + ".bc" ;
+            Process proc = Runtime.getRuntime().exec(command);
             proc.waitFor();
 
             command = "llc " + fileName + ".bc";
-            proc = Runtime.getRuntime().exec(command, envp, dir);
+            proc = Runtime.getRuntime().exec(command);
             proc.waitFor();
 
             command = "gcc -c " + fileName + ".s -o " + fileName + ".o";
-            proc = Runtime.getRuntime().exec(command, envp, dir);
+            proc = Runtime.getRuntime().exec(command);
             proc.waitFor();
 
             command = "gcc " + fileName + ".o -o " + fileName + " -no-pie";
-            proc = Runtime.getRuntime().exec(command, envp, dir);
+            proc = Runtime.getRuntime().exec(command);
+            proc.waitFor();
+
+            command = "rm " + fileName + ".bc";
+            proc = Runtime.getRuntime().exec(command);
+            proc.waitFor();
+
+            command = "rm " + fileName + ".s";
+            proc = Runtime.getRuntime().exec(command);
+            proc.waitFor();
+
+            command = "rm " + fileName + ".o";
+            proc = Runtime.getRuntime().exec(command);
+            proc.waitFor();
+
+            command = "rm " + fileName + ".ll";
+            proc = Runtime.getRuntime().exec(command);
+            proc.waitFor();
+
+        } catch (Exception e) {
+            System.err.println("Can't generate LLVM file : " + e.getMessage());
+        }
+    }
+
+    private static void executeFinal(String fileName) {
+        try
+        {
+            String command = "./" + fileName;
+            Process proc = Runtime.getRuntime().exec(command);
             proc.waitFor();
 
             BufferedReader buf = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -291,7 +303,6 @@ public class Main {
             System.err.println("Can't generate LLVM file : " + e.getMessage());
         }
     }
-
 
     private static String removeSpecialChar(String file) {
         HashMap<String, String> characterEscape = new HashMap<>();
