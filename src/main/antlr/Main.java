@@ -1,9 +1,12 @@
 
+import CodeGeneration.CodeGenerationListener;
 import Lexer.LexerErrorListener;
 import Lexer.LexerListener;
 import Parser.ParserErrorListener;
 import Parser.ParserListener;
 import Semantic.*;
+import VSOP.CodeGeneration.CODELexer;
+import VSOP.CodeGeneration.CODEParser;
 import VSOP.Lexer.LEXERLexer;
 import VSOP.Lexer.LEXERParser;
 import VSOP.Parser.PARSERLexer;
@@ -19,6 +22,7 @@ import java.util.Map;
 import java.util.Stack;
 
 public class Main {
+
     public static void main(String[] args) {
         try {
             int exitCode = 0;
@@ -26,6 +30,7 @@ public class Main {
                 System.out.println("Error : Missing correct arguments");
                 System.exit(1);
             }
+
 
             File file = new File(args[args.length-1]);
 
@@ -40,7 +45,7 @@ public class Main {
                     exitCode = startSemantic(file, true);
                     break;
                 case "-llvm":
-                    exitCode = startCodeGeneration(file, true);
+                    exitCode = startCodeGeneration(file, true, false);
                     break;
                 default:
                     exitCode = startProgram(file, args[0].equals("-v") || args[0].equals("-visual"));
@@ -91,7 +96,7 @@ public class Main {
                 System.out.println("======================");
             }
 
-            exitCode = startCodeGeneration(file, displayVisual);
+            exitCode = startCodeGeneration(file, displayVisual, true);
         }
 
         return exitCode;
@@ -172,15 +177,61 @@ public class Main {
         for (String token : listener.errorOutput) {
             System.err.println(token);
         }
-;
+
         return parser.getNumberOfSyntaxErrors() + listener.errorOutput.size();
     }
 
-    private static int startCodeGeneration(File file, boolean displayVisual) throws IOException  {
+    private static int startCodeGeneration(File file, boolean displayVisual, boolean generateLllvmFile) throws IOException  {
 
-        return 0;
+        String text = removeSpecialChar(removeComments(file));
+
+        ANTLRInputStream input = new ANTLRInputStream(text);
+        CODELexer lexer = new CODELexer(input);
+        //lexer.removeErrorListeners();
+        //lexer.addErrorListener(SemanticErrorListener.getInstance(file.getName()));
+
+        CODEParser parser = new CODEParser(new CommonTokenStream(lexer));
+        CodeGenerationListener listener = new CodeGenerationListener(file.getName());
+        //listener.addLibrary(addIOClasses()); // TODO : Maybe no need since they have to be implemented in llvm
+        //listener.addLibrary(addObjectClasses());
+
+        parser.addParseListener(listener);
+        //parser.removeErrorListeners();
+        //parser.addErrorListener(SemanticErrorListener.getInstance(file.getName()));
+
+        // Start parsing
+        parser.program();
+
+        if (parser.getNumberOfSyntaxErrors() == 0 && displayVisual) {
+            System.out.println(listener.llvmOutput.toString());
+
+        //for (String token : listener.errorOutput) {
+            //System.err.println(token);
+        }
+
+        if (generateLllvmFile) {
+            createLlvmFile(file.getName(), listener.llvmOutput.toString());
+        }
+
+        return parser.getNumberOfSyntaxErrors();
     }
 
+    private static void createLlvmFile(String fileName, String input) {
+        try {
+
+            File file = new File("VSOP_Executable/" + fileName.substring(0, fileName.lastIndexOf(".")) + ".ll");
+            if (!file.createNewFile()) {
+                System.err.println("Can't generate LLVM file : impossible to create file");
+            }
+
+            FileWriter writer = new FileWriter(file);
+            writer.write(input);
+            writer.close();
+
+        } catch (IOException e) {
+            System.err.println("Can't generate LLVM file : " + e.getMessage());
+        }
+    }
 
     private static String removeSpecialChar(String file) {
         HashMap<String, String> characterEscape = new HashMap<>();
@@ -310,4 +361,6 @@ public class Main {
         objectClass.classInitialized = true;
         return objectClass;
     }
+
+
 }

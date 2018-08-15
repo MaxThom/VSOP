@@ -1,5 +1,5 @@
 class A { }
 class MyClass {
-    myField : bool <- "true" = new A;
+    myField : bool <- "true" = "false";
 }
 class Main { main() : int32 { 0 } }
