@@ -479,30 +479,21 @@ public class SemanticListener extends SEMANTICBaseListener {
             typeElseBranch = "unit";
         }
 
-        //if (!onlyIf && !onlyElse) {
-            if (displayError && !typeIfBranch.equals(typeElseBranch) && (!typeIfBranch.equals("unit") && !typeElseBranch.equals("unit")) && !lookForInheritance(ctx, typeIfBranch, typeElseBranch) && !lookForInheritance(ctx, typeElseBranch, typeIfBranch)) {
-                errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + typeIfBranch + "' in if branch and '" + typeElseBranch + "' in else branch.");
-            }
+        if (displayError && !typeIfBranch.equals(typeElseBranch) && (!typeIfBranch.equals("unit") && !typeElseBranch.equals("unit")) && !lookForInheritance(ctx, typeIfBranch, typeElseBranch) && !lookForInheritance(ctx, typeElseBranch, typeIfBranch)) {
+            errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1) + ":" + " semantic error - invalid return type for conditional statement. Found '" + typeIfBranch + "' in if branch and '" + typeElseBranch + "' in else branch.");
+        }
 
-            if (!isPrimitive(typeIfBranch) && !isPrimitive(typeElseBranch) && lookForInheritance(ctx, typeIfBranch, typeElseBranch)) {
-                returnType = typeIfBranch;
-            }
-            else if (!isPrimitive(typeIfBranch) && !isPrimitive(typeElseBranch) && lookForInheritance(ctx, typeElseBranch, typeIfBranch)) {
-                returnType = typeElseBranch;
-            }
-            else if (typeIfBranch.equals("unit") || typeElseBranch.equals("unit")) {
-                returnType = "unit";
-            } else {
-                returnType = typeIfBranch;
-            }
-        /*} else {
-            if (onlyIf)
-                returnType = typeIfBranch;
-            else if (onlyElse)
-                returnType = typeElseBranch;
-        }*/
-
-
+        if (!isPrimitive(typeIfBranch) && !isPrimitive(typeElseBranch) && lookForInheritance(ctx, typeIfBranch, typeElseBranch)) {
+            returnType = typeIfBranch;
+        }
+        else if (!isPrimitive(typeIfBranch) && !isPrimitive(typeElseBranch) && lookForInheritance(ctx, typeElseBranch, typeIfBranch)) {
+            returnType = typeElseBranch;
+        }
+        else if (typeIfBranch.equals("unit") || typeElseBranch.equals("unit")) {
+            returnType = "unit";
+        } else {
+            returnType = typeIfBranch;
+        }
 
         treeOutput.append(")");
         treeOutput.append(" : ");

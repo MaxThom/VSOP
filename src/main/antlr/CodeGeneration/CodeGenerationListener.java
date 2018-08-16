@@ -2,11 +2,10 @@ package CodeGeneration;
 
 
 import VSOP.CodeGeneration.CODEBaseListener;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static VSOP.CodeGeneration.CODEParser.*;
@@ -17,8 +16,11 @@ public class CodeGenerationListener extends CODEBaseListener {
     private Map<String, ClassDefinition> classes;
     private ClassDefinition currentClass;
     private String fileName;
+    private int lastInstructionId;
+    private int lastGotoId;
 
     public StringBuilder llvmOutput;
+    private StringBuilder indents;
     public ArrayList<String> errorOutput;
 
 
@@ -29,6 +31,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         currentClass = null;
         this.fileName = fileName;
         llvmOutput = new StringBuilder();
+        indents = new StringBuilder();
     }
 
     public void addLibrary(ClassDefinition newClass) {
@@ -58,87 +61,526 @@ public class CodeGenerationListener extends CODEBaseListener {
             int formalPos = 0;
             for (FormalContext formal : method.formal()) {
                 FormalDefinition formalDef = new FormalDefinition(formal.OBJECT_IDENTIFIER().getText(), formal.varType().getText(), formalPos++);
-
-                // Check for same formal name
-                //if (methodDef.formals.containsKey(formalDef.name)) {
-                //    errorOutput.add(fileName + ":" + formal.getStart().getLine() + ":" + (formal.getStart().getCharPositionInLine()+1) + ":" + " semantic error - formal '" + formalDef.name + "' is already defined.");
-               // }
-                //else
-                    methodDef.formals.put(formalDef.name, formalDef);
+                methodDef.formals.put(formalDef.name, formalDef);
             }
 
-            // Check for same method name
-            //if (classDef.methods.containsKey(methodDef.name)) {
-            //    errorOutput.add(fileName + ":" + method.getStart().getLine() + ":" + (method.getStart().getCharPositionInLine()+1) + ":" + " semantic error - method '" + methodDef.name + "' is already defined.");
-            //}
-           // else
-                classDef.methods.put(methodDef.name, methodDef);
+            classDef.methods.put(methodDef.name, methodDef);
         }
 
         for (FieldContext field: fields) {
-
             FieldDefinition fieldDef = new FieldDefinition(field.OBJECT_IDENTIFIER().getText(), field.varType().getText());
-
-            // Check for same field name
-          //  if (classDef.fields.containsKey(fieldDef.name)) {
-            //    errorOutput.add(fileName + ":" + field.getStart().getLine() + ":" + (field.getStart().getCharPositionInLine()+1) + ":" + " semantic error - field '" + fieldDef.name + "' is already defined.");
-           // }
-           //else
-                classDef.fields.put(fieldDef.name, fieldDef);
+            classDef.fields.put(fieldDef.name, fieldDef);
         }
 
-
-        // Check for same class name
-        //if (classes.containsKey(classDef.name)) {
-         //   errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine()+1) + ":" + " semantic error - class '" + classDef.name + "' is already defined.");
-       // }
-        //else
-            classes.put(classDef.name, classDef);
+        classes.put(classDef.name, classDef);
     }
 
 //region GENERATE_LLVM
 
     private void generateProgram(ProgramContext ctx) {
-        llvmOutput.append("@.printInt = private constant [3 x i8] c\"%d\\00\"\n" +
-                "@.printStr = private constant [3 x i8] c\"%s\\00\"\n" +
-                "@.printlnInt = private constant [4 x i8] c\"%d\\0A\\00\"\n" +
-                "@.printlnStr = private constant [4 x i8] c\"%s\\0A\\00\"\n" +
-                "\n" +
-                "declare i32 @printf(i8*, ...)\n" +
-                "\n" +
-                "define i32 @main() {\n" +
-                "    entry:\n" +
-                "        %x = alloca i32\n" +
-                "        store i32 0, i32* %x\n" +
-                "\n" +
-                "        %x_load = load i32, i32* %x\n" +
-                "        %cond = icmp ne i32 %x_load, 5\n" +
-                "        br i1 %cond, label %while, label %end_while\n" +
-                "\n" +
-                "\n" +
-                "    while:\n" +
-                "        %x2_load = load i32, i32* %x\n" +
-                "        %x2_add = add i32 1, %x2_load\n" +
-                "        store i32 %x2_add, i32* %x\n" +
-                "        call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.printlnInt, i32 0, i32 0), i32 %x2_add)\n" +
-                "\n" +
-                "        %cond2 = icmp ne i32 %x2_add, 5        \n" +
-                "        br i1 %cond2, label %while, label %end_while\n" +
-                "        \n" +
-                "\n" +
-                "    end_while:\n" +
-                "        %str2 = alloca [10 x i8]\n" +
-                "        store [10 x i8] c\"end while\\00\", [10 x i8]* %str2\n" +
-                "        %tmp2 = bitcast [10 x i8]* %str2 to i8*\n" +
-                "        call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.printlnStr, i32 0, i32 0), i8* %tmp2)\n" +
-                "        br label %end\n" +
-                "\n" +
-                "\n" +
-                "    end:\n" +
-                "        ret i32 0\n" +
-                "}");
+        generateHeader();
+        generateStructuresFromClasses();
+
+        for (ClassDefinitionContext classDef : ctx.classDefinition()) {
+            currentClass = classes.get(classDef.TYPE_IDENTIFIER(0).getText());
+            appendSectionHeader(classDef.TYPE_IDENTIFIER(0).getText().toUpperCase());
+            generateStructuresAllocationFromClass(classDef);
+            generateStructuresInitializerFromClass(classDef);
+            generateMethodsFromClass(classDef);
+            llvmOutput.append(indents).append("\n");
+        }
+
+        generateIOClass();
     }
 
+    private void generateHeader() {
+        llvmOutput.append(indents).append(indents).append("; ModuleID = '").append(fileName).append("'\n");
+        llvmOutput.append(indents).append(indents).append("source_filename = \"").append(fileName).append("\"\n\n");
+
+        appendSectionHeader("DECLARATION");
+        llvmOutput.append(indents).append(indents).append("declare noalias i8* @malloc(i64) #1").append("\n");
+        llvmOutput.append(indents).append("declare i32 @printf(i8*, ...)").append("\n");
+        llvmOutput.append(indents).append("@.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1").append("\n");
+
+        llvmOutput.append(indents).append("\n");
+    }
+
+    private void generateStructuresFromClasses() {
+        appendSectionHeader("STRUCTURES");
+
+
+        for (ClassDefinition cl: classes.values()) {
+            boolean removeComma = false;
+            llvmOutput.append(indents).append("%struct.").append(cl.name).append(" = type {\n");
+
+            if (!cl.extend.equals("Object")) {
+                llvmOutput.append(indents).append("\t%struct.").append(cl.extend).append(",\n");
+                removeComma = true;
+            }
+
+            for (FieldDefinition field : cl.fields.values()) {
+                llvmOutput.append(indents).append("\t").append(vsopTypeToLlvmType(field.type)).append(",\n");
+                removeComma = true;
+            }
+            if (removeComma) llvmOutput.delete(llvmOutput.length()-2, llvmOutput.length());
+            llvmOutput.append(indents).append("\n}\n");
+        }
+
+        llvmOutput.append(indents).append("\n");
+    }
+
+    private void generateStructuresAllocationFromClass(ClassDefinitionContext ctx) {
+        llvmOutput.append(indents).append("\n; Allocation\n");
+        ClassDefinition cl = classes.get(ctx.TYPE_IDENTIFIER(0).getText());
+
+        // TODO : Add Alignment
+        llvmOutput.append(indents).append("define %struct.").append(cl.name).append("* @").append(cl.name).append("_new() #0 {\n");
+        llvmOutput.append(indents).append("\t").append("%size_as_ptr = getelementptr %struct.").append(cl.name).append(", %struct.").append(cl.name).append("* null, i32 1").append("\n");
+        llvmOutput.append(indents).append("\t").append("%size_as_i64 = ptrtoint %struct.").append(cl.name).append("* %size_as_ptr to i64").append("\n\n");
+        llvmOutput.append(indents).append("\t").append("%1 = alloca %struct.").append(cl.name).append("*").append("\n");
+        llvmOutput.append(indents).append("\t").append("%2 = call noalias i8* @malloc(i64 %size_as_i64) #3").append("\n");
+        llvmOutput.append(indents).append("\t").append("%3 = bitcast i8* %2 to %struct.").append(cl.name).append("*").append("\n");
+        llvmOutput.append(indents).append("\t").append("store %struct.").append(cl.name).append("* %3, %struct.").append(cl.name).append("** %1").append("\n\n");
+        llvmOutput.append(indents).append("\t").append("%4 = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %1").append("\n");
+        llvmOutput.append(indents).append("\t").append("call void @").append(cl.name).append("_init(%struct.").append(cl.name).append("* %4)").append("\n\n");
+        llvmOutput.append(indents).append("\t").append("%5 = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %1").append("\n");
+        llvmOutput.append(indents).append("\t").append("ret %struct.").append(cl.name).append("* %5").append("\n");
+        llvmOutput.append(indents).append("}\n");
+
+    }
+
+    private void generateStructuresInitializerFromClass(ClassDefinitionContext ctx) {
+        llvmOutput.append(indents).append("\n; Initializer\n");
+        ClassDefinition cl = classes.get(ctx.TYPE_IDENTIFIER(0).getText());
+        List<FieldContext> fields = ctx.children.stream().filter(x -> x instanceof  FieldContext).map(x -> (FieldContext) x).collect(Collectors.toList());
+
+        llvmOutput.append(indents).append("define void @").append(cl.name).append("_init(%struct.").append(cl.name).append("*) #0 {\n");
+        llvmOutput.append(indents).append("\t").append("%2 = alloca %struct.").append(cl.name).append("*").append("\n");
+        llvmOutput.append(indents).append("\t").append("store %struct.").append(cl.name).append("* %0, %struct.").append(cl.name).append("** %2").append("\n\n");
+
+        int i = 3, j = 0;
+        if (!cl.extend.equals("Object")) {
+            llvmOutput.append(indents).append("\t").append("%").append(i).append(" = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %2").append("\n");
+            llvmOutput.append(indents).append("\t").append("%").append(i+1).append(" = getelementptr inbounds %struct.").append(cl.name).append(", %struct.").append(cl.name).append("* %").append(i).append(", i32 0, i32 ").append(j).append("\n");
+            llvmOutput.append(indents).append("\t").append("call void @").append(cl.extend).append("_init(%struct.").append(cl.extend).append("* %").append(i+1).append(")").append("\n\n");
+            i += 2;
+            j += 1;
+        }
+
+        for (FieldContext field : fields) {
+            llvmOutput.append(indents).append("\t").append("%").append(i).append(" = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %2").append("\n");
+            llvmOutput.append(indents).append("\t").append("%").append(i+1).append(" = getelementptr inbounds %struct.").append(cl.name).append(", %struct.").append(cl.name).append("* %").append(i).append(", i32 0, i32 ").append(j).append("\n");
+            //if (isPrimitive(field.type))
+            ArrayList<Map<String, VariableDefinition>> variablesCache = new ArrayList<>();
+            variablesCache.add(new HashMap<>());
+            if (field.statement() != null) {
+                variablesCache.add(new HashMap<>());
+                generateStatement(field.statement(), variablesCache);
+                variablesCache.remove(variablesCache.size()-1);
+            } else if (field.block() != null) {
+                generateBlock(field.block(), variablesCache);
+            } else
+                llvmOutput.append(indents).append("\t").append("store ").append(vsopTypeToLlvmType(field.varType().getText())).append(" ").append(getDefaultValue(field.varType().getText())).append(", ").append(vsopTypeToLlvmType(field.varType().getText())).append("* %").append(i+1).append("\n\n");
+
+            //else
+                //llvmOutput.append(indents).append("\t").append("call void @").append(field.type).append("_init(%struct.").append(field.type).append("* %").append(i+1).append(")").append("\n\n");
+
+            i += 2;
+            j += 1;
+        }
+
+        llvmOutput.delete(llvmOutput.length()-1, llvmOutput.length());
+        llvmOutput.append(indents).append("\n\tret void\n}\n");
+
+    }
+
+    private void generateMethodsFromClass(ClassDefinitionContext ctx) {
+        List<MethodDefinitionContext> methods = ctx.children.stream().filter(x -> x instanceof  MethodDefinitionContext).map(x -> (MethodDefinitionContext) x).collect(Collectors.toList());
+
+        for (MethodDefinitionContext method: methods) {
+            ArrayList<Map<String, VariableDefinition>> variablesCache = new ArrayList<>();
+            llvmOutput.append(indents).append("\n; Method ").append(method.OBJECT_IDENTIFIER()).append("\n");
+            llvmOutput.append(indents).append("define ").append(vsopTypeToLlvmType(method.varType().getText())).append(" @").append(method.OBJECT_IDENTIFIER()).append("(");
+
+
+            // Add Fields
+            /*variablesCache.add(new HashMap<>());
+            ClassDefinition classToCheck = currentClass;
+            while (true) {
+                for (FieldDefinition field : classToCheck.fields.values()) {
+                    variablesCache.get(variablesCache.size()-1).put(field.name, new VariableDefinition(field.name, "%struct.".concat(classToCheck.name), field.type));
+                }
+                if (classToCheck.extend.equals("Object"))
+                    break;
+                if (classes.containsKey(classToCheck.extend))
+                    classToCheck = classes.get(classToCheck.extend);
+                else
+                    break;
+
+            }*/
+
+            // Formals
+            variablesCache.add(new HashMap<>());
+            List<FormalDefinition> formals = new ArrayList<>(currentClass.methods.get(method.OBJECT_IDENTIFIER().getText()).formals.values());
+            Collections.sort(formals, Comparator.comparingInt(FormalDefinition::getPosition));
+            for (FormalDefinition formal : formals) {
+                llvmOutput.append(indents).append(vsopTypeToLlvmType(formal.type)).append(", ");
+            }
+            if (formals.size() > 0) llvmOutput.delete(llvmOutput.length()-2, llvmOutput.length());
+            llvmOutput.append(indents).append(") #0 {\n");
+
+            if (method.block() != null) {
+                this.indents.append("\t");
+                this.lastInstructionId = formals.size();
+                this.lastGotoId = 0;
+
+                // Add formals as first instructions
+                if (formals.size() > 0) llvmOutput.append(indents).append("; Formals\n");
+                for (FormalDefinition formal : formals) {
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca ").append(vsopTypeToLlvmType(formal.type)).append("\n");
+                    llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(formal.type)).append(" %".concat(String.valueOf(formal.position))).append(", ").append(vsopTypeToLlvmType(formal.type)).append("* %").append(lastInstructionId).append("\n");
+                    variablesCache.get(variablesCache.size()-1).put(formal.name, new VariableDefinition(formal.name, "%".concat(String.valueOf(lastInstructionId)), formal.type));
+                }
+                if (formals.size() > 0) llvmOutput.append(indents).append("\n");
+
+                this.indents.delete(this.indents.length()-1, this.indents.length());
+                generateBlock(method.block(), variablesCache);
+            }
+
+            llvmOutput.append(indents).append("\tret ").append(vsopTypeToLlvmType(method.varType().getText())).append(" %").append(lastInstructionId).append("\n"); // TODO: add last statement
+            llvmOutput.append(indents).append("}\n");
+        }
+
+    }
+
+    private void generateBlock(BlockContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        this.indents.append("\t");
+
+        variablesCache.add(new HashMap<>());
+
+        for (int i = 0; i < ctx.children.size()-2 ; i++) {
+            if (ctx.children.get(i) instanceof ParserRuleContext) {
+                ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
+
+                if (child instanceof BlockContext) {
+                    generateBlock((BlockContext) child, variablesCache);
+                } else if (child instanceof IfStatementContext) {
+                    generateIfStatement((IfStatementContext) child, variablesCache);
+                } else if (child instanceof WhileStatementContext) {
+                    generateWhileStatement((WhileStatementContext) child, variablesCache);
+                } else if (child instanceof StatementContext) {
+                    generateStatement((StatementContext) child, variablesCache);
+                }
+            }
+        }
+
+        // Check last statement
+        for (int i = ctx.children.size()-1; i >= 0 ; i--) {
+            if (ctx.children.get(i) instanceof ParserRuleContext) {
+                ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
+
+                if (child instanceof BlockContext) {
+                    generateBlock((BlockContext) child, variablesCache);
+                } else if (child instanceof StatementContext) {
+                    generateStatement((StatementContext) child, variablesCache);
+                }
+
+                break;
+            }
+        }
+
+        variablesCache.remove(variablesCache.size()-1);
+        this.indents.delete(this.indents.length()-1, this.indents.length());
+    }
+
+    private String generateStatement(StatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        if (ctx.assign() != null) {
+            generateAssign(ctx.assign(), variablesCache);
+        } else if (ctx.ifStatement() != null) {
+            generateIfStatement(ctx.ifStatement(), variablesCache);
+        } else if (ctx.whileStatement() != null) {
+            generateWhileStatement(ctx.whileStatement(), variablesCache);
+        } else if (ctx.let() != null) {
+            generateLet(ctx.let(), variablesCache);
+        } else if (ctx.binaryOperation() != null) {
+            //checkBinaryOperation(ctx.binaryOperation());
+        } else if (ctx.callMethod() != null) {
+            //checkCallMethod(ctx.callMethod());
+        } else if (ctx.newObj() != null) {
+            //checkNewOperator(ctx.newObj());
+        } else if (ctx.OBJECT_IDENTIFIER() != null) {
+            generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
+        } else if (ctx.statement() != null) {
+            generateStatement(ctx.statement(), variablesCache);
+        } else if (ctx.varValue() != null) {
+            return generateVarValue(ctx.varValue(), variablesCache);
+        }
+
+        return "";
+    }
+
+    private void generateIfStatement(IfStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        int ifGoto = ++lastGotoId;
+        llvmOutput.append(indents).append("; If\n");
+        if (ctx.ifStat().statement(0) != null) {
+            generateStatement(ctx.ifStat().statement(0), variablesCache);
+            llvmOutput.append(indents).append("br i1 %").append(lastInstructionId).append(", label %condIf").append(ifGoto);
+            if (ctx.elseStat() != null) {
+                llvmOutput.append(", label %condElse").append(ifGoto);
+            } else {
+                llvmOutput.append(", label %condEnd").append(ifGoto);
+            }
+            llvmOutput.append(indents).append("\n\n");
+        }
+
+
+        // Get If branch type
+        variablesCache.add(new HashMap<>());
+        llvmOutput.append(indents).append("condIf").append(ifGoto).append(":").append("\n");
+
+        if (ctx.ifStat().statement(1) != null) {
+            this.indents.append("\t");
+            generateStatement(ctx.ifStat().statement(1), variablesCache);
+            this.indents.delete(this.indents.length()-1, this.indents.length());
+        } else if (ctx.ifStat().block() != null) {
+            generateBlock(ctx.ifStat().block(), variablesCache);
+        }
+        llvmOutput.append(indents).append("\tbr label %condEnd").append(ifGoto).append("\n\n");
+        variablesCache.remove(variablesCache.size()-1);
+
+
+        // Get Else branch type
+        if (ctx.elseStat() != null) {
+            variablesCache.add(new HashMap<>());
+            llvmOutput.append(indents).append("condElse").append(ifGoto).append(":").append("\n");
+
+            if (ctx.elseStat().statement() != null) {
+                this.indents.append("\t");
+                generateStatement(ctx.elseStat().statement(), variablesCache);
+                this.indents.delete(this.indents.length()-1, this.indents.length());
+            } else if (ctx.elseStat().block() != null) {
+                 generateBlock(ctx.elseStat().block(), variablesCache);
+            }
+            llvmOutput.append(indents).append("\tbr label %condEnd").append(ifGoto).append("\n\n");
+            variablesCache.remove(variablesCache.size()-1);
+        }
+
+        llvmOutput.append(indents).append("condEnd").append(ifGoto).append(":").append("\n");
+    }
+
+    private void generateWhileStatement(WhileStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        int whileGoto = ++lastGotoId;
+        llvmOutput.append(indents).append("; While\n");
+
+        if (ctx.statement(0) != null) {
+            llvmOutput.append(indents).append("whileCond").append(whileGoto).append(":").append("\n");
+            this.indents.append("\t");
+            generateStatement(ctx.statement(0), variablesCache);
+            llvmOutput.append(indents).append("br i1 %").append(lastInstructionId).append(", label %while").append(whileGoto).append(", label %whileEnd").append(whileGoto).append("\n\n");
+            variablesCache.remove(variablesCache.size()-1);
+            this.indents.delete(this.indents.length()-1, this.indents.length());
+        }
+
+        variablesCache.add(new HashMap<>());
+        llvmOutput.append(indents).append("while").append(whileGoto).append(":").append("\n");
+
+        if (ctx.statement(1) != null) {
+            this.indents.append("\t");
+            generateStatement(ctx.statement(1), variablesCache);
+            this.indents.delete(this.indents.length()-1, this.indents.length());
+        } else if (ctx.block() != null) {
+            generateBlock(ctx.block(), variablesCache);
+        }
+        llvmOutput.append(indents).append("\tbr label %whileCond").append(whileGoto).append("\n\n");
+
+        variablesCache.remove(variablesCache.size()-1);
+
+        llvmOutput.append(indents).append("whileEnd").append(whileGoto).append(":").append("\n");
+    }
+
+    private void  generateLet(LetContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        int letId = ++lastInstructionId;
+        llvmOutput.append(indents).append("; Let\n");
+        llvmOutput.append(indents).append("%").append(letId).append(" = alloca ").append(vsopTypeToLlvmType(ctx.varType().getText())).append("\n");
+
+        // Initializer
+        int statOffset = 0;
+        if (ctx.statement().size() == 2 || (ctx.statement().size() == 1 && ctx.block() != null)) {
+            variablesCache.add(new HashMap<>());
+            variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), new VariableDefinition(ctx.OBJECT_IDENTIFIER().getText(), "%".concat(String.valueOf(letId)), ctx.varType().getText()));
+            generateStatement(ctx.statement(statOffset++), variablesCache);
+            variablesCache.remove(variablesCache.size()-1);
+        } else
+            llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(ctx.varType().getText())).append(" ").append(getDefaultValue(ctx.varType().getText())).append(", ").append(vsopTypeToLlvmType(ctx.varType().getText())).append("* %").append(lastInstructionId).append("\n");
+
+        // Body
+        variablesCache.add(new HashMap<>());
+        variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), new VariableDefinition(ctx.OBJECT_IDENTIFIER().getText(), "%".concat(String.valueOf(letId)), ctx.varType().getText()));
+        if (ctx.statement(statOffset) != null) {
+            generateStatement(ctx.statement(statOffset), variablesCache);
+        } else if (ctx.block() != null) {
+            generateBlock(ctx.block(), variablesCache);
+        }
+        variablesCache.remove(variablesCache.size()-1);
+        llvmOutput.append(indents).append("\n");
+    }
+
+    private void  generateAssign(AssignContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        String typeFound = generateStatement(ctx.statement(), variablesCache);
+        VariableDefinition var = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
+
+        llvmOutput.append(indents).append("; Assign\n");
+        if (var != null)
+            llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(var.type)).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append("* ").append(var.alias).append("\n");
+        else if (currentClass.fields.containsKey(ctx.OBJECT_IDENTIFIER().getText())) {
+            llvmOutput.append(indents).append("STRUCT");
+        }
+        llvmOutput.append(indents).append("\n");
+    }
+
+    private String generateObjectIdentifier(TerminalNode ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        int varId = ++lastInstructionId;
+        VariableDefinition var = checkVariableCacheForIdentifier(ctx, variablesCache);
+        llvmOutput.append(indents).append("; ObjectIdentifier\n");
+        llvmOutput.append(indents).append("%").append(varId).append(" = load ").append(vsopTypeToLlvmType(var.type)).append(", ").append(vsopTypeToLlvmType(var.type)).append("* ").append(var.alias).append("\n");
+
+        return  "";
+    }
+
+    private String generateVarValue(VarValueContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        String typeFound = "";
+        String text = ctx.getText();
+
+        if (ctx.integer() != null) {
+            typeFound = "int32";
+        } else if (ctx.STRING() != null) {
+            typeFound = "string";
+        } else if (ctx.getText().equals("true") || ctx.getText().equals("false")) {
+            typeFound = "bool";
+        } else if (ctx.VOID_OPERATOR() != null) {
+            typeFound = "unit";
+        }
+
+        if (ctx.getText().equals("true")) {
+            text = "1";
+        } else if (ctx.getText().equals("false")) {
+            text = "0";
+        }
+
+        int varId = ++lastInstructionId;
+        llvmOutput.append(indents).append("; VarValue\n");
+        llvmOutput.append(indents).append("%").append(varId).append(" = alloca ").append(vsopTypeToLlvmType(typeFound)).append("\n");
+        llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(typeFound)).append(" ").append(text).append(", ").append(vsopTypeToLlvmType(typeFound)).append("* %").append(varId).append("\n");
+        llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(typeFound)).append(", ").append(vsopTypeToLlvmType(typeFound)).append("* %").append(varId).append("\n");
+        llvmOutput.append(indents).append("\n");
+
+        return typeFound;
+    }
+
+    private void generateIOClass() {
+        appendSectionHeader("IO Class");
+
+        llvmOutput.append(indents).append("@IO.printInt = private constant [3 x i8] c\"%d\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printStr = private constant [3 x i8] c\"%s\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printBool = private constant [3 x i8] c\"%d\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printlnInt = private constant [4 x i8] c\"%d\\0A\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printlnStr = private constant [4 x i8] c\"%s\\0A\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printlnBool = private constant [4 x i8] c\"%d\\0A\\00\"").append("\n\n");
+
+        llvmOutput.append(indents).append("define void @printInt(i32) {\n" +
+                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printInt, i32 0, i32 0), i32 %0)\n" +
+                "\tret void\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define void @printBool(i1) {\n" +
+                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printBool, i32 0, i32 0), i1 %0)\n" +
+                "\tret void\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define void @printStr(i8*) {\n" +
+                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printStr, i32 0, i32 0), i8* %0)\n" +
+                "\tret void\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define void @printlnInt(i32) {\n" +
+                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnInt, i32 0, i32 0), i32 %0)\n" +
+                "\tret void\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define void @printlnBool(i1) {\n" +
+                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnBool, i32 0, i32 0), i1 %0)\n" +
+                "\tret void\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define void @printlnStr(i8*) {\n" +
+                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnStr, i32 0, i32 0), i8* %0)\n" +
+                "\tret void\n" +
+                "}").append("\n");
+
+    }
+
+    private String vsopTypeToLlvmType(String type) {
+        switch (type) {
+            case "int32":
+                return "i32";
+            case "unit":
+                return "void";
+            case "bool":
+                return "i1";
+            case "string":
+                return "i8*";
+            default:
+                return "%struct." + type + "*";
+        }
+    }
+
+    private boolean isPrimitive(String varType) {
+        switch (varType) {
+            case "int32":
+                return true;
+            case "unit":
+                return true;
+            case "bool":
+                return true;
+            case "string":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private String getDefaultValue(String type) {
+        switch (type) {
+            case "int32":
+                return "0";
+            case "unit":
+                return "()";
+            case "bool":
+                return "0";
+            case "string":
+                return "getelementptr inbounds ([1 x i8], [1 x i8]* @.str.empty, i32 0, i32 0)";
+            default:
+                return "null";
+        }
+    }
+
+    private void appendSectionHeader(String title) {
+        llvmOutput.append(indents).append("; \n");
+        llvmOutput.append(indents).append("; ").append(title).append("\n");
+        llvmOutput.append(indents).append("; \n");
+    }
+
+    private VariableDefinition checkVariableCacheForIdentifier(TerminalNode identifier, ArrayList<Map<String, VariableDefinition>> variablesCache)  {
+        VariableDefinition varFound = null;
+
+        if (variablesCache != null) {
+            for (int i = variablesCache.size() - 1; i >= 0; i--) {
+                if (variablesCache.get(i).containsKey(identifier.getText())) {
+                    varFound = variablesCache.get(i).get(identifier.getText());
+                    break;
+                }
+            }
+        }
+
+        return varFound;
+    }
 //endregion
 
 }

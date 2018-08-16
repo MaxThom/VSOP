@@ -1,0 +1,29 @@
+class Parent {
+    i : int32 ;
+}
+class Child extends Parent {
+    k : int32 ;
+}
+class Main {
+    x: int32 ;
+
+    main() : int32 {
+        if (true) then {
+            if (false) then {
+                1
+            }
+        } else {
+            0;
+            while (true) do {
+                1
+            }
+        }
+
+        if (false) then {
+            1
+        } else
+            2
+
+        0
+    }
+}

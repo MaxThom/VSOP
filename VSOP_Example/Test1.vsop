@@ -1,0 +1,17 @@
+class Main {
+
+    test: int32 ;
+
+    main() : int32 {
+        0
+    }
+
+    main2(x: int32, y: int32) : int32 {
+
+
+        test <- 5;
+        y <- 5;
+
+        0
+    }
+}

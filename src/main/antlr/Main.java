@@ -227,12 +227,11 @@ public class Main {
                 System.err.println("Can't generate LLVM file : impossible to create file");
             }
 
+            FileWriter writer = new FileWriter(file);
+            writer.write(input);
+            writer.close();
+
             if (System.getProperty("os.name").equals("Linux")) {
-
-                FileWriter writer = new FileWriter(file);
-                writer.write(input);
-                writer.close();
-
                 generateExecutableFinal(name);
                 if (displayVisual) {
                     System.out.println("======================");
