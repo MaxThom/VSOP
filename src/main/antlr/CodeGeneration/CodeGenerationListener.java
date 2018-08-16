@@ -95,15 +95,16 @@ public class CodeGenerationListener extends CODEBaseListener {
     }
 
     private void generateHeader() {
-        llvmOutput.append(indents).append(indents).append("; ModuleID = '").append(fileName).append("'\n");
-        llvmOutput.append(indents).append(indents).append("source_filename = \"").append(fileName).append("\"\n\n");
+        llvmOutput.append("; ModuleID = '").append(fileName).append("'\n");
+        //llvmOutput.append("source_filename = \"").append(fileName).append("\"\n\n");
 
         appendSectionHeader("DECLARATION");
-        llvmOutput.append(indents).append(indents).append("declare noalias i8* @malloc(i64) #1").append("\n");
-        llvmOutput.append(indents).append("declare i32 @printf(i8*, ...)").append("\n");
-        llvmOutput.append(indents).append("@.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1").append("\n");
+        llvmOutput.append("declare noalias i8* @malloc(i64) #1").append("\n");
+        llvmOutput.append("declare i32 @printf(i8*, ...)").append("\n");
+        llvmOutput.append("declare double @pow(double, double) #1").append("\n");
+        llvmOutput.append("@.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1").append("\n");
 
-        llvmOutput.append(indents).append("\n");
+        llvmOutput.append("\n");
     }
 
     private void generateStructuresFromClasses() {
@@ -329,11 +330,11 @@ public class CodeGenerationListener extends CODEBaseListener {
         } else if (ctx.let() != null) {
             generateLet(ctx.let(), variablesCache);
         } else if (ctx.binaryOperation() != null) {
-            //checkBinaryOperation(ctx.binaryOperation());
+            generateBinaryOperation(ctx.binaryOperation(), variablesCache);
         } else if (ctx.callMethod() != null) {
-            //checkCallMethod(ctx.callMethod());
+            generateCallMethod(ctx.callMethod(), variablesCache);
         } else if (ctx.newObj() != null) {
-            //checkNewOperator(ctx.newObj());
+            generateNewObj(ctx.newObj(), variablesCache);
         } else if (ctx.OBJECT_IDENTIFIER() != null) {
             generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
         } else if (ctx.statement() != null) {
@@ -345,7 +346,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         return "";
     }
 
-    private void generateIfStatement(IfStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private String generateIfStatement(IfStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         int ifGoto = ++lastGotoId;
         llvmOutput.append(indents).append("; If\n");
@@ -393,6 +394,8 @@ public class CodeGenerationListener extends CODEBaseListener {
         }
 
         llvmOutput.append(indents).append("condEnd").append(ifGoto).append(":").append("\n");
+
+        return "";
     }
 
     private void generateWhileStatement(WhileStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -483,7 +486,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         } else
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(", ").append(varType).append("* ").append(var.alias).append("\n");
 
-        return  "";
+        return  String.valueOf(lastInstructionId);
     }
 
     private String generateVarValue(VarValueContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -513,7 +516,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(typeFound)).append(", ").append(vsopTypeToLlvmType(typeFound)).append("* %").append(varId).append("\n");
         llvmOutput.append(indents).append("\n");
 
-        return typeFound;
+        return String.valueOf(lastInstructionId);
     }
 
     private void generateIOClass() {
@@ -552,6 +555,132 @@ public class CodeGenerationListener extends CODEBaseListener {
                 "}").append("\n");
 
     }
+
+    private String generateNewObj(NewObjContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        return "";
+    }
+
+    private String generateCallMethod(CallMethodContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        return "";
+    }
+
+
+    private void generateBinaryOperation(BinaryOperationContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        handleExpr1(ctx.expr1(), variablesCache);
+    }
+
+
+    private String handleExpr1(Expr1Context expr1, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        if (expr1.expr1() != null) {
+
+        } else
+            return handleExpr2(expr1.expr2(), variablesCache);
+
+        return "bool";
+    }
+
+    private String handleExpr2(Expr2Context expr2, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        if (expr2.expr2() != null) {
+
+        } else
+            return handleExpr3(expr2.expr3(), variablesCache);
+
+        return "bool";
+    }
+
+    private String handleExpr3(Expr3Context expr3, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        if (expr3.comparatorOperator() != null) {
+
+        } else
+            return handleExpr4(expr3.expr4(0), variablesCache);
+
+        return "bool";
+    }
+
+    private String handleExpr4(Expr4Context expr4, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        if (expr4.termOperator() != null) {
+
+        } else
+            return handleExpr5(expr4.expr5(), variablesCache);
+
+        return "int32";
+    }
+
+    private String handleExpr5(Expr5Context expr5, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        if (expr5.factorOperator() != null) {
+
+        } else
+            return handleExpr6(expr5.expr6(), variablesCache);
+
+        return "int32";
+    }
+
+    private String handleExpr6(Expr6Context expr6, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        String returnType = "";
+
+        if (expr6.expr6() != null) {
+
+
+        } else
+            return handleExpr7(expr6.expr7(), variablesCache);
+
+        return returnType;
+    }
+
+    private String handleExpr7(Expr7Context expr7, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        if (expr7.POW() != null) {
+
+
+
+            String id1 = handleExpr8(expr7.expr8(), variablesCache);
+            String id2 = handleExpr7(expr7.expr7(), variablesCache);
+
+            llvmOutput.append(indents).append("; Pow\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sitofp i32 %").append(id1).append(" to double").append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sitofp i32 %").append(id2).append(" to double").append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call double @pow(double %").append(lastInstructionId-2).append(", double %").append(lastInstructionId-1).append(") #3\n");
+
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = fptosi double %").append(lastInstructionId-1).append(" to i32").append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca i32").append("\n");
+            llvmOutput.append(indents).append("").append("store ").append("i32").append(" %").append(lastInstructionId-1).append(", ").append("i32* %").append(lastInstructionId).append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load i32, i32* %").append(lastInstructionId-1).append("\n");
+            llvmOutput.append("\n");
+
+
+        } else
+            return handleExpr8(expr7.expr8(), variablesCache);
+
+        return String.valueOf(lastInstructionId);
+    }
+
+    private String handleExpr8(Expr8Context expr8, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+
+        if (expr8.expr1() != null)
+            handleExpr1(expr8.expr1(), variablesCache);
+        else if (expr8.callMethod() != null)
+            return generateCallMethod(expr8.callMethod(), variablesCache);
+        else if (expr8.varValue() != null)
+            return generateVarValue(expr8.varValue(), variablesCache);
+        else if (expr8.newObj() != null)
+            return generateNewObj(expr8.newObj(), variablesCache);
+        else if (expr8.ifStatement() != null)
+            return generateIfStatement(expr8.ifStatement(), variablesCache);
+        else if (expr8.OBJECT_IDENTIFIER() != null) {
+            return generateObjectIdentifier(expr8.OBJECT_IDENTIFIER(), variablesCache);
+        }
+
+        return "";
+    }
+
 
     private String vsopTypeToLlvmType(String type) {
         switch (type) {

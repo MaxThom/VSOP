@@ -231,7 +231,7 @@ public class Main {
             writer.write(input);
             writer.close();
 
-            if (System.getProperty("os.name").equals("Linux")) {
+            if (System.getProperty("os.name").trim().toLowerCase().equals("linux")) {
                 generateExecutableFinal(name);
                 if (displayVisual) {
                     System.out.println("======================");
@@ -249,37 +249,45 @@ public class Main {
         try
         {
             String command = "llvm-as -f " + fileName + ".ll -o " + fileName + ".bc" ;
+            executeCommmandAnsListen(command);
+
+            command = "llc " + fileName + ".bc";
+            executeCommmandAnsListen(command);
+
+            command = "gcc -c " + fileName + ".s -o " + fileName + ".o";
+            executeCommmandAnsListen(command);
+
+            command = "gcc " + fileName + ".o -lm -o " + fileName + " -no-pie";
+            executeCommmandAnsListen(command);
+
+            command = "rm " + fileName + ".bc";
+            executeCommmandAnsListen(command);
+
+            command = "rm " + fileName + ".s";
+            executeCommmandAnsListen(command);
+
+            command = "rm " + fileName + ".o";
+            executeCommmandAnsListen(command);
+
+            command = "rm " + fileName + ".ll";
+            executeCommmandAnsListen(command);
+
+        } catch (Exception e) {
+            System.err.println("Can't generate LLVM file : " + e.getMessage());
+        }
+    }
+
+    private static void executeCommmandAnsListen(String command) {
+        try
+        {
             Process proc = Runtime.getRuntime().exec(command);
             proc.waitFor();
 
-            command = "llc " + fileName + ".bc";
-            proc = Runtime.getRuntime().exec(command);
-            proc.waitFor();
-
-            command = "gcc -c " + fileName + ".s -o " + fileName + ".o";
-            proc = Runtime.getRuntime().exec(command);
-            proc.waitFor();
-
-            command = "gcc " + fileName + ".o -o " + fileName + " -no-pie";
-            proc = Runtime.getRuntime().exec(command);
-            proc.waitFor();
-
-            command = "rm " + fileName + ".bc";
-            proc = Runtime.getRuntime().exec(command);
-            proc.waitFor();
-
-            command = "rm " + fileName + ".s";
-            proc = Runtime.getRuntime().exec(command);
-            proc.waitFor();
-
-            command = "rm " + fileName + ".o";
-            proc = Runtime.getRuntime().exec(command);
-            proc.waitFor();
-
-            command = "rm " + fileName + ".ll";
-            proc = Runtime.getRuntime().exec(command);
-            proc.waitFor();
-
+            BufferedReader buf = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            String line = "";
+            while ((line=buf.readLine())!=null) {
+                System.out.println(line);
+            }
         } catch (Exception e) {
             System.err.println("Can't generate LLVM file : " + e.getMessage());
         }

@@ -1,11 +1,10 @@
 ; ModuleID = 'Test1.vsop'
-source_filename = "Test1.vsop"
-
 ; 
 ; DECLARATION
 ; 
 declare noalias i8* @malloc(i64) #1
 declare i32 @printf(i8*, ...)
+declare double @pow(double, double) #1
 @.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
 
 ; 
@@ -13,11 +12,6 @@ declare i32 @printf(i8*, ...)
 ; 
 %struct.Object = type { }
 %struct.Main = type {
-	%struct.Test2,
-	i32,
-	i32
-}
-%struct.Test2 = type {
 	%struct.Object
 }
 
@@ -47,23 +41,6 @@ define void @Main_init(%struct.Main*) #0 {
 	%2 = alloca %struct.Main*
 	store %struct.Main* %0, %struct.Main** %2
 
-	%3 = load %struct.Main*, %struct.Main** %2
-	%4 = getelementptr inbounds %struct.Main, %struct.Main* %3, i32 0, i32 0
-	call void @Test2_init(%struct.Test2* %4)
-
-	%5 = load %struct.Main*, %struct.Main** %2
-	%6 = getelementptr inbounds %struct.Main, %struct.Main* %5, i32 0, i32 1
-	store i32 0, i32* %6
-
-	%7 = load %struct.Main*, %struct.Main** %2
-	%8 = getelementptr inbounds %struct.Main, %struct.Main* %7, i32 0, i32 2
-	; VarValue
-	%9 = alloca i32
-	store i32 5, i32* %9
-	%10 = load i32, i32* %9
-	
-	store i32 %10, i32* %8
-
 	ret void
 }
 
@@ -76,64 +53,43 @@ define i32 @main(%struct.Main*) #0 {
 	
 	; VarValue
 	%4 = alloca i32
-	store i32 0, i32* %4
+	store i32 2, i32* %4
 	%5 = load i32, i32* %4
 	
-	ret i32 %5
-}
-
-; Method main2
-define i32 @main2(%struct.Main*, i32, i32) #0 {
-	; Formals
-	%4 = alloca %struct.Main*
-	store %struct.Main* %0, %struct.Main** %4
-	%5 = alloca i32
-	store i32 %1, i32* %5
+	; VarValue
 	%6 = alloca i32
-	store i32 %2, i32* %6
-	
-	; ObjectIdentifier
-	%7 = load %struct.Main*, %struct.Main** %4
-	%8 = getelementptr inbounds %struct.Main, %struct.Main* %7, i32 0, i32 1
-	%9 = load i32, i32* %8
-	; Assign
-	store i32 %9, i32* %5
+	store i32 2, i32* %6
+	%7 = load i32, i32* %6
 	
 	; VarValue
-	%10 = alloca i32
-	store i32 0, i32* %10
-	%11 = load i32, i32* %10
+	%8 = alloca i32
+	store i32 2, i32* %8
+	%9 = load i32, i32* %8
 	
-	ret i32 %11
-}
+	; Pow
+	%10 = sitofp i32 %7 to double
+	%11 = sitofp i32 %9 to double
+	%12 = call double @pow(double %10, double %11) #3
+	%13 = fptosi double %12 to i32
+	%14 = alloca i32
+	store i32 %13, i32* %14
+	%15 = load i32, i32* 14
 
-; 
-; TEST2
-; 
+	; Pow
+	%16 = sitofp i32 %5 to double
+	%17 = sitofp i32 %15 to double
+	%18 = call double @pow(double %16, double %17) #3
+	%19 = fptosi double %18 to i32
+	%20 = alloca i32
+	store i32 %19, i32* %20
+	%21 = load i32, i32* 20
 
-; Allocation
-define %struct.Test2* @Test2_new() #0 {
-	%size_as_ptr = getelementptr %struct.Test2, %struct.Test2* null, i32 1
-	%size_as_i64 = ptrtoint %struct.Test2* %size_as_ptr to i64
-
-	%1 = alloca %struct.Test2*
-	%2 = call noalias i8* @malloc(i64 %size_as_i64) #3
-	%3 = bitcast i8* %2 to %struct.Test2*
-	store %struct.Test2* %3, %struct.Test2** %1
-
-	%4 = load %struct.Test2*, %struct.Test2** %1
-	call void @Test2_init(%struct.Test2* %4)
-
-	%5 = load %struct.Test2*, %struct.Test2** %1
-	ret %struct.Test2* %5
-}
-
-; Initializer
-define void @Test2_init(%struct.Test2*) #0 {
-	%2 = alloca %struct.Test2*
-	store %struct.Test2* %0, %struct.Test2** %2
-
-	ret void
+	; VarValue
+	%22 = alloca i32
+	store i32 0, i32* %22
+	%23 = load i32, i32* %22
+	
+	ret i32 %23
 }
 
 ; 
