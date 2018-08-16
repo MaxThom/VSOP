@@ -1,17 +1,18 @@
-class Main {
+class Main extends Test2{
 
     test: int32 ;
+    test2: int32 <- 5;
 
     main() : int32 {
         0
     }
 
     main2(x: int32, y: int32) : int32 {
-
-
-        test <- 5;
-        y <- 5;
-
+        x <- test;
         0
     }
+}
+
+class Test2 {
+
 }

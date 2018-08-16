@@ -67,8 +67,9 @@ public class CodeGenerationListener extends CODEBaseListener {
             classDef.methods.put(methodDef.name, methodDef);
         }
 
+        int fieldPos = 1;
         for (FieldContext field: fields) {
-            FieldDefinition fieldDef = new FieldDefinition(field.OBJECT_IDENTIFIER().getText(), field.varType().getText());
+            FieldDefinition fieldDef = new FieldDefinition(field.OBJECT_IDENTIFIER().getText(), field.varType().getText(), fieldPos++);
             classDef.fields.put(fieldDef.name, fieldDef);
         }
 
@@ -108,21 +109,23 @@ public class CodeGenerationListener extends CODEBaseListener {
     private void generateStructuresFromClasses() {
         appendSectionHeader("STRUCTURES");
 
+        // Add object structure
+        llvmOutput.append(indents).append("%struct.").append("Object").append(" = type { }\n");
 
         for (ClassDefinition cl: classes.values()) {
-            boolean removeComma = false;
+
             llvmOutput.append(indents).append("%struct.").append(cl.name).append(" = type {\n");
 
-            if (!cl.extend.equals("Object")) {
+            if (!cl.extend.equals("Object"))
                 llvmOutput.append(indents).append("\t%struct.").append(cl.extend).append(",\n");
-                removeComma = true;
-            }
+            else
+                llvmOutput.append(indents).append("\t%struct.").append("Object").append(",\n");
 
             for (FieldDefinition field : cl.fields.values()) {
                 llvmOutput.append(indents).append("\t").append(vsopTypeToLlvmType(field.type)).append(",\n");
-                removeComma = true;
+
             }
-            if (removeComma) llvmOutput.delete(llvmOutput.length()-2, llvmOutput.length());
+            llvmOutput.delete(llvmOutput.length()-2, llvmOutput.length());
             llvmOutput.append(indents).append("\n}\n");
         }
 
@@ -158,6 +161,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append(indents).append("\t").append("%2 = alloca %struct.").append(cl.name).append("*").append("\n");
         llvmOutput.append(indents).append("\t").append("store %struct.").append(cl.name).append("* %0, %struct.").append(cl.name).append("** %2").append("\n\n");
 
+
         int i = 3, j = 0;
         if (!cl.extend.equals("Object")) {
             llvmOutput.append(indents).append("\t").append("%").append(i).append(" = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %2").append("\n");
@@ -166,21 +170,25 @@ public class CodeGenerationListener extends CODEBaseListener {
             i += 2;
             j += 1;
         }
-
+        this.lastInstructionId = i-1;
         for (FieldContext field : fields) {
-            llvmOutput.append(indents).append("\t").append("%").append(i).append(" = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %2").append("\n");
-            llvmOutput.append(indents).append("\t").append("%").append(i+1).append(" = getelementptr inbounds %struct.").append(cl.name).append(", %struct.").append(cl.name).append("* %").append(i).append(", i32 0, i32 ").append(j).append("\n");
+            int whereToStore = ++lastInstructionId;
+            llvmOutput.append(indents).append("\t").append("%").append(whereToStore).append(" = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %2").append("\n");
+            llvmOutput.append(indents).append("\t").append("%").append(++lastInstructionId).append(" = getelementptr inbounds %struct.").append(cl.name).append(", %struct.").append(cl.name).append("* %").append(lastInstructionId-1).append(", i32 0, i32 ").append(j).append("\n");
             //if (isPrimitive(field.type))
             ArrayList<Map<String, VariableDefinition>> variablesCache = new ArrayList<>();
             variablesCache.add(new HashMap<>());
             if (field.statement() != null) {
+                this.indents.append("\t");
                 variablesCache.add(new HashMap<>());
                 generateStatement(field.statement(), variablesCache);
                 variablesCache.remove(variablesCache.size()-1);
+                llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(field.varType().getText())).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(field.varType().getText())).append("* %").append(whereToStore+1).append("\n\n");
+                this.indents.delete(this.indents.length()-1, this.indents.length());
             } else if (field.block() != null) {
                 generateBlock(field.block(), variablesCache);
             } else
-                llvmOutput.append(indents).append("\t").append("store ").append(vsopTypeToLlvmType(field.varType().getText())).append(" ").append(getDefaultValue(field.varType().getText())).append(", ").append(vsopTypeToLlvmType(field.varType().getText())).append("* %").append(i+1).append("\n\n");
+                llvmOutput.append(indents).append("\t").append("store ").append(vsopTypeToLlvmType(field.varType().getText())).append(" ").append(getDefaultValue(field.varType().getText())).append(", ").append(vsopTypeToLlvmType(field.varType().getText())).append("* %").append(whereToStore+1).append("\n\n");
 
             //else
                 //llvmOutput.append(indents).append("\t").append("call void @").append(field.type).append("_init(%struct.").append(field.type).append("* %").append(i+1).append(")").append("\n\n");
@@ -196,6 +204,7 @@ public class CodeGenerationListener extends CODEBaseListener {
 
     private void generateMethodsFromClass(ClassDefinitionContext ctx) {
         List<MethodDefinitionContext> methods = ctx.children.stream().filter(x -> x instanceof  MethodDefinitionContext).map(x -> (MethodDefinitionContext) x).collect(Collectors.toList());
+        String classType = ctx.TYPE_IDENTIFIER(0).getText();
 
         for (MethodDefinitionContext method: methods) {
             ArrayList<Map<String, VariableDefinition>> variablesCache = new ArrayList<>();
@@ -219,6 +228,10 @@ public class CodeGenerationListener extends CODEBaseListener {
 
             }*/
 
+            // Add self structure
+
+            llvmOutput.append(indents).append(vsopTypeToLlvmType(classType)).append(", ");
+
             // Formals
             variablesCache.add(new HashMap<>());
             List<FormalDefinition> formals = new ArrayList<>(currentClass.methods.get(method.OBJECT_IDENTIFIER().getText()).formals.values());
@@ -226,22 +239,35 @@ public class CodeGenerationListener extends CODEBaseListener {
             for (FormalDefinition formal : formals) {
                 llvmOutput.append(indents).append(vsopTypeToLlvmType(formal.type)).append(", ");
             }
-            if (formals.size() > 0) llvmOutput.delete(llvmOutput.length()-2, llvmOutput.length());
+            llvmOutput.delete(llvmOutput.length()-2, llvmOutput.length());
             llvmOutput.append(indents).append(") #0 {\n");
 
             if (method.block() != null) {
                 this.indents.append("\t");
-                this.lastInstructionId = formals.size();
+                this.lastInstructionId = formals.size()+1;
                 this.lastGotoId = 0;
 
+                // Add self structure
+                llvmOutput.append(indents).append("; Formals\n");
+                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca ").append(vsopTypeToLlvmType(classType)).append("\n");
+                if (classType.equals("Main") && method.OBJECT_IDENTIFIER().getText().equals("main")) {
+                    // If main, add initializer else it's created with the new
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call ").append(vsopTypeToLlvmType(classType)).append(" @").append(classType).append("_new()\n");
+                    llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(classType)).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(classType)).append("* %").append(lastInstructionId - 1).append("\n");
+                    variablesCache.get(variablesCache.size()-1).put("self", new VariableDefinition("self", "%".concat(String.valueOf(lastInstructionId-1)), classType));
+                } else {
+                    llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(classType)).append(" %0").append(", ").append(vsopTypeToLlvmType(classType)).append("* %").append(lastInstructionId).append("\n");
+                    variablesCache.get(variablesCache.size()-1).put("self", new VariableDefinition("self", "%".concat(String.valueOf(lastInstructionId)), classType));
+                }
+
+
                 // Add formals as first instructions
-                if (formals.size() > 0) llvmOutput.append(indents).append("; Formals\n");
                 for (FormalDefinition formal : formals) {
                     llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca ").append(vsopTypeToLlvmType(formal.type)).append("\n");
-                    llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(formal.type)).append(" %".concat(String.valueOf(formal.position))).append(", ").append(vsopTypeToLlvmType(formal.type)).append("* %").append(lastInstructionId).append("\n");
+                    llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(formal.type)).append(" %".concat(String.valueOf(formal.position+1))).append(", ").append(vsopTypeToLlvmType(formal.type)).append("* %").append(lastInstructionId).append("\n");
                     variablesCache.get(variablesCache.size()-1).put(formal.name, new VariableDefinition(formal.name, "%".concat(String.valueOf(lastInstructionId)), formal.type));
                 }
-                if (formals.size() > 0) llvmOutput.append(indents).append("\n");
+                llvmOutput.append(indents).append("\n");
 
                 this.indents.delete(this.indents.length()-1, this.indents.length());
                 generateBlock(method.block(), variablesCache);
@@ -441,10 +467,21 @@ public class CodeGenerationListener extends CODEBaseListener {
     }
 
     private String generateObjectIdentifier(TerminalNode ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
-        int varId = ++lastInstructionId;
         VariableDefinition var = checkVariableCacheForIdentifier(ctx, variablesCache);
+        String varType = vsopTypeToLlvmType(var.type);
         llvmOutput.append(indents).append("; ObjectIdentifier\n");
-        llvmOutput.append(indents).append("%").append(varId).append(" = load ").append(vsopTypeToLlvmType(var.type)).append(", ").append(vsopTypeToLlvmType(var.type)).append("* ").append(var.alias).append("\n");
+
+        if (var.name.equals("self")) {
+            FieldDefinition fieldToCheck = classes.get(var.type).fields.get(ctx.getText());
+
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(", ").append(varType).append("* ").append(var.alias).append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ").append(varType.substring(0, varType.length()-1)).append(", ").append(varType).append(" %").append(lastInstructionId-1).append(", i32 0, i32 ").append(fieldToCheck.position).append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(fieldToCheck.type)).append(", ").append(vsopTypeToLlvmType(fieldToCheck.type)).append("* %").append(lastInstructionId-1).append("\n");
+            //        %par_load = load %struct.Main*, %struct.Main** %2
+           //         %struct_value_1 = getelementptr inbounds %struct.Main, %struct.Main* %par_load, i32 0, i32 2
+           //         %struct_value_1_load = load i32, i32* %struct_value_1, align 4
+        } else
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(", ").append(varType).append("* ").append(var.alias).append("\n");
 
         return  "";
     }
@@ -575,6 +612,17 @@ public class CodeGenerationListener extends CODEBaseListener {
                 if (variablesCache.get(i).containsKey(identifier.getText())) {
                     varFound = variablesCache.get(i).get(identifier.getText());
                     break;
+                }
+            }
+        }
+
+        if (varFound == null) {
+            if (variablesCache != null) {
+                for (int i = variablesCache.size() - 1; i >= 0; i--) {
+                    if (variablesCache.get(i).containsKey("self")) {
+                        varFound = variablesCache.get(i).get("self");
+                        break;
+                    }
                 }
             }
         }
