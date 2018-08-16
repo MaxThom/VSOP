@@ -627,20 +627,29 @@ public class CodeGenerationListener extends CODEBaseListener {
         String returnType = "";
 
         if (expr6.expr6() != null) {
+            String operator = expr6.MINUS() != null ? expr6.MINUS().getText() : expr6.ISNULL().getText();
+            String varId = handleExpr6(expr6.expr6(), variablesCache);
 
+            if (operator.equals("isnull")) {
+                llvmOutput.append(indents).append("; IsNull\n");
+            } else if (operator.equals("-")) {
+                llvmOutput.append(indents).append("; Negative\n");
+                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sub nsw i32 0, %").append(varId).append("\n");
+                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca i32").append("\n");
+                llvmOutput.append(indents).append("store ").append("i32").append(" %").append(lastInstructionId-1).append(", ").append("i32* %").append(lastInstructionId).append("\n");
+                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load i32, i32* %").append(lastInstructionId-1).append("\n");
+            }
 
+            llvmOutput.append("\n");
         } else
             return handleExpr7(expr6.expr7(), variablesCache);
 
-        return returnType;
+        return String.valueOf(lastInstructionId);
     }
 
     private String handleExpr7(Expr7Context expr7, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr7.POW() != null) {
-
-
-
             String id1 = handleExpr8(expr7.expr8(), variablesCache);
             String id2 = handleExpr7(expr7.expr7(), variablesCache);
 
@@ -651,10 +660,9 @@ public class CodeGenerationListener extends CODEBaseListener {
 
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = fptosi double %").append(lastInstructionId-1).append(" to i32").append("\n");
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca i32").append("\n");
-            llvmOutput.append(indents).append("").append("store ").append("i32").append(" %").append(lastInstructionId-1).append(", ").append("i32* %").append(lastInstructionId).append("\n");
+            llvmOutput.append(indents).append("store ").append("i32").append(" %").append(lastInstructionId-1).append(", ").append("i32* %").append(lastInstructionId).append("\n");
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load i32, i32* %").append(lastInstructionId-1).append("\n");
             llvmOutput.append("\n");
-
 
         } else
             return handleExpr8(expr7.expr8(), variablesCache);
@@ -665,7 +673,7 @@ public class CodeGenerationListener extends CODEBaseListener {
     private String handleExpr8(Expr8Context expr8, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr8.expr1() != null)
-            handleExpr1(expr8.expr1(), variablesCache);
+            return handleExpr1(expr8.expr1(), variablesCache);
         else if (expr8.callMethod() != null)
             return generateCallMethod(expr8.callMethod(), variablesCache);
         else if (expr8.varValue() != null)

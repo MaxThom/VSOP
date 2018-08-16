@@ -53,43 +53,35 @@ define i32 @main(%struct.Main*) #0 {
 	
 	; VarValue
 	%4 = alloca i32
-	store i32 2, i32* %4
+	store i32 4, i32* %4
 	%5 = load i32, i32* %4
 	
-	; VarValue
-	%6 = alloca i32
-	store i32 2, i32* %6
-	%7 = load i32, i32* %6
-	
-	; VarValue
-	%8 = alloca i32
-	store i32 2, i32* %8
-	%9 = load i32, i32* %8
-	
-	; Pow
-	%10 = sitofp i32 %7 to double
-	%11 = sitofp i32 %9 to double
-	%12 = call double @pow(double %10, double %11) #3
-	%13 = fptosi double %12 to i32
-	%14 = alloca i32
-	store i32 %13, i32* %14
-	%15 = load i32, i32* 14
-
-	; Pow
-	%16 = sitofp i32 %5 to double
-	%17 = sitofp i32 %15 to double
-	%18 = call double @pow(double %16, double %17) #3
-	%19 = fptosi double %18 to i32
-	%20 = alloca i32
-	store i32 %19, i32* %20
-	%21 = load i32, i32* 20
+	; Negative
+	%6 = sub nsw i32 0, %5
+	%7 = alloca i32
+	store i32 %6, i32* %7
+	%8 = load i32, i32* %7
 
 	; VarValue
-	%22 = alloca i32
-	store i32 0, i32* %22
-	%23 = load i32, i32* %22
+	%9 = alloca i32
+	store i32 2, i32* %9
+	%10 = load i32, i32* %9
 	
-	ret i32 %23
+	; Pow
+	%11 = sitofp i32 %8 to double
+	%12 = sitofp i32 %10 to double
+	%13 = call double @pow(double %11, double %12) #3
+	%14 = fptosi double %13 to i32
+	%15 = alloca i32
+	store i32 %14, i32* %15
+	%16 = load i32, i32* %15
+
+	; VarValue
+	%17 = alloca i32
+	store i32 0, i32* %17
+	%18 = load i32, i32* %17
+	
+	ret i32 %18
 }
 
 ; 
