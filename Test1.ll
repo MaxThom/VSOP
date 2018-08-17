@@ -5,6 +5,7 @@
 declare noalias i8* @malloc(i64) #1
 declare i32 @printf(i8*, ...)
 declare double @pow(double, double) #1
+declare i32 @strcmp(i8*, i8*) #1
 @.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
 
 ; 
@@ -12,7 +13,8 @@ declare double @pow(double, double) #1
 ; 
 %struct.Object = type { }
 %struct.Main = type {
-	%struct.Object
+	%struct.Object,
+	i8*
 }
 
 ; 
@@ -41,6 +43,15 @@ define void @Main_init(%struct.Main*) #0 {
 	%2 = alloca %struct.Main*
 	store %struct.Main* %0, %struct.Main** %2
 
+	%3 = load %struct.Main*, %struct.Main** %2
+	%4 = getelementptr inbounds %struct.Main, %struct.Main* %3, i32 0, i32 1
+	; VarValue
+	%5 = alloca [6 x i8]
+	store [6 x i8] c"test2\00", [6 x i8]* %5
+	%6 = bitcast [6 x i8]* %5 to i8*
+	
+	store i8* %6, i8** %4
+
 	ret void
 }
 
@@ -51,92 +62,52 @@ define i32 @main(%struct.Main*) #0 {
 	%3 = call %struct.Main* @Main_new()
 	store %struct.Main* %3, %struct.Main** %2
 	
-	; VarValue
-	%4 = alloca i32
-	store i32 3, i32* %4
-	%5 = load i32, i32* %4
+	; ObjectIdentifier
+	%4 = load %struct.Main*, %struct.Main** %2
+	%5 = getelementptr inbounds %struct.Main, %struct.Main* %4, i32 0, i32 1
+	%6 = load i8*, i8** %5
 	
-	; VarValue
-	%6 = alloca i32
-	store i32 4, i32* %6
-	%7 = load i32, i32* %6
+	; ObjectIdentifier
+	%7 = load %struct.Main*, %struct.Main** %2
+	%8 = getelementptr inbounds %struct.Main, %struct.Main* %7, i32 0, i32 1
+	%9 = load i8*, i8** %8
 	
-	; Subtraction
-	%8 = sub nsw i32 %5, %7
-	%9 = alloca i32
-	store i32 %8, i32* %9
-	%10 = load i32, i32* %9
+	%10 = call i32 @strcmp(i8* %6, i8* %9) #2
+	; Equal
+	%11 = icmp eq i32 %10, 0
+
+	; Not
+	%12 = alloca i1
+	br i1 %11, label %notTrue1 , label %notFalse2
+	notTrue1:
+		store i1 0, i1* %12
+		br label %notEnd3	notFalse2:
+		store i1 1, i1* %12
+		br label %notEnd3	notEnd3:
+		%13 = load i1, i1* %12
 
 	; VarValue
-	%11 = alloca i32
-	store i32 4, i32* %11
-	%12 = load i32, i32* %11
+	%14 = alloca i32
+	store i32 0, i32* %14
+	%15 = load i32, i32* %14
 	
-	; VarValue
-	%13 = alloca i32
-	store i32 1, i32* %13
-	%14 = load i32, i32* %13
-	
-	; Subtraction
-	%15 = sub nsw i32 %12, %14
-	%16 = alloca i32
-	store i32 %15, i32* %16
-	%17 = load i32, i32* %16
+	ret i32 %15
+}
 
-	; VarValue
-	%18 = alloca i32
-	store i32 2, i32* %18
-	%19 = load i32, i32* %18
+; Method main2
+define i32 @main2(%struct.Main*, i8*) #0 {
+	; Formals
+	%3 = alloca %struct.Main*
+	store %struct.Main* %0, %struct.Main** %3
+	%4 = alloca i8*
+	store i8* %1, i8** %4
 	
 	; VarValue
-	%20 = alloca i32
-	store i32 5, i32* %20
-	%21 = load i32, i32* %20
+	%5 = alloca i32
+	store i32 0, i32* %5
+	%6 = load i32, i32* %5
 	
-	; Addition
-	%22 = add nsw i32 %19, %21
-	%23 = alloca i32
-	store i32 %22, i32* %23
-	%24 = load i32, i32* %23
-
-	; VarValue
-	%25 = alloca i32
-	store i32 3, i32* %25
-	%26 = load i32, i32* %25
-	
-	; VarValue
-	%27 = alloca i32
-	store i32 3, i32* %27
-	%28 = load i32, i32* %27
-	
-	; Division
-	%29 = sdiv i32 %26, %28
-	%30 = alloca i32
-	store i32 %29, i32* %30
-	%31 = load i32, i32* %30
-
-	; VarValue
-	%32 = alloca i32
-	store i32 2, i32* %32
-	%33 = load i32, i32* %32
-	
-	; VarValue
-	%34 = alloca i32
-	store i32 6, i32* %34
-	%35 = load i32, i32* %34
-	
-	; Multiplication
-	%36 = mul nsw i32 %33, %35
-	%37 = alloca i32
-	store i32 %36, i32* %37
-	%38 = load i32, i32* %37
-
-	; VarValue
-	%39 = alloca i32
-	store i32 0, i32* %39
-	%40 = load i32, i32* %39
-	
-	ret i32 %40
+	ret i32 %6
 }
 
 ; 

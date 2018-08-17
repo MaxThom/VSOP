@@ -1,17 +1,18 @@
 ; ModuleID = 'Test2.vsop'
-source_filename = "Test2.vsop"
-
 ; 
 ; DECLARATION
 ; 
 declare noalias i8* @malloc(i64) #1
 declare i32 @printf(i8*, ...)
+declare double @pow(double, double) #1
 @.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
 
 ; 
 ; STRUCTURES
 ; 
+%struct.Object = type { }
 %struct.Parent = type {
+	%struct.Object,
 	i32
 }
 %struct.Child = type {
@@ -19,6 +20,7 @@ declare i32 @printf(i8*, ...)
 	i32
 }
 %struct.Main = type {
+	%struct.Object,
 	i32
 }
 
@@ -126,29 +128,34 @@ define void @Main_init(%struct.Main*) #0 {
 }
 
 ; Method main
-define i32 @main() #0 {
+define i32 @main(%struct.Main*) #0 {
+	; Formals
+	%2 = alloca %struct.Main*
+	%3 = call %struct.Main* @Main_new()
+	store %struct.Main* %3, %struct.Main** %2
+	
 	; If
 	; VarValue
-	%1 = alloca i1
-	store i1 1, i1* %1
-	%2 = load i1, i1* %1
+	%4 = alloca i1
+	store i1 1, i1* %4
+	%5 = load i1, i1* %4
 	
-	br i1 %2, label %condIf1, label %condElse1	
+	br i1 %5, label %condIf1, label %condElse1	
 
 	condIf1:
 		; If
 		; VarValue
-		%3 = alloca i1
-		store i1 0, i1* %3
-		%4 = load i1, i1* %3
+		%6 = alloca i1
+		store i1 0, i1* %6
+		%7 = load i1, i1* %6
 		
-		br i1 %4, label %condIf2, label %condEnd2		
+		br i1 %7, label %condIf2, label %condEnd2		
 
 		condIf2:
 			; VarValue
-			%5 = alloca i32
-			store i32 1, i32* %5
-			%6 = load i32, i32* %5
+			%8 = alloca i32
+			store i32 1, i32* %8
+			%9 = load i32, i32* %8
 			
 			br label %condEnd2
 
@@ -157,24 +164,24 @@ define i32 @main() #0 {
 
 	condElse1:
 		; VarValue
-		%7 = alloca i32
-		store i32 0, i32* %7
-		%8 = load i32, i32* %7
+		%10 = alloca i32
+		store i32 0, i32* %10
+		%11 = load i32, i32* %10
 		
 		; While
 		whileCond3:
 			; VarValue
-			%9 = alloca i1
-			store i1 1, i1* %9
-			%10 = load i1, i1* %9
+			%12 = alloca i1
+			store i1 1, i1* %12
+			%13 = load i1, i1* %12
 			
-			br i1 %10, label %while3, label %whileEnd3
+			br i1 %13, label %while3, label %whileEnd3
 
 		while3:
 			; VarValue
-			%11 = alloca i32
-			store i32 1, i32* %11
-			%12 = load i32, i32* %11
+			%14 = alloca i32
+			store i32 1, i32* %14
+			%15 = load i32, i32* %14
 			
 			br label %whileCond3
 
@@ -184,35 +191,35 @@ define i32 @main() #0 {
 	condEnd1:
 	; If
 	; VarValue
-	%13 = alloca i1
-	store i1 0, i1* %13
-	%14 = load i1, i1* %13
+	%16 = alloca i1
+	store i1 0, i1* %16
+	%17 = load i1, i1* %16
 	
-	br i1 %14, label %condIf4, label %condElse4	
+	br i1 %17, label %condIf4, label %condElse4	
 
 	condIf4:
 		; VarValue
-		%15 = alloca i32
-		store i32 1, i32* %15
-		%16 = load i32, i32* %15
+		%18 = alloca i32
+		store i32 1, i32* %18
+		%19 = load i32, i32* %18
 		
 		br label %condEnd4
 
 	condElse4:
 		; VarValue
-		%17 = alloca i32
-		store i32 2, i32* %17
-		%18 = load i32, i32* %17
+		%20 = alloca i32
+		store i32 2, i32* %20
+		%21 = load i32, i32* %20
 		
 		br label %condEnd4
 
 	condEnd4:
 	; VarValue
-	%19 = alloca i32
-	store i32 0, i32* %19
-	%20 = load i32, i32* %19
+	%22 = alloca i32
+	store i32 0, i32* %22
+	%23 = load i32, i32* %22
 	
-	ret i32 %20
+	ret i32 %23
 }
 
 ; 

@@ -42,7 +42,7 @@ grammar PARSER;
 
     termOperator            : MINUS | PLUS ;
     factorOperator          : MULTI | DIV ;
-    comparatorOperator      : LOWER | LOWER_EQUAL | EQUAL ;
+    comparatorOperator      : LOWER | LOWER_EQUAL | EQUAL | GREATER | GREATER_EQUAL | DIFFERENT_EQUAL ;
 
     integer                 : INTEGER_HEX | INTEGER_DEC | INTEGER_BIN ;
     varType                 : 'bool' | 'int32' | 'string' | 'unit' | TYPE_IDENTIFIER ;
@@ -56,9 +56,12 @@ grammar PARSER;
     MINUS                   : '-' ;
     PLUS                    : '+' ;
 
+    LOWER                   : '<' ;
     LOWER_EQUAL             : '<=' ;
     EQUAL                   : '=' ;
-    LOWER                   : '<' ;
+    GREATER                 : '>' ;
+    GREATER_EQUAL           : '>=' ;
+    DIFFERENT_EQUAL         : '!=' ;
 
     AND                     : 'and' ;
     NOT                     : 'not' ;

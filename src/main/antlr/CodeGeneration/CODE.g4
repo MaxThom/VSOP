@@ -40,7 +40,7 @@ grammar CODE;
 
     termOperator            : MINUS | PLUS ;
     factorOperator          : MULTI | DIV ;
-    comparatorOperator      : LOWER | LOWER_EQUAL | EQUAL | GREATER | GREATER_EQUAL;
+    comparatorOperator      : LOWER | LOWER_EQUAL | EQUAL | GREATER | GREATER_EQUAL | DIFFERENT_EQUAL ;
 
     integer                 : INTEGER_HEX | INTEGER_DEC | INTEGER_BIN ;
     varType                 : 'bool' | 'int32' | 'string' | 'unit' | TYPE_IDENTIFIER ;
@@ -57,7 +57,8 @@ grammar CODE;
     LOWER_EQUAL             : '<=' ;
     EQUAL                   : '=' ;
     GREATER                 : '>' ;
-    GREATER_EQUAL           : '=>' ;
+    GREATER_EQUAL           : '>=' ;
+    DIFFERENT_EQUAL         : '!=' ;
 
     AND                     : 'and' ;
     NOT                     : 'not' ;

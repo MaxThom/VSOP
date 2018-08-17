@@ -5,6 +5,7 @@ import VSOP.CodeGeneration.CODEBaseListener;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -102,6 +103,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append("declare noalias i8* @malloc(i64) #1").append("\n");
         llvmOutput.append("declare i32 @printf(i8*, ...)").append("\n");
         llvmOutput.append("declare double @pow(double, double) #1").append("\n");
+        llvmOutput.append("declare i32 @strcmp(i8*, i8*) #1").append("\n");
         llvmOutput.append("@.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1").append("\n");
 
         llvmOutput.append("\n");
@@ -169,9 +171,9 @@ public class CodeGenerationListener extends CODEBaseListener {
             llvmOutput.append(indents).append("\t").append("%").append(i+1).append(" = getelementptr inbounds %struct.").append(cl.name).append(", %struct.").append(cl.name).append("* %").append(i).append(", i32 0, i32 ").append(j).append("\n");
             llvmOutput.append(indents).append("\t").append("call void @").append(cl.extend).append("_init(%struct.").append(cl.extend).append("* %").append(i+1).append(")").append("\n\n");
             i += 2;
-            j += 1;
         }
         this.lastInstructionId = i-1;
+        j = 1;
         for (FieldContext field : fields) {
             int whereToStore = ++lastInstructionId;
             llvmOutput.append(indents).append("\t").append("%").append(whereToStore).append(" = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %2").append("\n");
@@ -230,7 +232,6 @@ public class CodeGenerationListener extends CODEBaseListener {
             }*/
 
             // Add self structure
-
             llvmOutput.append(indents).append(vsopTypeToLlvmType(classType)).append(", ");
 
             // Formals
@@ -252,7 +253,7 @@ public class CodeGenerationListener extends CODEBaseListener {
                 llvmOutput.append(indents).append("; Formals\n");
                 llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca ").append(vsopTypeToLlvmType(classType)).append("\n");
                 if (classType.equals("Main") && method.OBJECT_IDENTIFIER().getText().equals("main")) {
-                    // If main, add initializer else it's created with the new
+                    // If main, add initializer else it's already created with the new before the call
                     llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call ").append(vsopTypeToLlvmType(classType)).append(" @").append(classType).append("_new()\n");
                     llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(classType)).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(classType)).append("* %").append(lastInstructionId - 1).append("\n");
                     variablesCache.get(variablesCache.size()-1).put("self", new VariableDefinition("self", "%".concat(String.valueOf(lastInstructionId-1)), classType));
@@ -320,7 +321,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         this.indents.delete(this.indents.length()-1, this.indents.length());
     }
 
-    private String generateStatement(StatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition generateStatement(StatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
         if (ctx.assign() != null) {
             generateAssign(ctx.assign(), variablesCache);
         } else if (ctx.ifStatement() != null) {
@@ -343,10 +344,10 @@ public class CodeGenerationListener extends CODEBaseListener {
             return generateVarValue(ctx.varValue(), variablesCache);
         }
 
-        return "";
+        return new VariableDefinition("", "", "");
     }
 
-    private String generateIfStatement(IfStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition generateIfStatement(IfStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         int ifGoto = ++lastGotoId;
         llvmOutput.append(indents).append("; If\n");
@@ -395,7 +396,7 @@ public class CodeGenerationListener extends CODEBaseListener {
 
         llvmOutput.append(indents).append("condEnd").append(ifGoto).append(":").append("\n");
 
-        return "";
+        return new VariableDefinition("", "", "");
     }
 
     private void generateWhileStatement(WhileStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -457,19 +458,25 @@ public class CodeGenerationListener extends CODEBaseListener {
     }
 
     private void  generateAssign(AssignContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
-        String typeFound = generateStatement(ctx.statement(), variablesCache);
+        generateStatement(ctx.statement(), variablesCache);
         VariableDefinition var = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
 
         llvmOutput.append(indents).append("; Assign\n");
-        if (var != null)
+        if (var != null && !var.name.equals("self"))
             llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(var.type)).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append("* ").append(var.alias).append("\n");
         else if (currentClass.fields.containsKey(ctx.OBJECT_IDENTIFIER().getText())) {
-            llvmOutput.append(indents).append("STRUCT");
+
+            FieldDefinition field = currentClass.fields.get(ctx.OBJECT_IDENTIFIER().getText());
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(var.type)).append(", ").append(vsopTypeToLlvmType(var.type)).append("* ").append(var.alias).append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ").append(vsopTypeToLlvmType(var.type).substring(0, vsopTypeToLlvmType(var.type).length()-1)).append(", ").append(vsopTypeToLlvmType(var.type)).append(" %").append(lastInstructionId-1).append(", i32 0, i32 ").append(field.position).append("\n");
+            llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(field.type)).append(" %").append(lastInstructionId-2).append(", ").append(vsopTypeToLlvmType(field.type)).append("* %").append(lastInstructionId).append("\n");
+
+
         }
         llvmOutput.append(indents).append("\n");
     }
 
-    private String generateObjectIdentifier(TerminalNode ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition generateObjectIdentifier(TerminalNode ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
         VariableDefinition var = checkVariableCacheForIdentifier(ctx, variablesCache);
         String varType = vsopTypeToLlvmType(var.type);
         llvmOutput.append(indents).append("; ObjectIdentifier\n");
@@ -480,16 +487,16 @@ public class CodeGenerationListener extends CODEBaseListener {
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(", ").append(varType).append("* ").append(var.alias).append("\n");
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ").append(varType.substring(0, varType.length()-1)).append(", ").append(varType).append(" %").append(lastInstructionId-1).append(", i32 0, i32 ").append(fieldToCheck.position).append("\n");
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(fieldToCheck.type)).append(", ").append(vsopTypeToLlvmType(fieldToCheck.type)).append("* %").append(lastInstructionId-1).append("\n");
-            //        %par_load = load %struct.Main*, %struct.Main** %2
-           //         %struct_value_1 = getelementptr inbounds %struct.Main, %struct.Main* %par_load, i32 0, i32 2
-           //         %struct_value_1_load = load i32, i32* %struct_value_1, align 4
+            varType = fieldToCheck.type;
         } else
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(", ").append(varType).append("* ").append(var.alias).append("\n");
 
-        return  String.valueOf(lastInstructionId);
+
+        llvmOutput.append(indents).append("\n");
+        return new VariableDefinition("", String.valueOf(lastInstructionId), varType);
     }
 
-    private String generateVarValue(VarValueContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition generateVarValue(VarValueContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
         String typeFound = "";
         String text = ctx.getText();
 
@@ -511,12 +518,29 @@ public class CodeGenerationListener extends CODEBaseListener {
 
         int varId = ++lastInstructionId;
         llvmOutput.append(indents).append("; VarValue\n");
-        llvmOutput.append(indents).append("%").append(varId).append(" = alloca ").append(vsopTypeToLlvmType(typeFound)).append("\n");
-        llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(typeFound)).append(" ").append(text).append(", ").append(vsopTypeToLlvmType(typeFound)).append("* %").append(varId).append("\n");
-        llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(typeFound)).append(", ").append(vsopTypeToLlvmType(typeFound)).append("* %").append(varId).append("\n");
-        llvmOutput.append(indents).append("\n");
 
-        return String.valueOf(lastInstructionId);
+        if (ctx.STRING() != null) {
+            int strLength = ctx.STRING().getText().length() - 1;
+            String str = ctx.STRING().getText().substring(1, strLength);
+            llvmOutput.append(indents).append("%").append(varId).append(" = alloca ").append("[").append(strLength).append(" x i8]").append("\n");
+            llvmOutput.append(indents).append("store [").append(strLength).append(" x i8] c\"").append(str).append("\\00\", ").append("[").append(strLength).append(" x i8]* %").append(varId).append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = bitcast [").append(strLength).append(" x i8]* %").append(varId).append(" to i8*").append("\n");
+
+            //%str2 = alloca [7 x i8]
+            //store [7 x i8] c"Hello!\00", [7 x i8]* %str2
+            //%tmp3 = bitcast [7 x i8]* %str2 to i8*
+
+        } else {
+
+            llvmOutput.append(indents).append("%").append(varId).append(" = alloca ").append(vsopTypeToLlvmType(typeFound)).append("\n");
+            llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(typeFound)).append(" ").append(text).append(", ").append(vsopTypeToLlvmType(typeFound)).append("* %").append(varId).append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(typeFound)).append(", ").append(vsopTypeToLlvmType(typeFound)).append("* %").append(varId).append("\n");
+        }
+
+
+        llvmOutput.append(indents).append("\n");
+        return new VariableDefinition("", String.valueOf(lastInstructionId), typeFound);
+
     }
 
     private void generateIOClass() {
@@ -556,14 +580,14 @@ public class CodeGenerationListener extends CODEBaseListener {
 
     }
 
-    private String generateNewObj(NewObjContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition generateNewObj(NewObjContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
-        return "";
+        return new VariableDefinition("", "", "");
     }
 
-    private String generateCallMethod(CallMethodContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition generateCallMethod(CallMethodContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
-        return "";
+        return new VariableDefinition("", "", "");
     }
 
 
@@ -573,49 +597,125 @@ public class CodeGenerationListener extends CODEBaseListener {
     }
 
 
-    private String handleExpr1(Expr1Context expr1, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition handleExpr1(Expr1Context expr1, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr1.expr1() != null) {
 
         } else
             return handleExpr2(expr1.expr2(), variablesCache);
 
-        return "bool";
+        return new VariableDefinition("", "", "");
     }
 
-    private String handleExpr2(Expr2Context expr2, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition handleExpr2(Expr2Context expr2, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr2.expr2() != null) {
+            VariableDefinition var1 = handleExpr2(expr2.expr2(), variablesCache);
+            int notTrue = ++lastGotoId;
+            int notFalse = ++lastGotoId;
+            int notEnd = ++lastGotoId;
 
+            llvmOutput.append(indents).append("; Not\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca i1").append("\n");
+            llvmOutput.append(indents).append("br i1 %").append(var1.alias).append(", label %notTrue").append(notTrue).append(" , label %notFalse").append(notFalse).append("\n");
+            llvmOutput.append(indents).append("notTrue").append(notTrue).append(":").append("\n");
+            indents.append("\t");
+            llvmOutput.append(indents).append("store i1 0, i1* %").append(lastInstructionId).append("\n");
+            llvmOutput.append(indents).append("br label %notEnd").append(notEnd).append("\n");
+            this.indents.delete(this.indents.length()-1, this.indents.length());
+            llvmOutput.append(indents).append("notFalse").append(notFalse).append(":").append("\n");
+            indents.append("\t");
+            llvmOutput.append(indents).append("store i1 1, i1* %").append(lastInstructionId).append("\n");
+            llvmOutput.append(indents).append("br label %notEnd").append(notEnd).append("\n");
+            this.indents.delete(this.indents.length()-1, this.indents.length());
+            llvmOutput.append(indents).append("notEnd").append(notEnd).append(":").append("\n");
+            indents.append("\t");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load i1, i1* %").append(lastInstructionId-1).append("\n");
+            this.indents.delete(this.indents.length()-1, this.indents.length());
+
+            llvmOutput.append("\n");
         } else
             return handleExpr3(expr2.expr3(), variablesCache);
 
-        return "bool";
+        return new VariableDefinition("", String.valueOf(lastInstructionId), "bool");
     }
 
-    private String handleExpr3(Expr3Context expr3, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition handleExpr3(Expr3Context expr3, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr3.comparatorOperator() != null) {
+
+            VariableDefinition id1 = handleExpr4(expr3.expr4(0), variablesCache);
+            VariableDefinition id2 = handleExpr4(expr3.expr4(1), variablesCache);
+
+            String type = "i32";
+            String alias1 = "%" + id1.alias;
+            String alias2 = "%" + id2.alias;
+
+            // TODO : Check addresses for objects
+
+            if (expr3.comparatorOperator().getText().equals("=") || expr3.comparatorOperator().getText().equals("!=")) {
+                if (id1.type.equals("bool")) {
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = zext i1 %").append(id1.alias).append(" to i32").append("\n");
+                    alias1 = "%" + String.valueOf(lastInstructionId);
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = zext i1 %").append(id2.alias).append(" to i32").append("\n");
+                    alias2 = "%" + String.valueOf(lastInstructionId);
+                } else if (id1.type.equals("string")) {
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call i32 @strcmp(i8* ").append(alias1).append(", i8* ").append(alias2).append(") #2").append("\n");
+                    alias1 = "%" + lastInstructionId;
+                    alias2 = "0";
+                }
+            }
+
+            String operator = "";
+            switch (expr3.comparatorOperator().getText()) {
+                case "<":
+                    llvmOutput.append(indents).append("; Lower\n");
+                    operator = "slt";
+                    break;
+                case "<=":
+                    llvmOutput.append(indents).append("; Lower or Equal\n");
+                    operator = "sle";
+                    break;
+                case ">":
+                    llvmOutput.append(indents).append("; Greater\n");
+                    operator = "sgt";
+                    break;
+                case ">=":
+                    llvmOutput.append(indents).append("; Greater or Equal\n");
+                    operator = "sge";
+                    break;
+                case "=":
+                    llvmOutput.append(indents).append("; Equal\n");
+                    operator = "eq";
+                    break;
+                case "!=":
+                    llvmOutput.append(indents).append("; Different\n");
+                    operator = "ne";
+                    break;
+            }
+
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = icmp ").append(operator).append(" ").append(type).append(" ").append(alias1).append(", ").append(alias2).append("\n");
+            llvmOutput.append("\n");
 
         } else
             return handleExpr4(expr3.expr4(0), variablesCache);
 
-        return "bool";
+        return new VariableDefinition("", String.valueOf(lastInstructionId), "bool");
     }
 
-    private String handleExpr4(Expr4Context expr4, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition handleExpr4(Expr4Context expr4, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr4.termOperator() != null) {
-            String id1 = handleExpr4(expr4.expr4(), variablesCache);
-            String id2 = handleExpr5(expr4.expr5(), variablesCache);
+            VariableDefinition id1 = handleExpr4(expr4.expr4(), variablesCache);
+            VariableDefinition id2 = handleExpr5(expr4.expr5(), variablesCache);
             switch (expr4.termOperator().getText()) {
                 case "+":
                     llvmOutput.append(indents).append("; Addition\n");
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = add nsw i32 %").append(id1).append(", %").append(id2).append("\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = add nsw i32 %").append(id1.alias).append(", %").append(id2).append("\n");
                     break;
                 case "-":
                     llvmOutput.append(indents).append("; Subtraction\n");
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sub nsw i32 %").append(id1).append(", %").append(id2).append("\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sub nsw i32 %").append(id1.alias).append(", %").append(id2).append("\n");
                     break;
             }
 
@@ -626,22 +726,22 @@ public class CodeGenerationListener extends CODEBaseListener {
         } else
             return handleExpr5(expr4.expr5(), variablesCache);
 
-        return String.valueOf(lastInstructionId);
+        return new VariableDefinition("", String.valueOf(lastInstructionId), "int32");
     }
 
-    private String handleExpr5(Expr5Context expr5, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition handleExpr5(Expr5Context expr5, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr5.factorOperator() != null) {
-            String id1 = handleExpr5(expr5.expr5(), variablesCache);
-            String id2 = handleExpr6(expr5.expr6(), variablesCache);
+            VariableDefinition id1 = handleExpr5(expr5.expr5(), variablesCache);
+            VariableDefinition id2 = handleExpr6(expr5.expr6(), variablesCache);
             switch (expr5.factorOperator().getText()) {
                 case "*":
                     llvmOutput.append(indents).append("; Multiplication\n");
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = mul nsw i32 %").append(id1).append(", %").append(id2).append("\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = mul nsw i32 %").append(id1.alias).append(", %").append(id2).append("\n");
                     break;
                 case "/":
                     llvmOutput.append(indents).append("; Division\n");
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sdiv i32 %").append(id1).append(", %").append(id2).append("\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sdiv i32 %").append(id1.alias).append(", %").append(id2).append("\n");
                     break;
             }
 
@@ -652,22 +752,24 @@ public class CodeGenerationListener extends CODEBaseListener {
         } else
             return handleExpr6(expr5.expr6(), variablesCache);
 
-        return String.valueOf(lastInstructionId);
+        return new VariableDefinition("", String.valueOf(lastInstructionId), "int32");
     }
 
-    private String handleExpr6(Expr6Context expr6, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition handleExpr6(Expr6Context expr6, ArrayList<Map<String, VariableDefinition>> variablesCache) {
         String returnType = "";
 
         if (expr6.expr6() != null) {
             String operator = expr6.MINUS() != null ? expr6.MINUS().getText() : expr6.ISNULL().getText();
-            String varId = handleExpr6(expr6.expr6(), variablesCache);
+            VariableDefinition varId = handleExpr6(expr6.expr6(), variablesCache);
 
             if (operator.equals("isnull")) {
                 llvmOutput.append(indents).append("; IsNull\n");
+                returnType = "bool";
                 // TODO : Null operation
             } else if (operator.equals("-")) {
+                returnType = "int32";
                 llvmOutput.append(indents).append("; Negative\n");
-                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sub nsw i32 0, %").append(varId).append("\n");
+                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sub nsw i32 0, %").append(varId.alias).append("\n");
                 llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca i32").append("\n");
                 llvmOutput.append(indents).append("store ").append("i32").append(" %").append(lastInstructionId-1).append(", ").append("i32* %").append(lastInstructionId).append("\n");
                 llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load i32, i32* %").append(lastInstructionId-1).append("\n");
@@ -677,18 +779,18 @@ public class CodeGenerationListener extends CODEBaseListener {
         } else
             return handleExpr7(expr6.expr7(), variablesCache);
 
-        return String.valueOf(lastInstructionId);
+        return new VariableDefinition("", String.valueOf(lastInstructionId), returnType);
     }
 
-    private String handleExpr7(Expr7Context expr7, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition handleExpr7(Expr7Context expr7, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr7.POW() != null) {
-            String id1 = handleExpr8(expr7.expr8(), variablesCache);
-            String id2 = handleExpr7(expr7.expr7(), variablesCache);
+            VariableDefinition id1 = handleExpr8(expr7.expr8(), variablesCache);
+            VariableDefinition id2 = handleExpr7(expr7.expr7(), variablesCache);
 
             llvmOutput.append(indents).append("; Pow\n");
-            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sitofp i32 %").append(id1).append(" to double").append("\n");
-            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sitofp i32 %").append(id2).append(" to double").append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sitofp i32 %").append(id1.alias).append(" to double").append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sitofp i32 %").append(id2.alias).append(" to double").append("\n");
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call double @pow(double %").append(lastInstructionId-2).append(", double %").append(lastInstructionId-1).append(") #3\n");
 
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = fptosi double %").append(lastInstructionId-1).append(" to i32").append("\n");
@@ -700,10 +802,10 @@ public class CodeGenerationListener extends CODEBaseListener {
         } else
             return handleExpr8(expr7.expr8(), variablesCache);
 
-        return String.valueOf(lastInstructionId);
+        return new VariableDefinition("", String.valueOf(lastInstructionId), "int32");
     }
 
-    private String handleExpr8(Expr8Context expr8, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition handleExpr8(Expr8Context expr8, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr8.expr1() != null)
             return handleExpr1(expr8.expr1(), variablesCache);
@@ -719,7 +821,7 @@ public class CodeGenerationListener extends CODEBaseListener {
             return generateObjectIdentifier(expr8.OBJECT_IDENTIFIER(), variablesCache);
         }
 
-        return "";
+        return new VariableDefinition("", "", "");
     }
 
 
