@@ -606,21 +606,53 @@ public class CodeGenerationListener extends CODEBaseListener {
     private String handleExpr4(Expr4Context expr4, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr4.termOperator() != null) {
+            String id1 = handleExpr4(expr4.expr4(), variablesCache);
+            String id2 = handleExpr5(expr4.expr5(), variablesCache);
+            switch (expr4.termOperator().getText()) {
+                case "+":
+                    llvmOutput.append(indents).append("; Addition\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = add nsw i32 %").append(id1).append(", %").append(id2).append("\n");
+                    break;
+                case "-":
+                    llvmOutput.append(indents).append("; Subtraction\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sub nsw i32 %").append(id1).append(", %").append(id2).append("\n");
+                    break;
+            }
 
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca i32").append("\n");
+            llvmOutput.append(indents).append("store ").append("i32").append(" %").append(lastInstructionId-1).append(", ").append("i32* %").append(lastInstructionId).append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load i32, i32* %").append(lastInstructionId-1).append("\n");
+            llvmOutput.append("\n");
         } else
             return handleExpr5(expr4.expr5(), variablesCache);
 
-        return "int32";
+        return String.valueOf(lastInstructionId);
     }
 
     private String handleExpr5(Expr5Context expr5, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr5.factorOperator() != null) {
+            String id1 = handleExpr5(expr5.expr5(), variablesCache);
+            String id2 = handleExpr6(expr5.expr6(), variablesCache);
+            switch (expr5.factorOperator().getText()) {
+                case "*":
+                    llvmOutput.append(indents).append("; Multiplication\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = mul nsw i32 %").append(id1).append(", %").append(id2).append("\n");
+                    break;
+                case "/":
+                    llvmOutput.append(indents).append("; Division\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sdiv i32 %").append(id1).append(", %").append(id2).append("\n");
+                    break;
+            }
 
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca i32").append("\n");
+            llvmOutput.append(indents).append("store ").append("i32").append(" %").append(lastInstructionId-1).append(", ").append("i32* %").append(lastInstructionId).append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load i32, i32* %").append(lastInstructionId-1).append("\n");
+            llvmOutput.append("\n");
         } else
             return handleExpr6(expr5.expr6(), variablesCache);
 
-        return "int32";
+        return String.valueOf(lastInstructionId);
     }
 
     private String handleExpr6(Expr6Context expr6, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -632,6 +664,7 @@ public class CodeGenerationListener extends CODEBaseListener {
 
             if (operator.equals("isnull")) {
                 llvmOutput.append(indents).append("; IsNull\n");
+                // TODO : Null operation
             } else if (operator.equals("-")) {
                 llvmOutput.append(indents).append("; Negative\n");
                 llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sub nsw i32 0, %").append(varId).append("\n");

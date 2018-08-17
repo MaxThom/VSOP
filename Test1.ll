@@ -53,35 +53,90 @@ define i32 @main(%struct.Main*) #0 {
 	
 	; VarValue
 	%4 = alloca i32
-	store i32 4, i32* %4
+	store i32 3, i32* %4
 	%5 = load i32, i32* %4
 	
-	; Negative
-	%6 = sub nsw i32 0, %5
-	%7 = alloca i32
-	store i32 %6, i32* %7
-	%8 = load i32, i32* %7
-
 	; VarValue
+	%6 = alloca i32
+	store i32 4, i32* %6
+	%7 = load i32, i32* %6
+	
+	; Subtraction
+	%8 = sub nsw i32 %5, %7
 	%9 = alloca i32
-	store i32 2, i32* %9
+	store i32 %8, i32* %9
 	%10 = load i32, i32* %9
-	
-	; Pow
-	%11 = sitofp i32 %8 to double
-	%12 = sitofp i32 %10 to double
-	%13 = call double @pow(double %11, double %12) #3
-	%14 = fptosi double %13 to i32
-	%15 = alloca i32
-	store i32 %14, i32* %15
-	%16 = load i32, i32* %15
 
 	; VarValue
-	%17 = alloca i32
-	store i32 0, i32* %17
-	%18 = load i32, i32* %17
+	%11 = alloca i32
+	store i32 4, i32* %11
+	%12 = load i32, i32* %11
 	
-	ret i32 %18
+	; VarValue
+	%13 = alloca i32
+	store i32 1, i32* %13
+	%14 = load i32, i32* %13
+	
+	; Subtraction
+	%15 = sub nsw i32 %12, %14
+	%16 = alloca i32
+	store i32 %15, i32* %16
+	%17 = load i32, i32* %16
+
+	; VarValue
+	%18 = alloca i32
+	store i32 2, i32* %18
+	%19 = load i32, i32* %18
+	
+	; VarValue
+	%20 = alloca i32
+	store i32 5, i32* %20
+	%21 = load i32, i32* %20
+	
+	; Addition
+	%22 = add nsw i32 %19, %21
+	%23 = alloca i32
+	store i32 %22, i32* %23
+	%24 = load i32, i32* %23
+
+	; VarValue
+	%25 = alloca i32
+	store i32 3, i32* %25
+	%26 = load i32, i32* %25
+	
+	; VarValue
+	%27 = alloca i32
+	store i32 3, i32* %27
+	%28 = load i32, i32* %27
+	
+	; Division
+	%29 = sdiv i32 %26, %28
+	%30 = alloca i32
+	store i32 %29, i32* %30
+	%31 = load i32, i32* %30
+
+	; VarValue
+	%32 = alloca i32
+	store i32 2, i32* %32
+	%33 = load i32, i32* %32
+	
+	; VarValue
+	%34 = alloca i32
+	store i32 6, i32* %34
+	%35 = load i32, i32* %34
+	
+	; Multiplication
+	%36 = mul nsw i32 %33, %35
+	%37 = alloca i32
+	store i32 %36, i32* %37
+	%38 = load i32, i32* %37
+
+	; VarValue
+	%39 = alloca i32
+	store i32 0, i32* %39
+	%40 = load i32, i32* %39
+	
+	ret i32 %40
 }
 
 ; 
