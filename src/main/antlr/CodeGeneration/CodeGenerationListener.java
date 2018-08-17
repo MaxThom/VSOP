@@ -104,7 +104,111 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append("declare i32 @printf(i8*, ...)").append("\n");
         llvmOutput.append("declare double @pow(double, double) #1").append("\n");
         llvmOutput.append("declare i32 @strcmp(i8*, i8*) #1").append("\n");
+        llvmOutput.append("declare i32 @__isoc99_scanf(i8*, ...) #1");
+        llvmOutput.append("declare void @exit(i32) #1");
         llvmOutput.append("@.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1").append("\n");
+
+        llvmOutput.append("\n");
+    }
+
+    private void generateIOClass() {
+        appendSectionHeader("IO Class");
+
+        llvmOutput.append(indents).append("%struct.IO = type { }").append("\n\n");
+
+        llvmOutput.append(indents).append("; Allocation\n" +
+                "define %struct.IO* @IO_new() #0 {\n" +
+                "\t%1 = alloca %struct.IO*\n" +
+                "\t%2 = call noalias i8* @malloc(i64 0) #3\n" +
+                "\t%3 = bitcast i8* %2 to %struct.IO*\n" +
+                "\tstore %struct.IO* %3, %struct.IO** %1\n" +
+                "\t%4 = load %struct.IO*, %struct.IO** %1\n" +
+                "\tret %struct.IO* %4\n" +
+                "}").append("\n\n");
+
+        llvmOutput.append(indents).append("@IO.printInt = private constant [3 x i8] c\"%d\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printStr = private constant [3 x i8] c\"%s\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printBool = private constant [3 x i8] c\"%d\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printlnInt = private constant [4 x i8] c\"%d\\0A\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printlnStr = private constant [4 x i8] c\"%s\\0A\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.printlnBool = private constant [4 x i8] c\"%d\\0A\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.inputInt = private constant [3 x i8] c\"%d\\00\"").append("\n");
+        llvmOutput.append(indents).append("@IO.inputStr = private constant [3 x i8] c\"%s\\00\"").append("\n");
+        llvmOutput.append("\n");
+
+        llvmOutput.append(indents).append("define %struct.IO* @printInt(%struct.IO*, i32) {\n" +
+                "\t%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printInt, i32 0, i32 0), i32 %1)\n" +
+                "\tret %struct.IO* %0\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define %struct.IO* @printBool(%struct.IO*, i1) {\n" +
+                "\t%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printBool, i32 0, i32 0), i1 %1)\n" +
+                "\tret %struct.IO* %0\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define %struct.IO* @printStr(%struct.IO*, i8*) {\n" +
+                "\t%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printStr, i32 0, i32 0), i8* %1)\n" +
+                "\tret %struct.IO* %0\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define %struct.IO* @printlnInt(%struct.IO*, i32) {\n" +
+                "\t%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnInt, i32 0, i32 0), i32 %1)\n" +
+                "\tret %struct.IO* %0\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define %struct.IO* @printlnBool(%struct.IO*, i1) {\n" +
+                "\t%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnBool, i32 0, i32 0), i1 %1)\n" +
+                "\tret %struct.IO* %0\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define %struct.IO* @printlnStr(%struct.IO*, i8*) {\n" +
+                "\t%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnStr, i32 0, i32 0), i8* %1)\n" +
+                "\tret %struct.IO* %0\n" +
+                "}").append("\n");
+
+        llvmOutput.append(indents).append("define i32 @inputInt(%struct.IO*) {\n" +
+                "    %2 = alloca i32, align 4\n" +
+                "    %3 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.inputInt, i32 0, i32 0), i32* %2)\n" +
+                "    %4 = load i32, i32* %2\n" +
+                "\n" +
+                "    %5 = icmp eq i32 %3, 0\n" +
+                "    br i1 %5, label %exit, label %end\n" +
+                "\n" +
+                "    exit:\n" +
+                "        %msg = alloca [40 x i8]\n" +
+                "        store [40 x i8] c\"Error : invalid input. Expecting int32.\\00\", [40 x i8]* %msg\n" +
+                "        %loadedMsg = bitcast [40 x i8]* %msg to i8*\n" +
+                "        call %struct.IO* @printlnStr(%struct.IO* %0, i8* %loadedMsg)\n" +
+                "        call void @exit(i32 1) #3\n" +
+                "        br label %end\n" +
+                "\n" +
+                "    end:\n" +
+                "\t    ret i32 %4\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define i1 @inputBool(%struct.IO*) {\n" +
+                "    %2 = alloca i32, align 4\n" +
+                "    %3 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.inputInt, i32 0, i32 0), i32* %2)\n" +
+                "    %4 = load i32, i32* %2\n" +
+                "\n" +
+                "    %5 = icmp eq i32 %3, 0\n" +
+                "    br i1 %5, label %exit, label %end\n" +
+                "\n" +
+                "    exit:\n" +
+                "        %msg = alloca [49 x i8]\n" +
+                "        store [49 x i8] c\"Error : invalid input. Expecting boolean 1 or 0.\\00\", [49 x i8]* %msg\n" +
+                "        %loadedMsg = bitcast [49 x i8]* %msg to i8*\n" +
+                "        call %struct.IO* @printlnStr(%struct.IO* %0, i8* %loadedMsg)\n" +
+                "        call void @exit(i32 1) #3\n" +
+                "        br label %end\n" +
+                "\n" +
+                "    end:\n" +
+                "        %7 = icmp ne i32 %4, 0\n" +
+                "\t    ret i1 %7\n" +
+                "}").append("\n");
+        llvmOutput.append(indents).append("define i8* @inputLine(%struct.IO*) {\n" +
+                "    %2 = alloca i8*\n" +
+                "    %3 = load i8*, i8** %2\n" +
+                "    \n" +
+                "    %4 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.inputStr, i32 0, i32 0), i8* %3)\n" +
+                "    %5 = load i8*, i8** %2\n" +
+                "\n" +
+                "    ret i8* %5\n" +
+                "}\n").append("\n");
 
         llvmOutput.append("\n");
     }
@@ -333,7 +437,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         } else if (ctx.binaryOperation() != null) {
             generateBinaryOperation(ctx.binaryOperation(), variablesCache);
         } else if (ctx.callMethod() != null) {
-            generateCallMethod(ctx.callMethod(), variablesCache);
+            generateCallMethod(ctx.callMethod(), variablesCache); // TODO
         } else if (ctx.newObj() != null) {
             generateNewObj(ctx.newObj(), variablesCache);
         } else if (ctx.OBJECT_IDENTIFIER() != null) {
@@ -405,6 +509,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append(indents).append("; While\n");
 
         if (ctx.statement(0) != null) {
+            llvmOutput.append(indents).append("br label %whileCond").append(whileGoto).append("\n");
             llvmOutput.append(indents).append("whileCond").append(whileGoto).append(":").append("\n");
             this.indents.append("\t");
             generateStatement(ctx.statement(0), variablesCache);
@@ -481,7 +586,8 @@ public class CodeGenerationListener extends CODEBaseListener {
         String varType = vsopTypeToLlvmType(var.type);
         llvmOutput.append(indents).append("; ObjectIdentifier\n");
 
-        if (var.name.equals("self")) {
+        //if (var.name.equals("self")) {
+        if (!isPrimitive(var.type)) {
             FieldDefinition fieldToCheck = classes.get(var.type).fields.get(ctx.getText());
 
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(", ").append(varType).append("* ").append(var.alias).append("\n");
@@ -526,10 +632,6 @@ public class CodeGenerationListener extends CODEBaseListener {
             llvmOutput.append(indents).append("store [").append(strLength).append(" x i8] c\"").append(str).append("\\00\", ").append("[").append(strLength).append(" x i8]* %").append(varId).append("\n");
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = bitcast [").append(strLength).append(" x i8]* %").append(varId).append(" to i8*").append("\n");
 
-            //%str2 = alloca [7 x i8]
-            //store [7 x i8] c"Hello!\00", [7 x i8]* %str2
-            //%tmp3 = bitcast [7 x i8]* %str2 to i8*
-
         } else {
 
             llvmOutput.append(indents).append("%").append(varId).append(" = alloca ").append(vsopTypeToLlvmType(typeFound)).append("\n");
@@ -543,46 +645,15 @@ public class CodeGenerationListener extends CODEBaseListener {
 
     }
 
-    private void generateIOClass() {
-        appendSectionHeader("IO Class");
-
-        llvmOutput.append(indents).append("@IO.printInt = private constant [3 x i8] c\"%d\\00\"").append("\n");
-        llvmOutput.append(indents).append("@IO.printStr = private constant [3 x i8] c\"%s\\00\"").append("\n");
-        llvmOutput.append(indents).append("@IO.printBool = private constant [3 x i8] c\"%d\\00\"").append("\n");
-        llvmOutput.append(indents).append("@IO.printlnInt = private constant [4 x i8] c\"%d\\0A\\00\"").append("\n");
-        llvmOutput.append(indents).append("@IO.printlnStr = private constant [4 x i8] c\"%s\\0A\\00\"").append("\n");
-        llvmOutput.append(indents).append("@IO.printlnBool = private constant [4 x i8] c\"%d\\0A\\00\"").append("\n\n");
-
-        llvmOutput.append(indents).append("define void @printInt(i32) {\n" +
-                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printInt, i32 0, i32 0), i32 %0)\n" +
-                "\tret void\n" +
-                "}").append("\n");
-        llvmOutput.append(indents).append("define void @printBool(i1) {\n" +
-                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printBool, i32 0, i32 0), i1 %0)\n" +
-                "\tret void\n" +
-                "}").append("\n");
-        llvmOutput.append(indents).append("define void @printStr(i8*) {\n" +
-                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printStr, i32 0, i32 0), i8* %0)\n" +
-                "\tret void\n" +
-                "}").append("\n");
-        llvmOutput.append(indents).append("define void @printlnInt(i32) {\n" +
-                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnInt, i32 0, i32 0), i32 %0)\n" +
-                "\tret void\n" +
-                "}").append("\n");
-        llvmOutput.append(indents).append("define void @printlnBool(i1) {\n" +
-                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnBool, i32 0, i32 0), i1 %0)\n" +
-                "\tret void\n" +
-                "}").append("\n");
-        llvmOutput.append(indents).append("define void @printlnStr(i8*) {\n" +
-                "\t%2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnStr, i32 0, i32 0), i8* %0)\n" +
-                "\tret void\n" +
-                "}").append("\n");
-
-    }
-
     private VariableDefinition generateNewObj(NewObjContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        String objType = ctx.TYPE_IDENTIFIER().getText();
+        llvmOutput.append(indents).append("; New").append("\n");
+        llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca ").append(vsopTypeToLlvmType(objType)).append("\n");
+        llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call ").append(vsopTypeToLlvmType(objType)).append(" @").append(objType).append("_new()").append("\n");
+        llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(objType)).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(objType)).append("* %").append(lastInstructionId-1).append("\n");
 
-        return new VariableDefinition("", "", "");
+        llvmOutput.append("\n");
+        return new VariableDefinition("", String.valueOf(lastInstructionId), objType);
     }
 
     private VariableDefinition generateCallMethod(CallMethodContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -590,21 +661,24 @@ public class CodeGenerationListener extends CODEBaseListener {
         return new VariableDefinition("", "", "");
     }
 
-
     private void generateBinaryOperation(BinaryOperationContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         handleExpr1(ctx.expr1(), variablesCache);
     }
 
-
     private VariableDefinition handleExpr1(Expr1Context expr1, ArrayList<Map<String, VariableDefinition>> variablesCache) {
 
         if (expr1.expr1() != null) {
+            VariableDefinition var1 = handleExpr1(expr1.expr1(), variablesCache);
+            VariableDefinition var2 = handleExpr2(expr1.expr2(), variablesCache);
 
+            llvmOutput.append(indents).append("; And\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = and i1 %").append(var1.alias).append(", %").append(var2.alias).append("\n");
+            llvmOutput.append("\n");
         } else
             return handleExpr2(expr1.expr2(), variablesCache);
 
-        return new VariableDefinition("", "", "");
+        return new VariableDefinition("", String.valueOf(lastInstructionId), "bool");
     }
 
     private VariableDefinition handleExpr2(Expr2Context expr2, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -651,21 +725,6 @@ public class CodeGenerationListener extends CODEBaseListener {
             String alias1 = "%" + id1.alias;
             String alias2 = "%" + id2.alias;
 
-            // TODO : Check addresses for objects
-
-            if (expr3.comparatorOperator().getText().equals("=") || expr3.comparatorOperator().getText().equals("!=")) {
-                if (id1.type.equals("bool")) {
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = zext i1 %").append(id1.alias).append(" to i32").append("\n");
-                    alias1 = "%" + String.valueOf(lastInstructionId);
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = zext i1 %").append(id2.alias).append(" to i32").append("\n");
-                    alias2 = "%" + String.valueOf(lastInstructionId);
-                } else if (id1.type.equals("string")) {
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call i32 @strcmp(i8* ").append(alias1).append(", i8* ").append(alias2).append(") #2").append("\n");
-                    alias1 = "%" + lastInstructionId;
-                    alias2 = "0";
-                }
-            }
-
             String operator = "";
             switch (expr3.comparatorOperator().getText()) {
                 case "<":
@@ -694,6 +753,20 @@ public class CodeGenerationListener extends CODEBaseListener {
                     break;
             }
 
+            // TODO : Check addresses for objects
+            if (expr3.comparatorOperator().getText().equals("=") || expr3.comparatorOperator().getText().equals("!=")) {
+                if (id1.type.equals("bool")) {
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = zext i1 %").append(id1.alias).append(" to i32").append("\n");
+                    alias1 = "%" + String.valueOf(lastInstructionId);
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = zext i1 %").append(id2.alias).append(" to i32").append("\n");
+                    alias2 = "%" + String.valueOf(lastInstructionId);
+                } else if (id1.type.equals("string")) {
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call i32 @strcmp(i8* ").append(alias1).append(", i8* ").append(alias2).append(") #2").append("\n");
+                    alias1 = "%" + lastInstructionId;
+                    alias2 = "0";
+                }
+            }
+
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = icmp ").append(operator).append(" ").append(type).append(" ").append(alias1).append(", ").append(alias2).append("\n");
             llvmOutput.append("\n");
 
@@ -711,11 +784,11 @@ public class CodeGenerationListener extends CODEBaseListener {
             switch (expr4.termOperator().getText()) {
                 case "+":
                     llvmOutput.append(indents).append("; Addition\n");
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = add nsw i32 %").append(id1.alias).append(", %").append(id2).append("\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = add nsw i32 %").append(id1.alias).append(", %").append(id2.alias).append("\n");
                     break;
                 case "-":
                     llvmOutput.append(indents).append("; Subtraction\n");
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sub nsw i32 %").append(id1.alias).append(", %").append(id2).append("\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sub nsw i32 %").append(id1.alias).append(", %").append(id2.alias).append("\n");
                     break;
             }
 
@@ -737,11 +810,11 @@ public class CodeGenerationListener extends CODEBaseListener {
             switch (expr5.factorOperator().getText()) {
                 case "*":
                     llvmOutput.append(indents).append("; Multiplication\n");
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = mul nsw i32 %").append(id1.alias).append(", %").append(id2).append("\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = mul nsw i32 %").append(id1.alias).append(", %").append(id2.alias).append("\n");
                     break;
                 case "/":
                     llvmOutput.append(indents).append("; Division\n");
-                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sdiv i32 %").append(id1.alias).append(", %").append(id2).append("\n");
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = sdiv i32 %").append(id1.alias).append(", %").append(id2.alias).append("\n");
                     break;
             }
 
@@ -823,6 +896,7 @@ public class CodeGenerationListener extends CODEBaseListener {
 
         return new VariableDefinition("", "", "");
     }
+
 
 
     private String vsopTypeToLlvmType(String type) {

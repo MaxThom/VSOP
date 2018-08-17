@@ -4,17 +4,25 @@ class Main {
 
     main() : int32 {
 
-        not test = test;
+        (new Main);
+
+
 
         0
     }
 
-    main2(x: string) : int32 {
+    main2(x: int32) : int32 {
+        x <- 1;
 
+        if (test = test and x <= 3 and true) then  {
+            while (x <= 10) do {
+                x <- x + 1
+            }
+        } else {
+            x <- 5
+        }
 
-
-        0
-
+        x
     }
 
 }
