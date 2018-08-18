@@ -5,7 +5,7 @@ class Child extends Parent {
     k : int32 ;
 
     test(): int32 {
-
+        i <- 32;
         0
     }
 }
@@ -14,37 +14,13 @@ class Main extends IO {
     test: string;
 
     main() : int32 {
-        test <- "test";
 
-
-        printlnInt32(x);
-        println("Hello World !");
-        printlnBool(true);
-
-        printlnInt32(3+4);
-        printlnBool(3+4 = 7);
-
-        x <- inputInt32();
-        printlnInt32(x);
-
-        main2("", 0, false);
 
         0
     }
 
     main2(str: string, int: int32, bo: bool) : int32 {
 
-        println("Please enter a string : ");
-        str <- inputLine();
-        println(str);
-
-        println("Please enter a int : ");
-        int <- inputInt32();
-        printlnInt32(int);
-
-        println("Please enter a bool : ");
-        bo <- inputBool();
-        printlnBool(bo);
 
 
         0

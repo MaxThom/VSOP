@@ -1,27 +1,31 @@
-class Main {
+class B extends IO {
+    test(): unit {
+        println("B");
+        ()
+    }
+}
 
-    test : string <- "test2";
+class A extends IO {
+    c: B;
+    b: B;
+
+    test(): unit {
+        println("A");
+        ()
+    }
+}
+
+class Main extends IO {
+    a: A;
 
     main() : int32 {
 
-        (new Main);
-        main2(5);
+        a.b.test();
+        a.test();
+        (new B).test();
+        (new A).test();
+        println("tamere");
 
         0
     }
-
-    main2(x: int32) : int32 {
-        x <- 1;
-
-        if (test = test and x <= 3 and true) then  {
-            while (x <= 10) do {
-                x <- x + 1
-            }
-        } else {
-            x <- 5
-        }
-
-        x
-    }
-
 }
