@@ -800,7 +800,7 @@ public class CodeGenerationListener extends CODEBaseListener {
                 String vsopVarType = vsopTypeToLlvmType(self.type);
                 FieldDefinition fieldToCheck = classes.get(self.type).fields.get(ctx.OBJECT_IDENTIFIER().getText());
                 llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ").append(vsopVarType).append(", ").append(vsopVarType).append("* %").append(lastInstructionId-1).append(", i32 0, i32 ").append(fieldToCheck.position).append("\n");
-                //llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(fieldToCheck.type)).append(", ").append(vsopTypeToLlvmType(fieldToCheck.type)).append("* %").append(lastInstructionId-1).append("\n");
+
 
                 returnVar = new VariableDefinition("", String.valueOf(lastInstructionId), fieldToCheck.type, "");
             }
