@@ -563,13 +563,15 @@ public class CodeGenerationListener extends CODEBaseListener {
     }
 
     private void  generateAssign(AssignContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        VariableDefinition var = generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
         generateStatement(ctx.statement(), variablesCache);
-        VariableDefinition var = checkVariableCacheForIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
 
         llvmOutput.append(indents).append("; Assign\n");
-        if (var != null && !var.name.equals("self"))
-            llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(var.type)).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append("* ").append(var.alias).append("\n");
-        else if (currentClass.fields.containsKey(ctx.OBJECT_IDENTIFIER().getText())) {
+        if (!var.name.equals("self"))
+            llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(var.type)).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append("* %").append(var.alias).append("\n");
+        else
+            llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(var.type)).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append("* %").append(Integer.parseInt(var.alias)-1).append("\n");
+        /*else if (currentClass.fields.containsKey(ctx.OBJECT_IDENTIFIER().getText())) {
 
             FieldDefinition field = currentClass.fields.get(ctx.OBJECT_IDENTIFIER().getText());
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(var.type)).append(", ").append(vsopTypeToLlvmType(var.type)).append("* ").append(var.alias).append("\n");
@@ -577,7 +579,7 @@ public class CodeGenerationListener extends CODEBaseListener {
             llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(field.type)).append(" %").append(lastInstructionId-2).append(", ").append(vsopTypeToLlvmType(field.type)).append("* %").append(lastInstructionId).append("\n");
 
 
-        }
+        }*/
         llvmOutput.append(indents).append("\n");
     }
 
@@ -585,21 +587,35 @@ public class CodeGenerationListener extends CODEBaseListener {
         VariableDefinition var = checkVariableCacheForIdentifier(ctx, variablesCache);
         String varType = vsopTypeToLlvmType(var.type);
         llvmOutput.append(indents).append("; ObjectIdentifier\n");
+        String name = "";
 
-        //if (var.name.equals("self")) {
         if (!isPrimitive(var.type)) {
-            FieldDefinition fieldToCheck = classes.get(var.type).fields.get(ctx.getText());
-
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(", ").append(varType).append("* ").append(var.alias).append("\n");
+
+            FieldDefinition fieldToCheck = null;
+            String tmpVarType = var.type;
+            do {
+                fieldToCheck = classes.get(tmpVarType).fields.get(ctx.getText());
+                if (fieldToCheck == null) {
+                    tmpVarType = classes.get(tmpVarType).extend;
+                    if (tmpVarType.equals("Object") || tmpVarType.equals(""))
+                        break;
+                        llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ").append(varType.substring(0, varType.length()-1)).append(", ").append(varType).append(" %").append(lastInstructionId-1).append(", i32 0, i32 ").append(0).append("\n");
+                        varType = vsopTypeToLlvmType(classes.get(tmpVarType).name);
+                }
+            } while (fieldToCheck == null);
+
+
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ").append(varType.substring(0, varType.length()-1)).append(", ").append(varType).append(" %").append(lastInstructionId-1).append(", i32 0, i32 ").append(fieldToCheck.position).append("\n");
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(fieldToCheck.type)).append(", ").append(vsopTypeToLlvmType(fieldToCheck.type)).append("* %").append(lastInstructionId-1).append("\n");
             varType = fieldToCheck.type;
+            name = "self";
         } else
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(", ").append(varType).append("* ").append(var.alias).append("\n");
 
 
         llvmOutput.append(indents).append("\n");
-        return new VariableDefinition("", String.valueOf(lastInstructionId), varType);
+        return new VariableDefinition(name, String.valueOf(lastInstructionId), varType);
     }
 
     private VariableDefinition generateVarValue(VarValueContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {

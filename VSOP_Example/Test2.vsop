@@ -3,27 +3,21 @@ class Parent {
 }
 class Child extends Parent {
     k : int32 ;
+
+    test(): int32 {
+
+        0
+    }
 }
-class Main {
-    x: int32 ;
+class Main extends Child {
+    x: int32 <- 3;
 
     main() : int32 {
-        if (true) then {
-            if (false) then {
-                1
-            }
-        } else {
-            0;
-            while (true) do {
-                1
-            }
-        }
 
-        if (false) then {
-            1
-        } else
-            2
-
+        x <- 5;
+        k <- 7;
+        i <- 9;
+        z;
         0
     }
 }
