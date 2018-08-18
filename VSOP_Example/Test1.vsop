@@ -5,8 +5,7 @@ class Main {
     main() : int32 {
 
         (new Main);
-
-
+        main2(5);
 
         0
     }

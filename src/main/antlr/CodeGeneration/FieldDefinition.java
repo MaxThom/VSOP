@@ -12,4 +12,8 @@ public class FieldDefinition {
         this.position = position;
         this.isInitialized = false;
     }
+
+    public int getPosition() {
+        return position;
+    }
 }

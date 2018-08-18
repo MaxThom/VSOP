@@ -6,10 +6,11 @@ grammar CODE;
     block                   : '{' (((statement | block) | (((statement ';') | whileStatement | ifStatement)+ (statement | block) ))?) '}' ;
 
     classDefinition         : 'class' TYPE_IDENTIFIER ('extends' TYPE_IDENTIFIER)? '{' (methodDefinition | field)* '}' ;
+    field                   : OBJECT_IDENTIFIER ':' varType ('<-' (statement | block))? ';' ;
 
     methodDefinition        : OBJECT_IDENTIFIER ('(' ((((formal ',')+ (formal)) | (formal)?) ')') | ('()')) ':' varType block ;
     formal                  : OBJECT_IDENTIFIER ':' varType ;
-    field                   : OBJECT_IDENTIFIER ':' varType ('<-' (statement | block))? ';' ;
+
     callMethod              : (singleCallMethod) | ((singleCallMethod  '.')+ (singleCallMethod));
     singleCallMethod        : (caller)* callFunction ('.' callFunction)* ;
     caller                  : (OBJECT_IDENTIFIER | ('(' newObj ')')) '.';

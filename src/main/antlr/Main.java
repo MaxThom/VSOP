@@ -421,6 +421,18 @@ public class Main {
         printInt32.formals.put("i", new FormalDefinition("i", "int32", 0));
         ioClass.methods.put(printInt32.name, printInt32);
 
+        MethodDefinition printlnInt32 = new MethodDefinition("printlnInt32", "IO");
+        printlnInt32.formals.put("i", new FormalDefinition("i", "int32", 0));
+        ioClass.methods.put(printlnInt32.name, printlnInt32);
+
+        MethodDefinition printlnBool = new MethodDefinition("printlnBool", "IO");
+        printlnBool.formals.put("b", new FormalDefinition("b", "bool", 0));
+        ioClass.methods.put(printlnBool.name, printlnBool);
+
+        MethodDefinition println = new MethodDefinition("println", "IO");
+        println.formals.put("s", new FormalDefinition("s", "string", 0));
+        ioClass.methods.put(println.name, println);
+
         // WRITE
         MethodDefinition inputLine = new MethodDefinition("inputLine", "string");
         ioClass.methods.put(inputLine.name, inputLine);
@@ -433,6 +445,8 @@ public class Main {
 
         return ioClass;
     }
+
+
 
     private static ClassDefinition addObjectClasses() {
         ClassDefinition objectClass = new ClassDefinition("Object", "");
