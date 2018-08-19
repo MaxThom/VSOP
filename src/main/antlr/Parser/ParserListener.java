@@ -401,17 +401,18 @@ public class ParserListener extends PARSERBaseListener {
     private StringBuilder handleArgument(ArgumentContext arg) {
         StringBuilder output = new StringBuilder();
 
-        if (arg.callMethod() != null) {
-            output.append(handleCallMethod(arg.callMethod()));
-        } else if (arg.newObj() != null) {
-            output.append(handleNewObj(arg.newObj()));
-        } else if (arg.OBJECT_IDENTIFIER() != null) {
-            output.append(arg.OBJECT_IDENTIFIER().getText());
-        } else if (arg.varValue() != null) {
-            output.append(arg.varValue().getText());
-        }  else if (arg.binaryOperation() != null) {
-            output.append(handleBinaryOperation(arg.binaryOperation()));
-        }
+        output.append(handleStatement(arg.statement()));
+        /*if (arg.statement().callMethod() != null) {
+            output.append(handleCallMethod(arg.statement().callMethod()));
+        } else if (arg.statement().newObj() != null) {
+            output.append(handleNewObj(arg.statement().newObj()));
+        } else if (arg.statement().OBJECT_IDENTIFIER() != null) {
+            output.append(arg.statement().OBJECT_IDENTIFIER().getText());
+        } else if (arg.statement().varValue() != null) {
+            output.append(arg.statement().varValue().getText());
+        } else if (arg.statement().binaryOperation() != null) {
+            output.append(handleBinaryOperation(arg.statement().binaryOperation()));
+        }*/
 
         return output;
     }

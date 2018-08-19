@@ -326,11 +326,25 @@ define i32 @main(%struct.Main*) #0 {
 	%6 = getelementptr inbounds %struct.A, %struct.A* %5, i32 0, i32 0
 	call void @B_test(%struct.B* %6)
 
+	; Call Method
+	; New
+	%7 = alloca %struct.IO*
+	%8 = call %struct.IO* @IO_new()
+	store %struct.IO* %8, %struct.IO** %7
+
+	; Arguments
 	; VarValue
-	%7 = alloca i32
-	store i32 0, i32* %7
-	%8 = load i32, i32* %7
+	%9 = alloca [7 x i8]
+	store [7 x i8] c"\5casd\ff\0a\00", [7 x i8]* %9
+	%10 = bitcast [7 x i8]* %9 to i8*
 	
-	ret i32 %8
+	%11 = call %struct.IO* @IO_println(%struct.IO* %8, i8* %10)
+
+	; VarValue
+	%12 = alloca i32
+	store i32 0, i32* %12
+	%13 = load i32, i32* %12
+	
+	ret i32 %13
 }
 

@@ -29,7 +29,7 @@ class Main extends A {
     main() : int32 {
 
          a.test(); // A
-
+        (new IO).println("\\asd\xff\n");
 
         0
     }

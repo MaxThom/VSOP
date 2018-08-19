@@ -32,7 +32,6 @@ public class Main {
                 System.exit(1);
             }
 
-
             File file = new File(args[args.length-1]);
 
             switch (args[0]) {

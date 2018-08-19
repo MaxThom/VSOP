@@ -1,6 +1,12 @@
-class Main {
+class Main extends IO {
+    x : int32;
+
     main() : int32 {
-        (new IO).println("Hello World !");
+        let y : int32 in {
+            x <- y <- 1984;
+            printInt32(y).print("\n")
+        };
+        printInt32(x).print("\n");
         0
     }
 }

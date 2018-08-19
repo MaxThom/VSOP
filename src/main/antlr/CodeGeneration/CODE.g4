@@ -15,7 +15,7 @@ grammar CODE;
     singleCallMethod        : (caller)* callFunction ('.' callFunction)* ;
     caller                  : (OBJECT_IDENTIFIER | ('(' newObj ')')) '.';
     callFunction            : OBJECT_IDENTIFIER (('(' (((argument ',')+ argument) | argument?) ')') | ('()')) ;
-    argument                : OBJECT_IDENTIFIER | varValue | callMethod | newObj | binaryOperation;
+    argument                : statement ; //OBJECT_IDENTIFIER | varValue | callMethod | newObj | binaryOperation;
 
     assign                  : OBJECT_IDENTIFIER '<-' statement ;
 

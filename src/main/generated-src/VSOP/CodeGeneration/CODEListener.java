@@ -48,6 +48,16 @@ public interface CODEListener extends ParseTreeListener {
 	 */
 	void exitClassDefinition(CODEParser.ClassDefinitionContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link CODEParser#field}.
+	 * @param ctx the parse tree
+	 */
+	void enterField(CODEParser.FieldContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CODEParser#field}.
+	 * @param ctx the parse tree
+	 */
+	void exitField(CODEParser.FieldContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link CODEParser#methodDefinition}.
 	 * @param ctx the parse tree
 	 */
@@ -67,16 +77,6 @@ public interface CODEListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFormal(CODEParser.FormalContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link CODEParser#field}.
-	 * @param ctx the parse tree
-	 */
-	void enterField(CODEParser.FieldContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link CODEParser#field}.
-	 * @param ctx the parse tree
-	 */
-	void exitField(CODEParser.FieldContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link CODEParser#callMethod}.
 	 * @param ctx the parse tree

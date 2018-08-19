@@ -64,6 +64,18 @@ public class CODEBaseListener implements CODEListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterField(CODEParser.FieldContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitField(CODEParser.FieldContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterMethodDefinition(CODEParser.MethodDefinitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -83,18 +95,6 @@ public class CODEBaseListener implements CODEListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitFormal(CODEParser.FormalContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterField(CODEParser.FieldContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitField(CODEParser.FieldContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

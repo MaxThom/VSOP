@@ -902,18 +902,19 @@ public class SemanticListener extends SEMANTICBaseListener {
                 for (FormalDefinition formal : formals) {
                     ArgumentContext arg = ctx.callFunction(i).argument(j++);
                     String argType = "";
-                    if (arg.binaryOperation() != null) {
-                        argType = checkBinaryOperation(arg.binaryOperation(), variablesCache);
-                    } else if (arg.callMethod() != null) {
-                        argType = checkCallMethod(arg.callMethod(), variablesCache);
-                    } else if (arg.newObj() != null) {
-                        argType = checkNewOperator(arg.newObj(), variablesCache);
-                    } else if (arg.OBJECT_IDENTIFIER() != null) {
-                        argType = checkVariableCacheForIdentifier(arg.OBJECT_IDENTIFIER(), variablesCache);
-                        treeOutput.append(arg.OBJECT_IDENTIFIER().getText() + " : " + argType);
-                    } else if (arg.varValue() != null) {
-                        argType = checkVarValue(arg.varValue(), variablesCache);
-                    }
+                    argType = checkStatementType(arg.statement(), variablesCache);
+                    /*if (arg.statement().binaryOperation() != null) {
+                        argType = checkBinaryOperation(arg.statement().binaryOperation(), variablesCache);
+                    } else if (arg.statement().callMethod() != null) {
+                        argType = checkCallMethod(arg.statement().callMethod(), variablesCache);
+                    } else if (arg.statement().newObj() != null) {
+                        argType = checkNewOperator(arg.statement().newObj(), variablesCache);
+                    } else if (arg.statement().OBJECT_IDENTIFIER() != null) {
+                        argType = checkVariableCacheForIdentifier(arg.statement().OBJECT_IDENTIFIER(), variablesCache);
+                        treeOutput.append(arg.statement().OBJECT_IDENTIFIER().getText() + " : " + argType);
+                    } else if (arg.statement().varValue() != null) {
+                        argType = checkVarValue(arg.statement().varValue(), variablesCache);
+                    }*/
 
 
                     if (isPrimitive(argType)) {
