@@ -849,6 +849,7 @@ public class SemanticListener extends SEMANTICBaseListener {
             treeOutput.append(".");
             // Grab next
             if (ctx.caller(i).OBJECT_IDENTIFIER() != null) {
+                // TODO : Inheritance
                 if (classes.containsKey(typeFoundForCaller) && classes.get(typeFoundForCaller).fields.containsKey(ctx.caller(i).OBJECT_IDENTIFIER().getText()))
                     typeFoundForCaller = classes.get(typeFoundForCaller).fields.get(ctx.caller(i).OBJECT_IDENTIFIER().getText()).type;
                 else {

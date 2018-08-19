@@ -1,30 +1,35 @@
-class B extends IO {
+class C {
+
     test(): unit {
-        println("B");
+        (new IO).println("C");
         ()
     }
 }
 
-class A extends IO {
+class B extends C {
+
+    test(): unit {
+        (new IO).println("B");
+        ()
+    }
+
+}
+
+class A extends B {
     c: B;
     b: B;
 
-    test(): unit {
-        println("A");
-        ()
-    }
+
+
 }
 
-class Main extends IO {
+class Main extends A {
     a: A;
 
     main() : int32 {
 
-        a.b.test();
-        a.test();
-        (new B).test();
-        (new A).test();
-        println("tamere");
+         a.test(); // A
+
 
         0
     }

@@ -126,6 +126,7 @@ public class CodeGenerationListener extends CODEBaseListener {
     private void generateProgram(ProgramContext ctx) {
         generateHeader();
         generateStructuresFromClasses();
+        generateIOClass();
 
         for (ClassDefinitionContext classDef : ctx.classDefinition()) {
                 currentClass = classes.get(classDef.TYPE_IDENTIFIER(0).getText());
@@ -136,7 +137,7 @@ public class CodeGenerationListener extends CODEBaseListener {
                 llvmOutput.append(indents).append("\n");
         }
 
-        generateIOClass();
+
     }
 
     private void generateHeader() {
@@ -790,31 +791,46 @@ public class CodeGenerationListener extends CODEBaseListener {
         VariableDefinition returnVar = null;
         if (ctx.newObj() != null) {
             returnVar = generateNewObj(ctx.newObj(), variablesCache);
-            // TODO : check for inheritance
+
         } else if (ctx.OBJECT_IDENTIFIER() != null) {
             if (self == null) {
                 returnVar = generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
-                // TODO : check for inheritance
+
             } else {
                 // Look into fields
                 String vsopVarType = vsopTypeToLlvmType(self.type);
                 FieldDefinition fieldToCheck = classes.get(self.type).fields.get(ctx.OBJECT_IDENTIFIER().getText());
                 llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ").append(vsopVarType).append(", ").append(vsopVarType).append("* %").append(lastInstructionId-1).append(", i32 0, i32 ").append(fieldToCheck.position).append("\n");
 
-
                 returnVar = new VariableDefinition("", String.valueOf(lastInstructionId), fieldToCheck.type, "");
+                // TODO : check for inheritance
             }
-
         }
-
-
-
 
         return returnVar;
     }
 
     private VariableDefinition generateCallFunction(CallFunctionContext ctx, String selfId, String selfType, ArrayList<Map<String, VariableDefinition>> variablesCache) {
-        MethodDefinition methodToCheck = classes.get(selfType).methods.get(ctx.OBJECT_IDENTIFIER().getText());
+        MethodDefinition methodToCheck = null;
+
+        do {
+            methodToCheck = classes.get(selfType).methods.get(ctx.OBJECT_IDENTIFIER().getText());
+
+            if (methodToCheck == null) {
+                 String nextType = classes.get(selfType).extend;
+                 if (nextType.equals("Object") || nextType.equals("")) {
+                     // Mean method not found
+                     return null;
+                 }
+                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ").append(vsopTypeToLlvmType(selfType)).append(", ").append(vsopTypeToLlvmType(selfType)).append("* %").append(lastInstructionId-1).append(", i32 0, i32 ").append(0).append("\n");
+                selfId = String.valueOf(lastInstructionId);
+                selfType = nextType;
+
+            }
+
+        } while (methodToCheck == null);
+
+
         StringBuilder formalStr = new StringBuilder();
         // Formals
         List<FormalDefinition> formals = new ArrayList<>(methodToCheck.formals.values());

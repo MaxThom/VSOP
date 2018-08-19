@@ -1,29 +1,6 @@
-class Parent {
-    i : int32 ;
-}
-class Child extends Parent {
-    k : int32 ;
-
-    test(): int32 {
-        i <- 32;
-        0
-    }
-}
-class Main extends IO {
-    x: int32 <- 3;
-    test: string;
-
+class Main {
     main() : int32 {
-
-
-        0
-    }
-
-    main2(str: string, int: int32, bo: bool) : int32 {
-
-
-
+        (new IO).println("Hello World !");
         0
     }
 }
-
