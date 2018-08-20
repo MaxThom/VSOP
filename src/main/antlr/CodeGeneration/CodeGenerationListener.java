@@ -861,7 +861,8 @@ public class CodeGenerationListener extends CODEBaseListener {
 
         llvmOutput.append(indents).append("; Call Method\n");
 
-        if (ctx.caller().size() == 0 || (ctx.caller().size() == 1 && ctx.caller(0).OBJECT_IDENTIFIER().getText().equals("self"))) {
+
+        if (ctx.caller().size() == 0 || (ctx.caller().size() == 1 &&  ctx.caller(0).OBJECT_IDENTIFIER() != null && ctx.caller(0).OBJECT_IDENTIFIER().getText().equals("self"))) {
 
             VariableDefinition lastCaller = checkVariableCacheForIdentifier("self", variablesCache);
             String varType = vsopTypeToLlvmType(lastCaller.type);
