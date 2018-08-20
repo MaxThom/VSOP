@@ -393,6 +393,8 @@ public class ParserListener extends PARSERBaseListener {
             output.append(handleNewObj(caller.newObj()));
         } else if (caller.OBJECT_IDENTIFIER() != null) {
             output.append(caller.OBJECT_IDENTIFIER().getText());
+        } else if (caller.ifStatement() != null) {
+            output.append(handleIfStatement(caller.ifStatement()));
         }
 
         return output;

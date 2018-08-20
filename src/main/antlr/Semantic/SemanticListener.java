@@ -826,6 +826,8 @@ public class SemanticListener extends SEMANTICBaseListener {
             treeOutput.append(ctx.singleCallMethod(0).caller(0).OBJECT_IDENTIFIER().getText() + " : " + lastCallerType);
         } else if (ctx.singleCallMethod(0).caller(0).newObj() != null) {
             lastCallerType = checkNewOperator(ctx.singleCallMethod(0).caller(0).newObj(), variablesCache);
+        } else if (ctx.singleCallMethod(0).caller(0).ifStatement() != null) {
+            lastCallerType = checkIfStatementType(ctx.singleCallMethod(0).caller(0).ifStatement(), variablesCache, true);
         }
 
         int firstOffset = 1;
@@ -859,6 +861,8 @@ public class SemanticListener extends SEMANTICBaseListener {
                 treeOutput.append(ctx.caller(i).OBJECT_IDENTIFIER().getText() + " : " + typeFoundForCaller);
             } else if (ctx.caller(i).newObj() != null) {
                 typeFoundForCaller = checkNewOperator(ctx.caller(i).newObj(), variablesCache);
+            } else if (ctx.caller(i).ifStatement() != null) {
+                typeFoundForCaller = checkIfStatementType(ctx.caller(i).ifStatement(), variablesCache, true);
             }
         }
         //treeOutput.delete(treeOutput.length()-1, treeOutput.length());

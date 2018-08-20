@@ -1,35 +1,28 @@
-class C {
+class Main extends IO {
+    n : int32;
 
-    test(): unit {
-        (new IO).println("C");
+    guessN() : unit {
+        print("n = ").printInt32(n).print(", guess is ");
+        if n < 0 then
+            print("n < 0")
+        else
+            if 100 < n then
+                print("n > 100")
+            else
+                print("\x0a")
+
         ()
     }
-}
-
-class B extends C {
-
-    test(): unit {
-        (new IO).println("B");
-        ()
-    }
-
-}
-
-class A extends B {
-    c: B;
-    b: B;
-
-
-
-}
-
-class Main extends A {
-    a: A;
 
     main() : int32 {
+        self.guessN();
 
-         a.test(); // A
-        (new IO).println("\\asd\xff\n");
+
+
+
+
+
+
 
         0
     }

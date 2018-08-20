@@ -371,12 +371,15 @@ public class CodeGenerationListener extends CODEBaseListener {
             if (field.statement() != null) {
                 this.indents.append("\t");
                 variablesCache.add(new HashMap<>());
-                generateStatement(field.statement(), variablesCache);
+                VariableDefinition var = generateStatement(field.statement(), variablesCache);
                 variablesCache.remove(variablesCache.size()-1);
-                llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(field.varType().getText())).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(field.varType().getText())).append("* %").append(whereToStore+1).append("\n\n");
+                //llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(field.varType().getText())).append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(field.varType().getText())).append("* %").append(whereToStore+1).append("\n\n");
+                llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "").append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "").append("* %").append(whereToStore+1).append("\n");
                 this.indents.delete(this.indents.length()-1, this.indents.length());
             } else if (field.block() != null) {
-                generateBlock(field.block(), variablesCache);
+                VariableDefinition var = generateBlock(field.block(), variablesCache);
+                llvmOutput.append(indents).append("; Assign\n");
+                llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "").append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "").append("* %").append(var.aliasAlocated).append("\n");
             } else {
                 if (isPrimitive(field.varType().getText()))
                     llvmOutput.append(indents).append("\t").append("store ").append(vsopTypeToLlvmType(field.varType().getText())).append(" ").append(getDefaultValue(field.varType().getText())).append(", ").append(vsopTypeToLlvmType(field.varType().getText())).append("* %").append(whereToStore + 1).append("\n\n");
@@ -405,23 +408,6 @@ public class CodeGenerationListener extends CODEBaseListener {
                 llvmOutput.append(indents).append("define ").append(vsopTypeToLlvmType(method.varType().getText())).append((isPrimitive(method.varType().getText()) ? " @" :"* @")).append(method.OBJECT_IDENTIFIER()).append("(");
             else
                 llvmOutput.append(indents).append("define ").append(vsopTypeToLlvmType(method.varType().getText())).append((isPrimitive(method.varType().getText()) ? " @" :"* @")).append(classType).append("_").append(method.OBJECT_IDENTIFIER()).append("(");
-
-
-            // Add Fields
-            /*variablesCache.add(new HashMap<>());
-            ClassDefinition classToCheck = currentClass;
-            while (true) {
-                for (FieldDefinition field : classToCheck.fields.values()) {
-                    variablesCache.get(variablesCache.size()-1).put(field.name, new VariableDefinition(field.name, "%struct.".concat(classToCheck.name), field.type));
-                }
-                if (classToCheck.extend.equals("Object"))
-                    break;
-                if (classes.containsKey(classToCheck.extend))
-                    classToCheck = classes.get(classToCheck.extend);
-                else
-                    break;
-
-            }*/
 
             // Add self structure
             llvmOutput.append(indents).append(vsopTypeToLlvmType(classType)).append("*, ");
@@ -462,7 +448,7 @@ public class CodeGenerationListener extends CODEBaseListener {
                 for (FormalDefinition formal : formals) {
                     llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca ").append(vsopTypeToLlvmType(formal.type)).append(isPrimitive(formal.type) ? "" : "*").append("\n");
                     llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(formal.type)).append(isPrimitive(formal.type) ? "" : "*").append(" %".concat(String.valueOf(formal.position+1))).append(", ").append(vsopTypeToLlvmType(formal.type)).append(isPrimitive(formal.type) ? "" : "*").append("* %").append(lastInstructionId).append("\n");
-                    variablesCache.get(variablesCache.size()-1).put(formal.name, new VariableDefinition(formal.name, "%".concat(String.valueOf(lastInstructionId)), formal.type, ""));
+                    variablesCache.get(variablesCache.size()-1).put(formal.name, new VariableDefinition(formal.name, "".concat(String.valueOf(lastInstructionId)), formal.type, ""));
                 }
                 llvmOutput.append(indents).append("\n");
 
@@ -473,13 +459,14 @@ public class CodeGenerationListener extends CODEBaseListener {
             if (method.varType().getText().equals("unit"))
                 llvmOutput.append(indents).append("\tret void").append("\n");
             else
-                llvmOutput.append(indents).append("\tret ").append(vsopTypeToLlvmType(method.varType().getText())).append(" %").append(lastInstructionId).append("\n");
+                llvmOutput.append(indents).append("\tret ").append(vsopTypeToLlvmType(method.varType().getText())).append(isPrimitive(method.varType().getText()) ? "" : "*").append(" %").append(lastInstructionId).append("\n");
             llvmOutput.append(indents).append("}\n");
         }
 
     }
 
-    private void generateBlock(BlockContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+    private VariableDefinition generateBlock(BlockContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        VariableDefinition returnVar = null;
         this.indents.append("\t");
 
         variablesCache.add(new HashMap<>());
@@ -506,9 +493,9 @@ public class CodeGenerationListener extends CODEBaseListener {
                 ParserRuleContext child = (ParserRuleContext) ctx.children.get(i);
 
                 if (child instanceof BlockContext) {
-                    generateBlock((BlockContext) child, variablesCache);
+                    returnVar = generateBlock((BlockContext) child, variablesCache);
                 } else if (child instanceof StatementContext) {
-                    generateStatement((StatementContext) child, variablesCache);
+                    returnVar = generateStatement((StatementContext) child, variablesCache);
                 }
 
                 break;
@@ -517,6 +504,8 @@ public class CodeGenerationListener extends CODEBaseListener {
 
         variablesCache.remove(variablesCache.size()-1);
         this.indents.delete(this.indents.length()-1, this.indents.length());
+
+        return returnVar;
     }
 
     private VariableDefinition generateStatement(StatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -531,7 +520,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         } else if (ctx.binaryOperation() != null) {
             return generateBinaryOperation(ctx.binaryOperation(), variablesCache);
         } else if (ctx.callMethod() != null) {
-            generateCallMethod(ctx.callMethod(), variablesCache); // TODO
+            return generateCallMethod(ctx.callMethod(), variablesCache);
         } else if (ctx.newObj() != null) {
             return generateNewObj(ctx.newObj(), variablesCache);
         } else if (ctx.OBJECT_IDENTIFIER() != null) {
@@ -546,6 +535,9 @@ public class CodeGenerationListener extends CODEBaseListener {
     }
 
     private VariableDefinition generateIfStatement(IfStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        VariableDefinition returnIf = null;
+        VariableDefinition returnElse = null;
+
 
         int ifGoto = ++lastGotoId;
         llvmOutput.append(indents).append("; If\n");
@@ -567,10 +559,10 @@ public class CodeGenerationListener extends CODEBaseListener {
 
         if (ctx.ifStat().statement(1) != null) {
             this.indents.append("\t");
-            generateStatement(ctx.ifStat().statement(1), variablesCache);
+            returnIf = generateStatement(ctx.ifStat().statement(1), variablesCache);
             this.indents.delete(this.indents.length()-1, this.indents.length());
         } else if (ctx.ifStat().block() != null) {
-            generateBlock(ctx.ifStat().block(), variablesCache);
+            returnIf = generateBlock(ctx.ifStat().block(), variablesCache);
         }
         llvmOutput.append(indents).append("\tbr label %condEnd").append(ifGoto).append("\n\n");
         variablesCache.remove(variablesCache.size()-1);
@@ -583,18 +575,56 @@ public class CodeGenerationListener extends CODEBaseListener {
 
             if (ctx.elseStat().statement() != null) {
                 this.indents.append("\t");
-                generateStatement(ctx.elseStat().statement(), variablesCache);
+                returnElse = generateStatement(ctx.elseStat().statement(), variablesCache);
                 this.indents.delete(this.indents.length()-1, this.indents.length());
             } else if (ctx.elseStat().block() != null) {
-                 generateBlock(ctx.elseStat().block(), variablesCache);
+                 returnElse = generateBlock(ctx.elseStat().block(), variablesCache);
             }
             llvmOutput.append(indents).append("\tbr label %condEnd").append(ifGoto).append("\n\n");
             variablesCache.remove(variablesCache.size()-1);
         }
 
         llvmOutput.append(indents).append("condEnd").append(ifGoto).append(":").append("\n");
+        // TODO Inheritance
 
-        return new VariableDefinition("", "", "", "");
+        String returnType = "";
+        String idIf = "", idElse = "";
+        if (!isPrimitive(returnIf.type) && !isPrimitive(returnElse.type) && !returnIf.type.equals(returnElse.type)) {
+            int whereToAdd = 0;
+            String whatToAdd = "";
+
+            if (lookForInheritance(returnIf.type, returnElse.type)) {
+                returnType = returnIf.type;
+                idIf = returnIf.aliasAlocated;
+                // Ajouter cast dans else
+
+                whereToAdd = llvmOutput.indexOf(indents.toString() + "\tbr label %condEnd" + ifGoto);
+                whereToAdd = llvmOutput.indexOf(indents.toString() + "\tbr label %condEnd" + ifGoto, whereToAdd+5);
+                whatToAdd = indents.toString() + "\t%cast" + ifGoto + " = bitcast " + vsopTypeToLlvmType(returnElse.type) + "* %" + returnElse.aliasAlocated + " to " + vsopTypeToLlvmType(returnType) + "*" + "\n";
+                idElse = "cast" + ifGoto;
+
+                //%cast = bitcast %struct.Child* %12 to %struct.Parent*
+            } else if (lookForInheritance(returnElse.type, returnIf.type)) {
+                returnType = returnElse.type;
+                idElse = returnIf.aliasAlocated;
+                // Ajouter cast dans if
+
+                whereToAdd = llvmOutput.indexOf(indents.toString() + "\tbr label %condEnd" + ifGoto);
+                whatToAdd = indents.toString() + "\t%cast"  + ifGoto + " = bitcast " + vsopTypeToLlvmType(returnIf.type) + "* %" + returnIf.aliasAlocated + " to " + vsopTypeToLlvmType(returnType) + "*" + "\n";
+                idIf = "cast" + ifGoto;
+            }
+
+            llvmOutput.insert(whereToAdd, whatToAdd);
+            llvmOutput.append(indents).append("\t%").append(++lastInstructionId).append(" = phi ").append(vsopTypeToLlvmType(returnType)).append("*").append(" [%").append(idIf).append(", %condIf").append(ifGoto).append("], [%").append(idElse).append(", %condElse").append(ifGoto).append("]").append("\n\n");
+        }
+        else if (!returnIf.type.equals("unit") && !returnElse.type.equals("unit")) {
+            returnType = returnIf.type;
+            llvmOutput.append(indents).append("\t%").append(++lastInstructionId).append(" = phi ").append(vsopTypeToLlvmType(returnType)).append(isPrimitive(returnIf.type) ? "" : "*").append(" [%").append(returnIf.alias).append(", %condIf").append(ifGoto).append("], [%").append(returnElse.alias).append(", %condElse").append(ifGoto).append("]").append("\n\n");
+        }
+
+
+        // %phi2 = phi i8* [%18, %condIf2], [%20, %condElse2]
+        return new VariableDefinition("", String.valueOf(lastInstructionId), returnType, "");
     }
 
     private void generateWhileStatement(WhileStatementContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -631,29 +661,36 @@ public class CodeGenerationListener extends CODEBaseListener {
 
     private void  generateLet(LetContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
         int letId = ++lastInstructionId;
+        String vsopType = vsopTypeToLlvmType(ctx.varType().getText());
         llvmOutput.append(indents).append("; Let\n");
-        llvmOutput.append(indents).append("%").append(letId).append(" = alloca ").append(vsopTypeToLlvmType(ctx.varType().getText())).append(isPrimitive(ctx.varType().getText()) ? "" : "*").append("\n");
+        llvmOutput.append(indents).append("%").append(letId).append(" = alloca ").append(vsopType).append(isPrimitive(ctx.varType().getText()) ? "" : "*").append("\n");
+
+        variablesCache.add(new HashMap<>());
+        variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), new VariableDefinition(ctx.OBJECT_IDENTIFIER().getText(), String.valueOf(letId), ctx.varType().getText(), ""));
 
         // Initializer
         int statOffset = 0;
         if (ctx.statement().size() == 2 || (ctx.statement().size() == 1 && ctx.block() != null)) {
-            variablesCache.add(new HashMap<>());
-            variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), new VariableDefinition(ctx.OBJECT_IDENTIFIER().getText(), "%".concat(String.valueOf(letId)), ctx.varType().getText(), ""));
+            //variablesCache.add(new HashMap<>());
+            //variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), new VariableDefinition(ctx.OBJECT_IDENTIFIER().getText(), "".concat(String.valueOf(letId)), ctx.varType().getText(), ""));
             generateStatement(ctx.statement(statOffset++), variablesCache);
-            variablesCache.remove(variablesCache.size()-1);
+            llvmOutput.append(indents).append("store ").append(vsopType).append(isPrimitive(ctx.varType().getText()) ? "" : "*").append(" %").append(lastInstructionId).append(", ").append(vsopType).append(isPrimitive(ctx.varType().getText()) ? "" : "*").append("* %").append(letId).append("\n");
+            //variablesCache.remove(variablesCache.size()-1);
         } else
             llvmOutput.append(indents).append("").append("store ").append(vsopTypeToLlvmType(ctx.varType().getText())).append(isPrimitive(ctx.varType().getText()) ? "" : "*").append(" ").append(getDefaultValue(ctx.varType().getText())).append(", ").append(vsopTypeToLlvmType(ctx.varType().getText())).append(isPrimitive(ctx.varType().getText()) ? "" : "*").append("* %").append(lastInstructionId).append("\n");
 
         // Body
-        variablesCache.add(new HashMap<>());
-        variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), new VariableDefinition(ctx.OBJECT_IDENTIFIER().getText(), "%".concat(String.valueOf(letId)), ctx.varType().getText(), ""));
+        //variablesCache.add(new HashMap<>());
+        //variablesCache.get(variablesCache.size()-1).put(ctx.OBJECT_IDENTIFIER().getText(), new VariableDefinition(ctx.OBJECT_IDENTIFIER().getText(), "".concat(String.valueOf(letId)), ctx.varType().getText(), ""));
         if (ctx.statement(statOffset) != null) {
             generateStatement(ctx.statement(statOffset), variablesCache);
         } else if (ctx.block() != null) {
             generateBlock(ctx.block(), variablesCache);
         }
-        variablesCache.remove(variablesCache.size()-1);
+        //variablesCache.remove(variablesCache.size()-1);
         llvmOutput.append(indents).append("\n");
+
+        variablesCache.remove(variablesCache.size()-1);
     }
 
     private VariableDefinition  generateAssign(AssignContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -664,7 +701,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         if (!var.name.equals("self"))
             llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "*").append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "*").append("* %").append(var.aliasAlocated).append("\n");
         else
-            llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "*").append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "*").append("* %").append(var.aliasAlocated).append("\n");
+            llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "").append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type)).append(isPrimitive(var.type) ? "" : "").append("* %").append(var.aliasAlocated).append("\n");
 
         llvmOutput.append(indents).append("\n");
         var = generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
@@ -679,7 +716,41 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append(indents).append("; ObjectIdentifier\n");
         String name = "";
 
-        if (!isPrimitive(var.type)) {
+        //if (!isPrimitive(var.type)) {
+        if (ctx.getText().equals("self")) {
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append("*, ").append(varType).append("** %").append(var.alias).append("\n");
+            String heritageType = "";
+            ParserRuleContext parentNode = (ParserRuleContext) ctx.getParent();
+            while (!(parentNode instanceof LetContext) && !(parentNode instanceof MethodDefinitionContext) ) {
+                parentNode = parentNode.getParent();
+            }
+
+            if (parentNode instanceof  LetContext) {
+                heritageType = ((LetContext) parentNode).varType().getText();
+            }
+            else if (parentNode instanceof MethodDefinitionContext) {
+                heritageType = ((MethodDefinitionContext) parentNode).varType().getText();
+            }
+
+            String tmpVarType = var.type;
+            while (!tmpVarType.equals(heritageType)) {
+                    tmpVarType = classes.get(tmpVarType).extend;
+                    if (tmpVarType.equals("Object") || tmpVarType.equals(""))
+                        break;
+                    llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ").append(varType).append(", ").append(varType).append("* %").append(lastInstructionId-1).append(", i32 0, i32 ").append(0).append("\n");
+                    varTypeFinal = classes.get(tmpVarType).name;
+                    varType = vsopTypeToLlvmType(varTypeFinal);
+
+            }
+
+
+
+            varAllocFinal = String.valueOf(lastInstructionId);
+            //llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(fieldToCheck.type)).append(", ").append(vsopTypeToLlvmType(fieldToCheck.type)).append("* %").append(lastInstructionId-1).append("\n");
+
+
+        }
+        else if (var.name.equals("self")) {
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append("*, ").append(varType).append("** %").append(var.alias).append("\n");
 
             FieldDefinition fieldToCheck = null;
@@ -704,8 +775,8 @@ public class CodeGenerationListener extends CODEBaseListener {
             name = "self";
 
         } else {
-            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(", ").append(varType).append("* ").append(var.alias).append("\n");
-            varAllocFinal = var.alias.substring(1);
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(varType).append(isPrimitive(varTypeFinal) ? "" : "*").append(", ").append(varType).append(isPrimitive(varTypeFinal) ? "" : "*").append("* %").append(var.alias).append("\n");
+            varAllocFinal = var.alias;
         }
 
 
@@ -766,19 +837,21 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca ").append(vsopTypeToLlvmType(objType)).append("*").append("\n");
         llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call ").append(vsopTypeToLlvmType(objType)).append("* @").append(objType).append("_new()").append("\n");
         llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(objType)).append("* %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(objType)).append("** %").append(lastInstructionId-1).append("\n");
+        llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(objType)).append(", ").append(vsopTypeToLlvmType(objType)).append("* %").append(lastInstructionId-1);
 
+        //%7 = load %struct.MightyClass, %struct.MightyClass* %6
         llvmOutput.append("\n");
-        return new VariableDefinition("", String.valueOf(lastInstructionId), objType, "");
+        return new VariableDefinition("", String.valueOf(lastInstructionId), objType, String.valueOf(lastInstructionId-1));
     }
 
     private VariableDefinition generateCallMethod(CallMethodContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
-
+        VariableDefinition returnVar = null;
         for (SingleCallMethodContext call : ctx.singleCallMethod()) {
-            generateSingleCallMethod(call, variablesCache);
+            returnVar = generateSingleCallMethod(call, variablesCache);
         }
 
 
-        return new VariableDefinition("", "", "", "");
+        return returnVar;
     }
 
     private VariableDefinition generateSingleCallMethod(SingleCallMethodContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
@@ -788,7 +861,7 @@ public class CodeGenerationListener extends CODEBaseListener {
 
         llvmOutput.append(indents).append("; Call Method\n");
 
-        if (ctx.caller().size() == 0) {
+        if (ctx.caller().size() == 0 || (ctx.caller().size() == 1 && ctx.caller(0).OBJECT_IDENTIFIER().getText().equals("self"))) {
 
             VariableDefinition lastCaller = checkVariableCacheForIdentifier("self", variablesCache);
             String varType = vsopTypeToLlvmType(lastCaller.type);
@@ -835,10 +908,12 @@ public class CodeGenerationListener extends CODEBaseListener {
         VariableDefinition returnVar = null;
         if (ctx.newObj() != null) {
             returnVar = generateNewObj(ctx.newObj(), variablesCache);
-
+            returnVar.alias = returnVar.aliasAlocated;
         } else if (ctx.OBJECT_IDENTIFIER() != null) {
             if (self == null) {
                 returnVar = generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
+                if (returnVar.name.equals("self"))
+                    returnVar.alias = returnVar.aliasAlocated;
 
             } else {
                 // Look into fields
@@ -849,6 +924,8 @@ public class CodeGenerationListener extends CODEBaseListener {
                 returnVar = new VariableDefinition("", String.valueOf(lastInstructionId), fieldToCheck.type, "");
                 // TODO : check for inheritance
             }
+        } else if (ctx.ifStatement() != null) {
+            returnVar = generateIfStatement(ctx.ifStatement(), variablesCache);
         }
 
         return returnVar;
@@ -883,8 +960,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         if (formals.size() > 0) llvmOutput.append(indents).append("; Arguments").append("\n");
         for (FormalDefinition formal : formals) {
             ArgumentContext arg = ctx.argument(j++);
-            VariableDefinition argType = new VariableDefinition("", "", "", "");
-            argType = generateStatement(arg.statement(), variablesCache);
+            VariableDefinition argType = generateStatement(arg.statement(), variablesCache);
             /*if (arg.statement().binaryOperation() != null) {
                 argType = generateBinaryOperation(arg.statement().binaryOperation(), variablesCache);
             } else if (arg.statement().callMethod() != null) {
@@ -897,7 +973,10 @@ public class CodeGenerationListener extends CODEBaseListener {
                 argType = generateVarValue(arg.statement().varValue(), variablesCache);
             }*/
 
-            formalStr.append(", ").append(vsopTypeToLlvmType(argType.type)).append(" %").append(argType.alias);
+            if (arg.statement().newObj() != null)
+                formalStr.append(", ").append(vsopTypeToLlvmType(argType.type)).append(isPrimitive(argType.type) ? "" : "*").append(" %").append(argType.aliasAlocated);
+            else
+                formalStr.append(", ").append(vsopTypeToLlvmType(argType.type)).append(isPrimitive(argType.type) ? "" : "*").append(" %").append(isPrimitive(argType.type) ? argType.alias : argType.alias);
         }
 
         // Find function to get type
@@ -1272,6 +1351,25 @@ public class CodeGenerationListener extends CODEBaseListener {
         }
 
         return str;
+    }
+
+    private boolean lookForInheritance(String parent, String child) {
+        ClassDefinition classToCheck =  classes.get(child);
+        if (classToCheck != null) {
+            while (true) {
+                if (parent.equals(classToCheck.name) && !parent.equals("")) {
+                    return true;
+                }
+
+                if (classes.containsKey(classToCheck.extend))
+                    classToCheck = classes.get(classToCheck.extend);
+                else if (classToCheck.extend.equals("")) {
+                    break;
+                }
+            }
+        }
+
+        return false;
     }
 
 //endregion

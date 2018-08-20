@@ -13,7 +13,7 @@ grammar CODE;
 
     callMethod              : (singleCallMethod) | ((singleCallMethod  '.')+ (singleCallMethod));
     singleCallMethod        : (caller)* callFunction ('.' callFunction)* ;
-    caller                  : (OBJECT_IDENTIFIER | ('(' newObj ')')) '.';
+    caller                  : (OBJECT_IDENTIFIER | ('(' newObj ')') | ('(' ifStatement ')')) '.';
     callFunction            : OBJECT_IDENTIFIER (('(' (((argument ',')+ argument) | argument?) ')') | ('()')) ;
     argument                : statement ; //OBJECT_IDENTIFIER | varValue | callMethod | newObj | binaryOperation;
 

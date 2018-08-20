@@ -12,23 +12,12 @@ declare i32 @__isoc99_scanf(i8*, ...) #1declare void @exit(i32) #1@.str.empty = 
 ; STRUCTURES
 ; 
 %struct.Object = type { }
-%struct.A = type {
-	%struct.B,
-	%struct.B,
-	%struct.B
-}
-%struct.B = type {
-	%struct.C
-}
-%struct.C = type {
-	%struct.Object
-}
 %struct.IO = type {
 	%struct.Object
 }
 %struct.Main = type {
-	%struct.A,
-	%struct.A
+	%struct.IO,
+	i32
 }
 
 ; 
@@ -62,8 +51,25 @@ define %struct.IO* @IO_printInt32(%struct.IO*, i32) {
 	ret %struct.IO* %0
 }
 define %struct.IO* @IO_printBool(%struct.IO*, i1) {
-	%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printBool, i32 0, i32 0), i1 %1)
-	ret %struct.IO* %0
+	%3 = icmp eq i1 %1, 0
+	br i1 %3, label %false, label %true	
+
+    true:
+        %msg = alloca [5 x i8]
+        store [5 x i8] c"true\00", [5 x i8]* %msg
+        %loadedMsg = bitcast [5 x i8]* %msg to i8*
+        call %struct.IO* @IO_print(%struct.IO* %0, i8* %loadedMsg)
+        br label %end
+
+    false:
+        %msg2 = alloca [6 x i8]
+        store [6 x i8] c"false\00", [6 x i8]* %msg2
+        %loadedMsg2 = bitcast [6 x i8]* %msg2 to i8*
+        call %struct.IO* @IO_print(%struct.IO* %0, i8* %loadedMsg2)
+        br label %end
+
+	end:
+	    ret %struct.IO* %0
 }
 define %struct.IO* @IO_print(%struct.IO*, i8*) {
 	%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.printStr, i32 0, i32 0), i8* %1)
@@ -74,8 +80,25 @@ define %struct.IO* @IO_printlnInt32(%struct.IO*, i32) {
 	ret %struct.IO* %0
 }
 define %struct.IO* @IO_printlnBool(%struct.IO*, i1) {
-	%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnBool, i32 0, i32 0), i1 %1)
-	ret %struct.IO* %0
+	%3 = icmp eq i1 %1, 0
+	br i1 %3, label %false, label %true	
+
+    true:
+        %msg = alloca [5 x i8]
+        store [5 x i8] c"true\00", [5 x i8]* %msg
+        %loadedMsg = bitcast [5 x i8]* %msg to i8*
+        call %struct.IO* @IO_println(%struct.IO* %0, i8* %loadedMsg)
+        br label %end
+
+    false:
+        %msg2 = alloca [6 x i8]
+        store [6 x i8] c"false\00", [6 x i8]* %msg2
+        %loadedMsg2 = bitcast [6 x i8]* %msg2 to i8*
+        call %struct.IO* @IO_println(%struct.IO* %0, i8* %loadedMsg2)
+        br label %end
+
+	end:
+	    ret %struct.IO* %0
 }
 define %struct.IO* @IO_println(%struct.IO*, i8*) {
 	%3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @IO.printlnStr, i32 0, i32 0), i8* %1)
@@ -132,151 +155,6 @@ define i8* @IO_inputLine(%struct.IO*) {
 
 
 ; 
-; C
-; 
-
-; Allocation
-define %struct.C* @C_new() #0 {
-	%size_as_ptr = getelementptr %struct.C, %struct.C* null, i32 1
-	%size_as_i64 = ptrtoint %struct.C* %size_as_ptr to i64
-
-	%1 = alloca %struct.C*
-	%2 = call noalias i8* @malloc(i64 %size_as_i64) #3
-	%3 = bitcast i8* %2 to %struct.C*
-	store %struct.C* %3, %struct.C** %1
-
-	%4 = load %struct.C*, %struct.C** %1
-	call void @C_init(%struct.C* %4)
-
-	%5 = load %struct.C*, %struct.C** %1
-	ret %struct.C* %5
-}
-
-; Initializer
-define void @C_init(%struct.C*) #0 {
-	%2 = alloca %struct.C*
-	store %struct.C* %0, %struct.C** %2
-
-	ret void
-}
-
-; Method test
-define void @C_test(%struct.C*) #0 {
-	; Formals
-	%2 = alloca %struct.C*
-	store %struct.C* %0, %struct.C** %2
-	
-	; Call Method
-	; New
-	%3 = alloca %struct.IO*
-	%4 = call %struct.IO* @IO_new()
-	store %struct.IO* %4, %struct.IO** %3
-
-	; Arguments
-	; VarValue
-	%5 = alloca [2 x i8]
-	store [2 x i8] c"C\00", [2 x i8]* %5
-	%6 = bitcast [2 x i8]* %5 to i8*
-	
-	%7 = call %struct.IO* @IO_println(%struct.IO* %4, i8* %6)
-
-	ret void
-}
-
-; 
-; B
-; 
-
-; Allocation
-define %struct.B* @B_new() #0 {
-	%size_as_ptr = getelementptr %struct.B, %struct.B* null, i32 1
-	%size_as_i64 = ptrtoint %struct.B* %size_as_ptr to i64
-
-	%1 = alloca %struct.B*
-	%2 = call noalias i8* @malloc(i64 %size_as_i64) #3
-	%3 = bitcast i8* %2 to %struct.B*
-	store %struct.B* %3, %struct.B** %1
-
-	%4 = load %struct.B*, %struct.B** %1
-	call void @B_init(%struct.B* %4)
-
-	%5 = load %struct.B*, %struct.B** %1
-	ret %struct.B* %5
-}
-
-; Initializer
-define void @B_init(%struct.B*) #0 {
-	%2 = alloca %struct.B*
-	store %struct.B* %0, %struct.B** %2
-
-	%3 = load %struct.B*, %struct.B** %2
-	%4 = getelementptr inbounds %struct.B, %struct.B* %3, i32 0, i32 0
-	call void @C_init(%struct.C* %4)
-
-	ret void
-}
-
-; Method test
-define void @B_test(%struct.B*) #0 {
-	; Formals
-	%2 = alloca %struct.B*
-	store %struct.B* %0, %struct.B** %2
-	
-	; Call Method
-	; New
-	%3 = alloca %struct.IO*
-	%4 = call %struct.IO* @IO_new()
-	store %struct.IO* %4, %struct.IO** %3
-
-	; Arguments
-	; VarValue
-	%5 = alloca [2 x i8]
-	store [2 x i8] c"B\00", [2 x i8]* %5
-	%6 = bitcast [2 x i8]* %5 to i8*
-	
-	%7 = call %struct.IO* @IO_println(%struct.IO* %4, i8* %6)
-
-	ret void
-}
-
-; 
-; A
-; 
-
-; Allocation
-define %struct.A* @A_new() #0 {
-	%size_as_ptr = getelementptr %struct.A, %struct.A* null, i32 1
-	%size_as_i64 = ptrtoint %struct.A* %size_as_ptr to i64
-
-	%1 = alloca %struct.A*
-	%2 = call noalias i8* @malloc(i64 %size_as_i64) #3
-	%3 = bitcast i8* %2 to %struct.A*
-	store %struct.A* %3, %struct.A** %1
-
-	%4 = load %struct.A*, %struct.A** %1
-	call void @A_init(%struct.A* %4)
-
-	%5 = load %struct.A*, %struct.A** %1
-	ret %struct.A* %5
-}
-
-; Initializer
-define void @A_init(%struct.A*) #0 {
-	%2 = alloca %struct.A*
-	store %struct.A* %0, %struct.A** %2
-
-	%3 = load %struct.A*, %struct.A** %2
-	%4 = getelementptr inbounds %struct.A, %struct.A* %3, i32 0, i32 0
-	call void @B_init(%struct.B* %4)
-
-	%5 = load %struct.A*, %struct.A** %2
-	%6 = getelementptr inbounds %struct.A, %struct.A* %5, i32 0, i32 1
-	%7 = load %struct.A*, %struct.A** %2
-	%8 = getelementptr inbounds %struct.A, %struct.A* %7, i32 0, i32 2
-	ret void
-}
-
-; 
 ; MAIN
 ; 
 
@@ -304,10 +182,129 @@ define void @Main_init(%struct.Main*) #0 {
 
 	%3 = load %struct.Main*, %struct.Main** %2
 	%4 = getelementptr inbounds %struct.Main, %struct.Main* %3, i32 0, i32 0
-	call void @A_init(%struct.A* %4)
+	call void @IO_init(%struct.IO* %4)
 
 	%5 = load %struct.Main*, %struct.Main** %2
 	%6 = getelementptr inbounds %struct.Main, %struct.Main* %5, i32 0, i32 1
+	store i32 0, i32* %6
+
+	ret void
+}
+
+; Method guessN
+define void @Main_guessN(%struct.Main*) #0 {
+	; Formals
+	%2 = alloca %struct.Main*
+	store %struct.Main* %0, %struct.Main** %2
+	
+	; Call Method
+	%3 = load %struct.Main*, %struct.Main** %2
+	%4 = getelementptr inbounds %struct.Main, %struct.Main* %3, i32 0, i32 0
+	; Arguments
+	; VarValue
+	%5 = alloca [5 x i8]
+	store [5 x i8] c"n = \00", [5 x i8]* %5
+	%6 = bitcast [5 x i8]* %5 to i8*
+	
+	%7 = call %struct.IO* @IO_print(%struct.IO* %4, i8* %6)
+	; Arguments
+	; ObjectIdentifier
+	%8 = load %struct.Main*, %struct.Main** %2
+	%9 = getelementptr inbounds %struct.Main, %struct.Main* %8, i32 0, i32 1
+	%10 = load i32, i32* %9
+
+	%11 = call %struct.IO* @IO_printInt32(%struct.IO* %7, i32 %10)
+	; Arguments
+	; VarValue
+	%12 = alloca [12 x i8]
+	store [12 x i8] c", guess is \00", [12 x i8]* %12
+	%13 = bitcast [12 x i8]* %12 to i8*
+	
+	%14 = call %struct.IO* @IO_print(%struct.IO* %11, i8* %13)
+
+	; If
+	; ObjectIdentifier
+	%15 = load %struct.Main*, %struct.Main** %2
+	%16 = getelementptr inbounds %struct.Main, %struct.Main* %15, i32 0, i32 1
+	%17 = load i32, i32* %16
+
+	; VarValue
+	%18 = alloca i32
+	store i32 0, i32* %18
+	%19 = load i32, i32* %18
+	
+	; Lower
+	%20 = icmp slt i32 %17, %19
+
+	br i1 %20, label %condIf1, label %condElse1	
+
+	condIf1:
+		; Call Method
+		%21 = load %struct.Main*, %struct.Main** %2
+		%22 = getelementptr inbounds %struct.Main, %struct.Main* %21, i32 0, i32 0
+		; Arguments
+		; VarValue
+		%23 = alloca [6 x i8]
+		store [6 x i8] c"n < 0\00", [6 x i8]* %23
+		%24 = bitcast [6 x i8]* %23 to i8*
+		
+		%25 = call %struct.IO* @IO_print(%struct.IO* %22, i8* %24)
+
+		br label %condEnd1
+
+	condElse1:
+		; If
+		; VarValue
+		%26 = alloca i32
+		store i32 100, i32* %26
+		%27 = load i32, i32* %26
+		
+		; ObjectIdentifier
+		%28 = load %struct.Main*, %struct.Main** %2
+		%29 = getelementptr inbounds %struct.Main, %struct.Main* %28, i32 0, i32 1
+		%30 = load i32, i32* %29
+
+		; Lower
+		%31 = icmp slt i32 %27, %30
+
+		br i1 %31, label %condIf2, label %condElse2		
+
+		condIf2:
+			; Call Method
+			%32 = load %struct.Main*, %struct.Main** %2
+			%33 = getelementptr inbounds %struct.Main, %struct.Main* %32, i32 0, i32 0
+			; Arguments
+			; VarValue
+			%34 = alloca [8 x i8]
+			store [8 x i8] c"n > 100\00", [8 x i8]* %34
+			%35 = bitcast [8 x i8]* %34 to i8*
+			
+			%36 = call %struct.IO* @IO_print(%struct.IO* %33, i8* %35)
+
+			br label %condEnd2
+
+		condElse2:
+			; Call Method
+			%37 = load %struct.Main*, %struct.Main** %2
+			%38 = getelementptr inbounds %struct.Main, %struct.Main* %37, i32 0, i32 0
+			; Arguments
+			; VarValue
+			%39 = alloca [2 x i8]
+			store [2 x i8] c"\0a\00", [2 x i8]* %39
+			%40 = bitcast [2 x i8]* %39 to i8*
+			
+			%41 = call %struct.IO* @IO_print(%struct.IO* %38, i8* %40)
+
+			br label %condEnd2
+
+		condEnd2:
+			%42 = phi %struct.IO* [%36, %condIf2], [%41, %condElse2]
+
+		br label %condEnd1
+
+	condEnd1:
+		%43 = phi %struct.IO* [%25, %condIf1], [%42, %condElse1]
+
 	ret void
 }
 
@@ -319,32 +316,14 @@ define i32 @main(%struct.Main*) #0 {
 	store %struct.Main* %3, %struct.Main** %2
 	
 	; Call Method
-	; ObjectIdentifier
 	%4 = load %struct.Main*, %struct.Main** %2
-	%5 = getelementptr inbounds %struct.Main, %struct.Main* %4, i32 0, i32 1
-
-	%6 = getelementptr inbounds %struct.A, %struct.A* %5, i32 0, i32 0
-	call void @B_test(%struct.B* %6)
-
-	; Call Method
-	; New
-	%7 = alloca %struct.IO*
-	%8 = call %struct.IO* @IO_new()
-	store %struct.IO* %8, %struct.IO** %7
-
-	; Arguments
-	; VarValue
-	%9 = alloca [7 x i8]
-	store [7 x i8] c"\5casd\ff\0a\00", [7 x i8]* %9
-	%10 = bitcast [7 x i8]* %9 to i8*
-	
-	%11 = call %struct.IO* @IO_println(%struct.IO* %8, i8* %10)
+	call void @Main_guessN(%struct.Main* %4)
 
 	; VarValue
-	%12 = alloca i32
-	store i32 0, i32* %12
-	%13 = load i32, i32* %12
+	%5 = alloca i32
+	store i32 0, i32* %5
+	%6 = load i32, i32* %5
 	
-	ret i32 %13
+	ret i32 %6
 }
 
