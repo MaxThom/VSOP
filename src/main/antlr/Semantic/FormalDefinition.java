@@ -1,5 +1,8 @@
 package Semantic;
 
+/**
+ * Represent a formal in the vsop language
+ */
 public class FormalDefinition {
     public String name;
     public String type;

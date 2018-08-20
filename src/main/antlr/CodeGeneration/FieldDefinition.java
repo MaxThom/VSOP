@@ -1,5 +1,8 @@
 package CodeGeneration;
 
+/**
+ * Represent a field in the vsop language
+ */
 public class FieldDefinition {
     public String name;
     public String type;

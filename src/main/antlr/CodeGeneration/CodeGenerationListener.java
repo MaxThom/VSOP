@@ -1,16 +1,17 @@
 package CodeGeneration;
 
-
 import VSOP.CodeGeneration.CODEBaseListener;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static VSOP.CodeGeneration.CODEParser.*;
 
+/**
+ * Class overriding the default listener of antlr. Each hit on a token generate two methods. One enter and one exit. Exit when everything under the node has been looked.
+ */
 public class CodeGenerationListener extends CODEBaseListener {
 
 

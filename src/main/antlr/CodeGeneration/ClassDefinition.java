@@ -3,7 +3,7 @@ package CodeGeneration;
 import java.util.HashMap;
 
 /**
- * Represent a class in vsop
+ * Represent a class in the vsop language
  */
 public class ClassDefinition {
     public String name;

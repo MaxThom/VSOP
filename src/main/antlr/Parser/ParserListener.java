@@ -4,8 +4,6 @@ package Parser;
 import VSOP.Parser.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import java.util.HashMap;
-import java.util.Map;
 
 import static VSOP.Parser.PARSERParser.*;
 
@@ -614,7 +612,7 @@ public class ParserListener extends PARSERBaseListener {
     private StringBuilder handleExpr6(Expr6Context expr6) {
         StringBuilder output = new StringBuilder();
 
-        // Handle negative operation
+        // Handle negative and isnull operation
         if (expr6.expr6() != null) {
             output.append("UnOp(");
             output.append(expr6.MINUS() != null ? expr6.MINUS().getText() : expr6.ISNULL().getText());

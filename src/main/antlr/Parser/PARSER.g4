@@ -14,16 +14,15 @@ grammar PARSER;
     singleCallMethod        : (caller)* callFunction ('.' callFunction)* ;
     caller                  : (OBJECT_IDENTIFIER | ('(' newObj ')') | ('(' ifStatement ')')) '.';
     callFunction            : OBJECT_IDENTIFIER (('(' (((argument ',')+ argument) | argument?) ')') | ('()')) ;
-    argument                : statement ; //OBJECT_IDENTIFIER | varValue | callMethod | newObj | binaryOperation;
+    argument                : statement ;
 
 
     assign                  : OBJECT_IDENTIFIER '<-' statement ;
 
     whileStatement          : 'while' statement 'do' (statement | block) ;
 
-    ifStatement             : ifStat elseStat? ; //ifStat elseIfStat* elseStat? ;
+    ifStatement             : ifStat elseStat? ;
     ifStat                  : 'if' statement 'then' (statement | block) ;
-    //elseIfStat              : 'else if' condition 'then' block ;
     elseStat                : 'else' (statement | block) ;
 
     let                     : 'let' OBJECT_IDENTIFIER ':' varType ('<-' statement)? 'in' (statement | block) ;
@@ -47,7 +46,6 @@ grammar PARSER;
     integer                 : INTEGER_HEX | INTEGER_DEC | INTEGER_BIN ;
     varType                 : 'bool' | 'int32' | 'string' | 'unit' | TYPE_IDENTIFIER ;
     varValue                : 'true' | 'false' | STRING | integer  | VOID_OPERATOR;
-
 
 
     POW                     : '^' ;

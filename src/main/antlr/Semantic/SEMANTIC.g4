@@ -14,7 +14,7 @@ grammar SEMANTIC;
     singleCallMethod        : (caller)* callFunction ('.' callFunction)* ;
     caller                  : (OBJECT_IDENTIFIER | ('(' newObj ')') | ('(' ifStatement ')')) '.';
     callFunction            : OBJECT_IDENTIFIER (('(' (((argument ',')+ argument) | argument?) ')') | ('()')) ;
-    argument                : statement ; //OBJECT_IDENTIFIER | varValue | callMethod | newObj | binaryOperation;
+    argument                : statement ;
 
     assign                  : OBJECT_IDENTIFIER '<-' statement ;
 

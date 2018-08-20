@@ -1,5 +1,8 @@
 package CodeGeneration;
 
+/**
+ * Represent a variable in the vsop language
+ */
 public class VariableDefinition {
 
     public String name;

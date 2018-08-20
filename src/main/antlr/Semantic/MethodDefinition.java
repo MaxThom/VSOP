@@ -2,6 +2,9 @@ package Semantic;
 
 import java.util.HashMap;
 
+/**
+ * Represent a method in the vsop language
+ */
 public class MethodDefinition {
     public String name;
     public String type;

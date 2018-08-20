@@ -4,6 +4,9 @@ import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
+/**
+ * Error listener override for the parser. Display syntax error
+ */
 public class SemanticErrorListener extends BaseErrorListener {
     private static SemanticErrorListener INSTANCE;
     public static SemanticErrorListener getInstance(String src) {
@@ -11,9 +14,6 @@ public class SemanticErrorListener extends BaseErrorListener {
             INSTANCE = new SemanticErrorListener(src);
         return INSTANCE;
     }
-
-
-    private static final boolean REPORT_SYNTAX_ERRORS = true;
 
     private String inputSource;
     public boolean inError;
@@ -28,7 +28,6 @@ public class SemanticErrorListener extends BaseErrorListener {
                             int line, int charPositionInLine,
                             String msg, RecognitionException e)
     {
-
         inError = true;
         System.err.println(String.format("%s:%d:%d: syntax error.", inputSource, line, charPositionInLine+1));
     }

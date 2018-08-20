@@ -28,7 +28,6 @@ public class LexerErrorListener extends BaseErrorListener {
                             int line, int charPositionInLine,
                             String msg, RecognitionException e)
     {
-
         inError = true;
         System.err.println(String.format("%s:%d:%d: \n  character %s is illegal in this context.", inputSource, line, charPositionInLine+1, msg.substring(msg.indexOf(": ")+2)));
     }
