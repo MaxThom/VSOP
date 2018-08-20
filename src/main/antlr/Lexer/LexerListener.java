@@ -7,12 +7,12 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.*;
 
+/**
+ * Class overriding the default listener of antlr. Each hit on a token generate two methods. One enter and one exit. Exit when everything under the node has been looked.
+ */
 public class LexerListener extends LEXERBaseListener {
-
-    private final String LINE_FEED_WIN = "\r\n";
     private final String LINE_FEED_LIN = "\n";
 
-    private Map<String, Integer> variables;
     private Map<String, String> operatorsName;
     private Map<String, String> characterEscape;
     private Stack<CommentNode> commentStack;
@@ -24,12 +24,14 @@ public class LexerListener extends LEXERBaseListener {
     public ArrayList<String> errorOutput;
 
     public LexerListener(String fileName) {
+        // Initialize arrays and stacks
         this.fileName = fileName;
         tokenOutput = new ArrayList();
         errorOutput = new ArrayList();
         commentStack = new Stack<>();
         closeCommentStack = new Stack<>();
-        variables = new HashMap<>();
+
+        // Add name for every character
         operatorsName = new HashMap<>();
         operatorsName.put("{", "lbrace");
         operatorsName.put("}", "rbrace");
@@ -49,6 +51,7 @@ public class LexerListener extends LEXERBaseListener {
         operatorsName.put("<=", "lower-equal");
         operatorsName.put("<-", "assign");
 
+        // To transform character escape with good values
         characterEscape = new HashMap<>();
         characterEscape.put("\\b", "\\x08");
         characterEscape.put("\\t", "\\x09");
@@ -57,6 +60,10 @@ public class LexerListener extends LEXERBaseListener {
 
     }
 
+    /**
+     * Exiting form object identifier token
+     * @param ctx
+     */
     @Override
     public void exitObjectIdentifier(LEXERParser.ObjectIdentifierContext ctx) {
        if (commentStack.empty()) {
@@ -64,6 +71,10 @@ public class LexerListener extends LEXERBaseListener {
        }
     }
 
+    /**
+     * Exiting form type identifier token
+     * @param ctx
+     */
     @Override
     public void exitTypeIdentifier(LEXERParser.TypeIdentifierContext ctx) {
         if (commentStack.empty()) {
@@ -71,6 +82,10 @@ public class LexerListener extends LEXERBaseListener {
         }
     }
 
+    /**
+     * Exiting form keyword token
+     * @param ctx
+     */
     @Override
     public void exitKeyword(LEXERParser.KeywordContext ctx) {
         if (commentStack.empty()) {
@@ -78,6 +93,10 @@ public class LexerListener extends LEXERBaseListener {
         }
     }
 
+    /**
+     * Exiting form operator token
+     * @param ctx
+     */
     @Override
     public void exitOperator(LEXERParser.OperatorContext ctx) {
         if (commentStack.empty()) {
@@ -85,9 +104,15 @@ public class LexerListener extends LEXERBaseListener {
         }
     }
 
+    /**
+     * Exiting form integer token
+     * @param ctx
+     */
     @Override
     public void exitInteger(LEXERParser.IntegerContext ctx) {
         if (commentStack.empty()) {
+
+            // Get type the integer (binary, hexa and decimal)
             TerminalNode node = null;
             String text = null;
             int radix = 10;
@@ -105,6 +130,7 @@ public class LexerListener extends LEXERBaseListener {
                 radix = 10;
             }
 
+            // Transform the value into decimal
             try {
                 int decimalValue = Integer.parseInt(text, radix);
                 if (node != null)
@@ -115,6 +141,10 @@ public class LexerListener extends LEXERBaseListener {
         }
     }
 
+    /**
+     * Exiting form string token
+     * @param ctx
+     */
     @Override
     public void exitString(LEXERParser.StringContext ctx) {
         String string = ctx.STRING().getText();
@@ -124,23 +154,19 @@ public class LexerListener extends LEXERBaseListener {
             int errLine = ctx.STRING().getSymbol().getLine();
             int errCol = ctx.STRING().getSymbol().getCharPositionInLine();
 
-
-
             // Check for EOF
             if (string.charAt(string.length()-1) != '"') {
                 inError = true;
                 errorMessage += "  unterminated string.";
             }
 
-
-
-            //Hexadecimal Character
+            //Hexadecimal Character. Check if they are valid
             int hex = -4;
             while ((hex = string.indexOf("\\x", hex + 4)) != -1) {
                 String hexNumber = "";
                 try {
                     hexNumber = string.substring(hex + 2, hex + 4);
-                    int decimalValue = Integer.parseInt(hexNumber, 16);
+                    Integer.parseInt(hexNumber, 16);
                 } catch (Exception e) {
                     inError = true;
                     errorMessage += "  \\x" + hexNumber + " is not a valid escape sequence.";
@@ -156,20 +182,17 @@ public class LexerListener extends LEXERBaseListener {
                 }
             }
 
-            // Escape Character
+            // Escape Character. Replace all with good value
             for (Map.Entry<String, String> escape : characterEscape.entrySet()) {
                 string = string.replace(escape.getKey(), escape.getValue());
             }
 
-            // New Line
+            // New Line. Check if all new line in string are valid
             int nl = -1;
-            //while (string.indexOf(LINE_FEED_WIN, nl) != -1 || string.indexOf(LINE_FEED_LIN, nl) != -1) {
-            //    nl = Math.max(string.indexOf(LINE_FEED_WIN, nl), string.indexOf(LINE_FEED_LIN, nl));
             while ((nl = string.indexOf(LINE_FEED_LIN, nl)) != -1) {
                 int offsetWin = 0;
-                if (string.charAt(nl - 1) == '\r') {
+                if (string.charAt(nl - 1) == '\r')
                     offsetWin = 1;
-                }
 
                 if (string.charAt(nl - 1 - offsetWin) != '\\') {
                     inError = true;
@@ -193,7 +216,7 @@ public class LexerListener extends LEXERBaseListener {
                 }
             }
 
-            // Other Escape Character
+            // Other Escape Character. Mean invalid.
             int esc = -2;
             while ((esc = string.indexOf("\\", esc + 2)) != -1) {
                 if (string.charAt(esc + 1) != 'x' && string.charAt(esc + 1) != '"' && string.charAt(esc + 1) != '\\') {
@@ -211,6 +234,7 @@ public class LexerListener extends LEXERBaseListener {
                 }
             }
 
+            // Check for end of file character in string
             int posNull;
             if ((posNull = string.indexOf('\0')) != -1) {
                 inError = true;
@@ -223,6 +247,7 @@ public class LexerListener extends LEXERBaseListener {
                 }
             }
 
+            // Print error if found
             if (inError) {
                 printError(errLine, errCol, errorMessage);
             } else {
@@ -231,27 +256,20 @@ public class LexerListener extends LEXERBaseListener {
         }
     }
 
-    @Override
-    public void exitSingleLineComment(LEXERParser.SingleLineCommentContext ctx) {
-
-
-        //printToken(ctx.SINGLE_LINE_COMMENT().getSymbol(), "");
-    }
-
+    /**
+     * Exiting form multi line comment token
+     * @param ctx
+     */
     @Override
     public void exitMultiLineComment(LEXERParser.MultiLineCommentContext ctx) {
         TerminalNode node = null;
 
+        // If full comment. With open at start and close at the end
         if (ctx.MULTILINE_COMMENT() != null) {
             node = ctx.MULTILINE_COMMENT();
             String txt = ctx.MULTILINE_COMMENT().getText();
-            int nextOpen = 1;
-            /*while (txt.indexOf("(*", nextOpen) != -1) {
-                nextOpen = txt.indexOf("(*", nextOpen);
-                nextOpen += 1;
-                commentStack.push(new CommentNode(CommentType.OPEN, node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine()+nextOpen));
-            }*/
 
+            // Check for every open comment and add them into the stack
             for (int i = 0; (i = txt.indexOf("(*", i++)) != -1; i++) {
                 int row = node.getSymbol().getLine();
                 int col = node.getSymbol().getCharPositionInLine()+i;
@@ -262,12 +280,12 @@ public class LexerListener extends LEXERBaseListener {
                 commentStack.push(new CommentNode(CommentType.OPEN, row, col));
             }
 
-            if (txt.substring(txt.length()-3).equals("(*)")) {
-
-            } else if (txt.substring(txt.length()-2).equals("*)")) {
+            // Pop last one
+            if (txt.substring(txt.length()-2).equals("*)")) {
                 commentStack.pop();
             }
 
+        // If open comment, add it to the stack, else its a close. Pop stack
         } else if (ctx.MULTILINE_OPEN_COMMENT() != null) {
             node = ctx.MULTILINE_OPEN_COMMENT();
             commentStack.push(new CommentNode(CommentType.OPEN, node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine()));
@@ -279,12 +297,15 @@ public class LexerListener extends LEXERBaseListener {
                 closeCommentStack.push(new CommentNode(CommentType.CLOSE, node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine()));
             }
         }
-
     }
 
+    /**
+     * Exit program token
+     * @param ctx
+     */
     @Override
     public void exitProgram(LEXERParser.ProgramContext ctx) {
-
+        // Check if stacks is empty. If empty, its an error
         if (!commentStack.empty()) {
             CommentNode node = commentStack.pop();
             printError(node.row, node.col, "lexical error");
@@ -293,27 +314,38 @@ public class LexerListener extends LEXERBaseListener {
             CommentNode node = closeCommentStack.pop();
             printError(node.row, node.col, "lexical error");
         }
-
     }
 
-
+    /**
+     * Use to print the token
+     * @param token
+     * @param message
+     */
     private void printToken(Token token, String message) {
         String output = token.getLine() + "," + (token.getCharPositionInLine()+1) + "," + message + token.getText();
         tokenOutput.add(output);
-        //System.out.println(output);
     }
 
+    /**
+     * Use to print the token with a custom message
+     * @param token
+     * @param message
+     */
     private void printTokenCustom(Token token, String message) {
         String output = token.getLine() + "," + (token.getCharPositionInLine()+1) + "," + message;
         tokenOutput.add(output);
-        //System.out.println(output);
     }
 
+    /**
+     * Print an error on the error output.
+     * @param line
+     * @param column
+     * @param message
+     */
     private void printError(int line, int column, String message) {
         lexicalError = true;
         String output = this.fileName + ":" + line + ":" + (column+1) + ": " + message;
         errorOutput.add(output);
-        //System.out.println(output);
     }
 }
 

@@ -2,6 +2,9 @@ package CodeGeneration;
 
 import java.util.HashMap;
 
+/**
+ * Represent a class in vsop
+ */
 public class ClassDefinition {
     public String name;
     public String extend;

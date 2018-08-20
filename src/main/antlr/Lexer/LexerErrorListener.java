@@ -4,6 +4,9 @@ import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
+/**
+ * Error listener override for the lexer. Display illegal character
+ */
 public class LexerErrorListener extends BaseErrorListener {
     private static LexerErrorListener INSTANCE;
     public static LexerErrorListener getInstance(String src) {
@@ -11,9 +14,6 @@ public class LexerErrorListener extends BaseErrorListener {
             INSTANCE = new LexerErrorListener(src);
         return INSTANCE;
     }
-
-
-    private static final boolean REPORT_SYNTAX_ERRORS = true;
 
     private String inputSource;
     public boolean inError;

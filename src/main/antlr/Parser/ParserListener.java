@@ -4,32 +4,32 @@ package Parser;
 import VSOP.Parser.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import static VSOP.Parser.PARSERParser.*;
 
+/**
+ * Class overriding the default listener of antlr. Each hit on a token generate two methods. One enter and one exit. Exit when everything under the node has been looked.
+ */
 public class ParserListener extends PARSERBaseListener {
 
-    private Map<String, Integer> variables;
-    private String fileName;
     public String treeOuput;
 
-    public Boolean lexicalError = false;
-
     public ParserListener(String fileName) {
-        variables = new HashMap<>();
-        this.fileName = fileName;
         treeOuput = "";
     }
 
+    /**
+     * Exit program token.
+     * @param ctx
+     */
     @Override
     public void exitProgram(ProgramContext ctx) {
         StringBuilder output = new StringBuilder();
         output.append("[");
 
+        // Move in the tree for each class and generate output
         for (ClassDefinitionContext classDef : ctx.classDefinition()) {
             output.append(handleClass(classDef));
             output.append(", ");
@@ -37,13 +37,14 @@ public class ParserListener extends PARSERBaseListener {
         if ( ctx.classDefinition().size() > 0) output.delete(output.length()-2, output.length());
 
         output.append("]");
-        //System.out.println(ctx.getText());
-        //System.out.println(treeOutput);
         this.treeOuput = output.toString();
     }
 
-
-
+    /**
+     * Handle class node
+     * @param classDef
+     * @return
+     */
     private StringBuilder handleClass(ClassDefinitionContext classDef) {
 
         // Class Info
@@ -75,17 +76,26 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle field node
+     * @param field
+     * @return
+     */
     private StringBuilder handleField(FieldContext field) {
+        // Field info
         StringBuilder output = new StringBuilder();
         output.append("Field(");
         output.append(field.OBJECT_IDENTIFIER().getText());
         output.append(", ");
         output.append(field.varType().getText());
 
+        // Append statement
         if (field.statement() != null) {
             output.append(", ");
             output.append(handleStatement(field.statement()));
         }
+
+        // Append block
         if (field.block() != null) {
             output.append(", ");
             output.append(handleBlock(field.block()));
@@ -95,6 +105,11 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle method node
+     * @param method
+     * @return
+     */
     private StringBuilder handleMethod(MethodDefinitionContext method) {
         StringBuilder output = new StringBuilder();
         //Method Info
@@ -103,6 +118,7 @@ public class ParserListener extends PARSERBaseListener {
         output.append(", ");
         output.append("[");
 
+        // For each arguments in the method
         for (FormalContext formal : method.formal()) {
             output.append(handleFormal(formal));
             output.append(", ");
@@ -111,6 +127,7 @@ public class ParserListener extends PARSERBaseListener {
         if (method.formal().size() > 0) output.delete(output.length()-2, output.length());
         output.append("]");
 
+        // Handle method block
         output.append(", ");
         output.append(method.varType().getText());
         output.append(", ");
@@ -120,9 +137,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle formal node
+     * @param formal
+     * @return
+     */
     private StringBuilder handleFormal(FormalContext formal) {
         StringBuilder output = new StringBuilder();
 
+        // Formal info
         output.append(formal.OBJECT_IDENTIFIER().getText());
         output.append(" : ");
         output.append(formal.varType().getText());
@@ -130,12 +153,17 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle block node
+     * @param block
+     * @return
+     */
     private StringBuilder handleBlock(BlockContext block) {
         StringBuilder output = new StringBuilder();
         StringBuilder temp = new StringBuilder();
         int countStat = 0;
+        // Handle every statement in the block
         for (ParseTree child : block.children) {
-
             if (child instanceof ParserRuleContext) {
                 countStat++;
 
@@ -166,9 +194,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle statement node
+     * @param statement
+     * @return
+     */
     private StringBuilder handleStatement(StatementContext statement) {
         StringBuilder output = new StringBuilder();
 
+        // Handle every statement.
         if (statement.assign() != null) {
             output.append(handleAssign(statement.assign()));
         } else if (statement.ifStatement() != null) {
@@ -177,8 +211,6 @@ public class ParserListener extends PARSERBaseListener {
             output.append(handleWhileStatement(statement.whileStatement()));
         } else if (statement.let() != null) {
             output.append(handleLet(statement.let()));
-        //} else if (statement.unOperation() != null) {
-            //output.append(handleUnOperation(statement.unOperation()));
         } else if (statement.binaryOperation() != null) {
             output.append(handleBinaryOperation(statement.binaryOperation()));
         } else if (statement.callMethod() != null) {
@@ -196,12 +228,19 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle ifStatement node
+     * @param ifStatement
+     * @return
+     */
     private StringBuilder handleIfStatement(IfStatementContext ifStatement) {
         StringBuilder output = new StringBuilder();
+
+        // If info
         output.append("If(");
         output.append(handleStatement(ifStatement.ifStat().statement(0)));
 
-
+        // Handle if statement or block
         if (ifStatement.ifStat().statement(1) != null) {
             output.append(", ");
             output.append(handleStatement(ifStatement.ifStat().statement(1)));
@@ -210,6 +249,7 @@ public class ParserListener extends PARSERBaseListener {
             output.append(handleBlock(ifStatement.ifStat().block()));
         }
 
+        // Handle else block if present
         if (ifStatement.elseStat() != null) {
             output.append(", ");
             if (ifStatement.elseStat().statement() != null) {
@@ -223,12 +263,19 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle whileStatement node
+     * @param whileStatement
+     * @return
+     */
     private StringBuilder handleWhileStatement(WhileStatementContext whileStatement) {
         StringBuilder output = new StringBuilder();
+
+        // While info
         output.append("While(");
         output.append(handleStatement(whileStatement.statement(0)));
 
-
+        // Handle block or statement
         if (whileStatement.statement(1) != null) {
             output.append(", ");
             output.append(handleStatement(whileStatement.statement(1)));
@@ -241,12 +288,20 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle assign node
+     * @param assign
+     * @return
+     */
     private StringBuilder handleAssign(AssignContext assign) {
         StringBuilder output = new StringBuilder();
+
+        // Assign info
         output.append("Assign(");
         output.append(assign.OBJECT_IDENTIFIER().getText());
         output.append(", ");
 
+        // Assign statement
         if (assign.statement() != null) {
             output.append(handleStatement(assign.statement()));
         }
@@ -255,7 +310,13 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle let node
+     * @param let
+     * @return
+     */
     private StringBuilder handleLet(LetContext let) {
+        // Let info
         StringBuilder output = new StringBuilder();
         output.append("Let(");
         output.append(let.OBJECT_IDENTIFIER().getText());
@@ -263,41 +324,32 @@ public class ParserListener extends PARSERBaseListener {
         output.append(let.varType().getText());
         output.append(", ");
 
+        // Check if initializer is present
         int statOffset = 0;
         if (let.statement().size() == 2 || (let.block() != null && let.statement().size() == 1)) {
             output.append(handleStatement(let.statement(statOffset++)));
             output.append(", ");
         }
 
+        // Handle block or statement of in scope
         if (let.block() != null) {
             output.append(handleBlock(let.block()));
         } else {
             output.append(handleStatement(let.statement(statOffset)));
         }
 
-
         output.append(")");
         return output;
     }
 
-    private StringBuilder handleUnOperation(ParserRuleContext unOp) {
-        StringBuilder output = new StringBuilder();
-        /*output.append("UnOp(");
-        output.append(unOp.unOperator().getText());
-        output.append(", ");
-
-        if (unOp.statement() != null)
-            output.append(handleStatement(unOp.statement()));
-        else if (unOp.condition() != null)
-            output.append(handleCondition(unOp.condition()));
-
-        output.append(")");*/
-
-        return output;
-    }
-
+    /**
+     * Handle obj node
+     * @param obj
+     * @return
+     */
     private StringBuilder handleNewObj(NewObjContext obj) {
         StringBuilder output = new StringBuilder();
+        // New info
         output.append("New(");
         output.append(obj.TYPE_IDENTIFIER().getText());
         output.append(")");
@@ -305,6 +357,11 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle call node
+     * @param call
+     * @return
+     */
     private StringBuilder handleCallMethod(CallMethodContext call) {
         StringBuilder output = new StringBuilder();
 
@@ -312,6 +369,7 @@ public class ParserListener extends PARSERBaseListener {
             output.append("[");
         }
 
+        // Check each sub call
         for (int i = 0; i < call.singleCallMethod().size(); i++) {
             output.append(handleSingleCallMethod(call.singleCallMethod(i)));
             output.append(", ");
@@ -325,56 +383,56 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle singleCall node
+     * @param singleCall
+     * @return
+     */
     private StringBuilder handleSingleCallMethod(SingleCallMethodContext singleCall) {
         StringBuilder output = new StringBuilder();
 
-        /*if (singleCall.caller().size() == 0) {
+        // Add every call, then we go back up
+        for (int i = singleCall.callFunction().size()-1; i >= 0 ; i--) {
+            output.append("Call(");
+        }
 
-            for (int i = 0; i < singleCall.callFunction().size() ; i++) {
-                output.append("Call(self, ");
-                output.append(handleCallFunction(singleCall.callFunction(i)));
-                output.append("), ");
-            }
-            output.delete(output.length()-2, output.length());
-        } else {*/
-
-            for (int i = singleCall.callFunction().size()-1; i >= 0 ; i--) {
-                output.append("Call(");
-            }
-
-            if (singleCall.caller().size() == 0) {
-                output.append("self, ");
-            }
-            else {
-                for (int i = 0; i < singleCall.caller().size() ; i++) {
-                    output.append(handleCaller(singleCall.caller(i)) + ".");
-                }
-
-                output.delete(output.length()-1, output.length());
-                output.append(", ");
+        // Add self if no caller
+        if (singleCall.caller().size() == 0) {
+            output.append("self, ");
+        }
+        else {
+            // Handle caller
+            for (int i = 0; i < singleCall.caller().size() ; i++) {
+                output.append(handleCaller(singleCall.caller(i)) + ".");
             }
 
-            for (int i = 0; i < singleCall.callFunction().size() ; i++) {
-                output.append(handleCallFunction(singleCall.callFunction(i)));
-                output.append("), ");
-            }
-            output.delete(output.length()-2, output.length());
+            output.delete(output.length()-1, output.length());
+            output.append(", ");
+        }
 
-       // }
-
-
-
-
+        // Handle the function
+        for (int i = 0; i < singleCall.callFunction().size() ; i++) {
+            output.append(handleCallFunction(singleCall.callFunction(i)));
+            output.append("), ");
+        }
+        output.delete(output.length()-2, output.length());
 
         return output;
     }
 
+    /**
+     * Handle callFunc node
+     * @param callFunc
+     * @return
+     */
     private StringBuilder handleCallFunction(CallFunctionContext callFunc) {
         StringBuilder output = new StringBuilder();
 
+        // Call info
         output.append(callFunc.OBJECT_IDENTIFIER().getText());
         output.append(", [");
 
+        // Handle every argument
         for (ArgumentContext arg : callFunc.argument()) {
             output.append(handleArgument(arg));
             output.append(", ");
@@ -386,9 +444,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle caller node
+     * @param caller
+     * @return
+     */
     private StringBuilder handleCaller(CallerContext caller) {
         StringBuilder output = new StringBuilder();
 
+        // Handle every type of caller
         if (caller.newObj() != null) {
             output.append(handleNewObj(caller.newObj()));
         } else if (caller.OBJECT_IDENTIFIER() != null) {
@@ -400,37 +464,43 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle arg node
+     * @param arg
+     * @return
+     */
     private StringBuilder handleArgument(ArgumentContext arg) {
         StringBuilder output = new StringBuilder();
 
+        // Handle arg
         output.append(handleStatement(arg.statement()));
-        /*if (arg.statement().callMethod() != null) {
-            output.append(handleCallMethod(arg.statement().callMethod()));
-        } else if (arg.statement().newObj() != null) {
-            output.append(handleNewObj(arg.statement().newObj()));
-        } else if (arg.statement().OBJECT_IDENTIFIER() != null) {
-            output.append(arg.statement().OBJECT_IDENTIFIER().getText());
-        } else if (arg.statement().varValue() != null) {
-            output.append(arg.statement().varValue().getText());
-        } else if (arg.statement().binaryOperation() != null) {
-            output.append(handleBinaryOperation(arg.statement().binaryOperation()));
-        }*/
 
         return output;
     }
 
+    /**
+     * Handle binOp node
+     * @param binOp
+     * @return
+     */
     private StringBuilder handleBinaryOperation(BinaryOperationContext binOp) {
         StringBuilder output = new StringBuilder();
 
+        // Handle the operation
         output.append(handleExpr1(binOp.expr1()));
 
         return output;
     }
 
+    /**
+     * Handle expr1 node
+     * @param expr1
+     * @return
+     */
     private StringBuilder handleExpr1(Expr1Context expr1) {
         StringBuilder output = new StringBuilder();
 
-
+        // Handle and operation
         if (expr1.expr1() != null) {
             output.append("BinOp(");
             output.append(expr1.AND().getText());
@@ -446,9 +516,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle expr2 node
+     * @param expr2
+     * @return
+     */
     private StringBuilder handleExpr2(Expr2Context expr2) {
         StringBuilder output = new StringBuilder();
 
+        // Handle not operation
         if (expr2.expr2() != null) {
             output.append("UnOp(");
             output.append(expr2.NOT().getText());
@@ -461,9 +537,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle expr3 node
+     * @param expr3
+     * @return
+     */
     private StringBuilder handleExpr3(Expr3Context expr3) {
         StringBuilder output = new StringBuilder();
 
+        // Handle comparator (<, <=, =, !=, >=, >) operation
         if (expr3.comparatorOperator() != null) {
             output.append("BinOp(");
             output.append(expr3.comparatorOperator().getText());
@@ -478,9 +560,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle expr4 node
+     * @param expr4
+     * @return
+     */
     private StringBuilder handleExpr4(Expr4Context expr4) {
         StringBuilder output = new StringBuilder();
 
+        // Handle term operation (-, +)
         if (expr4.termOperator() != null) {
             output.append("BinOp(");
             output.append(expr4.termOperator().getText());
@@ -495,9 +583,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle expr5 node
+     * @param expr5
+     * @return
+     */
     private StringBuilder handleExpr5(Expr5Context expr5) {
         StringBuilder output = new StringBuilder();
 
+        // Handle factor operation (*, /)
         if (expr5.factorOperator() != null) {
             output.append("BinOp(");
             output.append(expr5.factorOperator().getText());
@@ -512,9 +606,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle expr6 node
+     * @param expr6
+     * @return
+     */
     private StringBuilder handleExpr6(Expr6Context expr6) {
         StringBuilder output = new StringBuilder();
 
+        // Handle negative operation
         if (expr6.expr6() != null) {
             output.append("UnOp(");
             output.append(expr6.MINUS() != null ? expr6.MINUS().getText() : expr6.ISNULL().getText());
@@ -527,9 +627,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle expr7 node
+     * @param expr7
+     * @return
+     */
     private StringBuilder handleExpr7(Expr7Context expr7) {
         StringBuilder output = new StringBuilder();
 
+        // Handle pow operation
         if (expr7.POW() != null) {
             output.append("BinOp(");
             output.append(expr7.POW().getText());
@@ -544,9 +650,15 @@ public class ParserListener extends PARSERBaseListener {
         return output;
     }
 
+    /**
+     * Handle expr8 node
+     * @param expr8
+     * @return
+     */
     private StringBuilder handleExpr8(Expr8Context expr8) {
         StringBuilder output = new StringBuilder();
 
+        // Handle for each type of possible value
         if (expr8.expr1() != null)
             output.append(handleExpr1(expr8.expr1()));
         else if (expr8.varValue() != null)
@@ -562,8 +674,5 @@ public class ParserListener extends PARSERBaseListener {
 
         return output;
     }
-
-
-
 
 }

@@ -4,6 +4,9 @@ import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
+/**
+ * Error listener override for the parser. Display syntax error
+ */
 public class ParserErrorListener extends BaseErrorListener {
     private static ParserErrorListener INSTANCE;
     public static ParserErrorListener getInstance(String src) {

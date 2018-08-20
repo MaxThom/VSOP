@@ -1,5 +1,8 @@
 package Lexer;
 
+/**
+ * Represent a comment node. (* or *) with is position for errors
+ */
 public class CommentNode {
     public CommentType type;
     public int row;
@@ -10,16 +13,5 @@ public class CommentNode {
         this.row = row;
         this.col = col;
     }
-
-    CommentNode(String type, int row, int col) {
-        this.row = row;
-        this.col = col;
-
-        if (type.equals("(*"))
-            this.type = CommentType.OPEN;
-        else if (type.equals("*)"))
-            this.type = CommentType.CLOSE;
-    }
-
 }
 
