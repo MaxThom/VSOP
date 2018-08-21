@@ -1323,6 +1323,9 @@ public class CodeGenerationListener extends CODEBaseListener {
                             .append(alias1).append(", i8* ").append(alias2).append(") #2").append("\n");
                     alias1 = "%" + lastInstructionId;
                     alias2 = "0";
+                } else if (id1.type.equals("unit") && id2.type.equals("unit")) {
+                    alias1 = "0";
+                    alias2 = "0";
                 }
             }
 
