@@ -6,7 +6,9 @@ declare noalias i8* @malloc(i64) #1
 declare i32 @printf(i8*, ...)
 declare double @pow(double, double) #1
 declare i32 @strcmp(i8*, i8*) #1
-declare i32 @__isoc99_scanf(i8*, ...) #1declare void @exit(i32) #1@.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
+declare i32 @__isoc99_scanf(i8*, ...) #1
+declare void @exit(i32) #1
+@.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
 
 ; 
 ; STRUCTURES
@@ -289,107 +291,110 @@ define i32 @main(%struct.Main*) #0 {
 	%3 = call %struct.Main* @Main_new()
 	store %struct.Main* %3, %struct.Main** %2
 	
-	; Call Method
-	%4 = load %struct.Main*, %struct.Main** %2
-	%5 = getelementptr inbounds %struct.Main, %struct.Main* %4, i32 0, i32 0
-	; Arguments
-	; Call Method
 	; If
 	; VarValue
-	%6 = alloca i1
-	store i1 1, i1* %6
-	%7 = load i1, i1* %6
+	%4 = alloca i1
+	store i1 0, i1* %4
+	%5 = load i1, i1* %4
 	
-	br i1 %7, label %condIf1, label %condElse1	
+	br i1 %5, label %condIf1, label %condElse1	
 
 	condIf1:
-		; New
-		%8 = alloca %struct.Parent*
-		%9 = call %struct.Parent* @Parent_new()
-		store %struct.Parent* %9, %struct.Parent** %8
-		%10 = load %struct.Parent, %struct.Parent* %9
+		; VarValue
+		%6 = alloca i32
+		store i32 0, i32* %6
+		%7 = load i32, i32* %6
+		
 		br label %condEnd1
 
 	condElse1:
-		; New
-		%11 = alloca %struct.Child*
-		%12 = call %struct.Child* @Child_new()
-		store %struct.Child* %12, %struct.Child** %11
-		%13 = load %struct.Child, %struct.Child* %12
-		%cast1 = bitcast %struct.Child* %12 to %struct.Parent*
+		; If
+		; VarValue
+		%8 = alloca i1
+		store i1 0, i1* %8
+		%9 = load i1, i1* %8
+		
+		br i1 %9, label %condIf2, label %condElse2		
+
+		condIf2:
+			; Call Method
+			%10 = load %struct.Main*, %struct.Main** %2
+			%11 = getelementptr inbounds %struct.Main, %struct.Main* %10, i32 0, i32 0
+			; Arguments
+			; VarValue
+			%12 = alloca i32
+			store i32 1, i32* %12
+			%13 = load i32, i32* %12
+			
+			%14 = call %struct.IO* @IO_printlnInt32(%struct.IO* %11, i32 %13)
+
+			; VarValue
+			%15 = alloca i32
+			store i32 0, i32* %15
+			%16 = load i32, i32* %15
+			
+			br label %condEnd2
+
+		condElse2:
+			; If
+			; VarValue
+			%17 = alloca i1
+			store i1 1, i1* %17
+			%18 = load i1, i1* %17
+			
+			br i1 %18, label %condIf3, label %condEnd3			
+
+			condIf3:
+				; Call Method
+				%19 = load %struct.Main*, %struct.Main** %2
+				%20 = getelementptr inbounds %struct.Main, %struct.Main* %19, i32 0, i32 0
+				; Arguments
+				; VarValue
+				%21 = alloca i32
+				store i32 11, i32* %21
+				%22 = load i32, i32* %21
+				
+				%23 = call %struct.IO* @IO_printlnInt32(%struct.IO* %20, i32 %22)
+
+				; VarValue
+				%24 = alloca i32
+				store i32 0, i32* %24
+				%25 = load i32, i32* %24
+				
+				br label %condEnd3
+
+			condEnd3:
+			; Call Method
+			%26 = load %struct.Main*, %struct.Main** %2
+			%27 = getelementptr inbounds %struct.Main, %struct.Main* %26, i32 0, i32 0
+			; Arguments
+			; VarValue
+			%28 = alloca i32
+			store i32 0, i32* %28
+			%29 = load i32, i32* %28
+			
+			%30 = call %struct.IO* @IO_printlnInt32(%struct.IO* %27, i32 %29)
+
+			; VarValue
+			%31 = alloca i32
+			store i32 0, i32* %31
+			%32 = load i32, i32* %31
+			
+			br label %condEnd2
+
+		condEnd2:
+			%33 = phi i32 [%16, %condIf2], [%32, %condEnd3]
+
 		br label %condEnd1
 
 	condEnd1:
-		%14 = phi %struct.Parent* [%9, %condIf1], [%cast1, %condElse1]
-
-	%15 = call i32 @Parent_name(%struct.Parent* %14)
-
-	%16 = call %struct.IO* @IO_printInt32(%struct.IO* %5, i32 %15)
-
-	; Call Method
-	%17 = load %struct.Main*, %struct.Main** %2
-	%18 = getelementptr inbounds %struct.Main, %struct.Main* %17, i32 0, i32 0
-	; Arguments
-	; VarValue
-	%19 = alloca [2 x i8]
-	store [2 x i8] c"\0a\00", [2 x i8]* %19
-	%20 = bitcast [2 x i8]* %19 to i8*
-	
-	%21 = call %struct.IO* @IO_print(%struct.IO* %18, i8* %20)
-
-	; Call Method
-	%22 = load %struct.Main*, %struct.Main** %2
-	%23 = getelementptr inbounds %struct.Main, %struct.Main* %22, i32 0, i32 0
-	; Arguments
-	; Call Method
-	; If
-	; VarValue
-	%24 = alloca i1
-	store i1 0, i1* %24
-	%25 = load i1, i1* %24
-	
-	br i1 %25, label %condIf2, label %condElse2	
-
-	condIf2:
-		; New
-		%26 = alloca %struct.Parent*
-		%27 = call %struct.Parent* @Parent_new()
-		store %struct.Parent* %27, %struct.Parent** %26
-		%28 = load %struct.Parent, %struct.Parent* %27
-		br label %condEnd2
-
-	condElse2:
-		; New
-		%29 = alloca %struct.Child*
-		%30 = call %struct.Child* @Child_new()
-		store %struct.Child* %30, %struct.Child** %29
-		%31 = load %struct.Child, %struct.Child* %30
-		%cast2 = bitcast %struct.Child* %30 to %struct.Parent*
-		br label %condEnd2
-
-	condEnd2:
-		%32 = phi %struct.Parent* [%27, %condIf2], [%cast2, %condElse2]
-
-	%33 = call i32 @Parent_name(%struct.Parent* %32)
-
-	%34 = call %struct.IO* @IO_printInt32(%struct.IO* %23, i32 %33)
-
-	; Call Method
-	%35 = load %struct.Main*, %struct.Main** %2
-	%36 = getelementptr inbounds %struct.Main, %struct.Main* %35, i32 0, i32 0
-	; Arguments
-	; VarValue
-	%37 = alloca [2 x i8]
-	store [2 x i8] c"\0a\00", [2 x i8]* %37
-	%38 = bitcast [2 x i8]* %37 to i8*
-	
-	%39 = call %struct.IO* @IO_print(%struct.IO* %36, i8* %38)
+		%34 = phi i32 [%7, %condIf1], [%33, %condEnd2]
 
 	; VarValue
-	%40 = alloca i32
-	store i32 0, i32* %40
-	%41 = load i32, i32* %40
+	%35 = alloca i32
+	store i32 0, i32* %35
+	%36 = load i32, i32* %35
 	
-	ret i32 %41
+	ret i32 %36
 }
 

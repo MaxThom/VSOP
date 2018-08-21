@@ -6,10 +6,22 @@ class Child extends Parent {
 }
 class Main extends IO {
     main() : int32 {
-        printInt32((if true then new Parent else new Child).name());
-        print("\n");
-        printInt32((if false then new Parent else new Child).name());
-        print("\n");
+        if (false) then {
+            0
+        }
+        else {
+            if (false) then {
+                printlnInt32(1);
+                0
+            } else {
+                if (true) then {
+                    printlnInt32(11);
+                    0
+                }
+                printlnInt32(0);
+                0
+            }
+        }
         0
     }
 }
