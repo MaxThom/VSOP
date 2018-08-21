@@ -1,6 +1,42 @@
 class Main extends IO {
+    x: IO <- new IO;
+    w: IO <- {new IO};
+    t: IO;
+    y: int32 <- 23;
+    z: string <- "string";
+    q: bool <- true;
+
     main() : int32 {
-        if () = () then print("OK\n") else print("KO\n");
+
+        isnull x;
+
+        printlnBool(isnull x);
+        printlnBool(isnull w);
+        printlnBool(isnull t);
+
+        printlnBool(isnull new IO);
+        printlnBool(not isnull new IO);
+
+        println(z);
+        printlnInt32(y);
+        printlnBool(q);
+
+        0
+    }
+
+    main2(z: IO, j: int32, k: string, l: string) : int32 {
+
+        printlnBool(isnull z);
+        z <- new IO;
+        printlnBool(isnull z);
+        j <- 2;
+
+        k <- "test";
+        l <- "test";
+
+        if (k = l) then println("true")
+
+
         0
     }
 }
