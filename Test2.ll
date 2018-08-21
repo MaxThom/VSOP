@@ -14,16 +14,11 @@ declare void @exit(i32) #1
 ; STRUCTURES
 ; 
 %struct.Object = type { }
-%struct.Parent = type {
-	%struct.Object
-}
 %struct.IO = type {
 	%struct.Object
 }
-%struct.Child = type {
-	%struct.Parent
-}
 %struct.Main = type {
+	%struct.IO,
 	%struct.IO
 }
 
@@ -162,96 +157,6 @@ define i8* @IO_inputLine(%struct.IO*) {
 
 
 ; 
-; PARENT
-; 
-
-; Allocation
-define %struct.Parent* @Parent_new() #0 {
-	%size_as_ptr = getelementptr %struct.Parent, %struct.Parent* null, i32 1
-	%size_as_i64 = ptrtoint %struct.Parent* %size_as_ptr to i64
-
-	%1 = alloca %struct.Parent*
-	%2 = call noalias i8* @malloc(i64 %size_as_i64) #3
-	%3 = bitcast i8* %2 to %struct.Parent*
-	store %struct.Parent* %3, %struct.Parent** %1
-
-	%4 = load %struct.Parent*, %struct.Parent** %1
-	call void @Parent_init(%struct.Parent* %4)
-
-	%5 = load %struct.Parent*, %struct.Parent** %1
-	ret %struct.Parent* %5
-}
-
-; Initializer
-define void @Parent_init(%struct.Parent*) #0 {
-	%2 = alloca %struct.Parent*
-	store %struct.Parent* %0, %struct.Parent** %2
-
-	ret void
-}
-
-; Method name
-define i32 @Parent_name(%struct.Parent*) #0 {
-	; Formals
-	%2 = alloca %struct.Parent*
-	store %struct.Parent* %0, %struct.Parent** %2
-	
-	; VarValue
-	%3 = alloca i32
-	store i32 50, i32* %3
-	%4 = load i32, i32* %3
-	
-	ret i32 %4
-}
-
-; 
-; CHILD
-; 
-
-; Allocation
-define %struct.Child* @Child_new() #0 {
-	%size_as_ptr = getelementptr %struct.Child, %struct.Child* null, i32 1
-	%size_as_i64 = ptrtoint %struct.Child* %size_as_ptr to i64
-
-	%1 = alloca %struct.Child*
-	%2 = call noalias i8* @malloc(i64 %size_as_i64) #3
-	%3 = bitcast i8* %2 to %struct.Child*
-	store %struct.Child* %3, %struct.Child** %1
-
-	%4 = load %struct.Child*, %struct.Child** %1
-	call void @Child_init(%struct.Child* %4)
-
-	%5 = load %struct.Child*, %struct.Child** %1
-	ret %struct.Child* %5
-}
-
-; Initializer
-define void @Child_init(%struct.Child*) #0 {
-	%2 = alloca %struct.Child*
-	store %struct.Child* %0, %struct.Child** %2
-
-	%3 = load %struct.Child*, %struct.Child** %2
-	%4 = getelementptr inbounds %struct.Child, %struct.Child* %3, i32 0, i32 0
-	call void @Parent_init(%struct.Parent* %4)
-
-	ret void
-}
-
-; Method name
-define i32 @Child_name(%struct.Child*) #0 {
-	; Formals
-	%2 = alloca %struct.Child*
-	store %struct.Child* %0, %struct.Child** %2
-	
-	; VarValue
-	%3 = alloca i32
-	store i32 20, i32* %3
-	%4 = load i32, i32* %3
-	
-	ret i32 %4
-}
-
-; 
 ; MAIN
 ; 
 
@@ -281,7 +186,32 @@ define void @Main_init(%struct.Main*) #0 {
 	%4 = getelementptr inbounds %struct.Main, %struct.Main* %3, i32 0, i32 0
 	call void @IO_init(%struct.IO* %4)
 
+	%5 = load %struct.Main*, %struct.Main** %2
+	%6 = getelementptr inbounds %struct.Main, %struct.Main* %5, i32 0, i32 1
 	ret void
+}
+
+; Method useIO
+define %struct.IO* @Main_useIO(%struct.Main*, %struct.IO*) #0 {
+	; Formals
+	%3 = alloca %struct.Main*
+	store %struct.Main* %0, %struct.Main** %3
+	%4 = alloca %struct.IO*
+	store %struct.IO* %1, %struct.IO** %4
+	
+	; Call Method
+	; ObjectIdentifier
+	%5 = load %struct.IO*, %struct.IO** %4
+
+	; Arguments
+	; VarValue
+	%6 = alloca [51 x i8]
+	store [51 x i8] c"This argument looks like it is a valid IO object.\0a\00", [51 x i8]* %6
+	%7 = bitcast [51 x i8]* %6 to i8*
+	
+	%8 = call %struct.IO* @IO_print(%struct.IO* %5, i8* %7)
+
+	ret %struct.IO* %8
 }
 
 ; Method main
@@ -291,110 +221,38 @@ define i32 @main(%struct.Main*) #0 {
 	%3 = call %struct.Main* @Main_new()
 	store %struct.Main* %3, %struct.Main** %2
 	
-	; If
-	; VarValue
-	%4 = alloca i1
-	store i1 0, i1* %4
-	%5 = load i1, i1* %4
+	; ObjectIdentifier
+	%4 = load %struct.Main*, %struct.Main** %2
+	%5 = getelementptr inbounds %struct.Main, %struct.Main* %4, i32 0, i32 1
+	%6 = load %struct.IO, %struct.IO* %5
+
+	; ObjectIdentifier
+	%7 = load %struct.Main*, %struct.Main** %2
+	%8 = getelementptr inbounds %struct.Main, %struct.Main* %7, i32 0, i32 0
+
+	; Assign
+	store %struct.IO %8, %struct.IO* %5
 	
-	br i1 %5, label %condIf1, label %condElse1	
+	; ObjectIdentifier
+	%9 = load %struct.Main*, %struct.Main** %2
+	%10 = getelementptr inbounds %struct.Main, %struct.Main* %9, i32 0, i32 1
+	%11 = load %struct.IO, %struct.IO* %10
 
-	condIf1:
-		; VarValue
-		%6 = alloca i32
-		store i32 0, i32* %6
-		%7 = load i32, i32* %6
-		
-		br label %condEnd1
+	; Call Method
+	%12 = load %struct.Main*, %struct.Main** %2
+	; Arguments
+	; ObjectIdentifier
+	%13 = load %struct.Main*, %struct.Main** %2
+	%14 = getelementptr inbounds %struct.Main, %struct.Main* %13, i32 0, i32 1
+	%15 = load %struct.IO, %struct.IO* %14
 
-	condElse1:
-		; If
-		; VarValue
-		%8 = alloca i1
-		store i1 0, i1* %8
-		%9 = load i1, i1* %8
-		
-		br i1 %9, label %condIf2, label %condElse2		
-
-		condIf2:
-			; Call Method
-			%10 = load %struct.Main*, %struct.Main** %2
-			%11 = getelementptr inbounds %struct.Main, %struct.Main* %10, i32 0, i32 0
-			; Arguments
-			; VarValue
-			%12 = alloca i32
-			store i32 1, i32* %12
-			%13 = load i32, i32* %12
-			
-			%14 = call %struct.IO* @IO_printlnInt32(%struct.IO* %11, i32 %13)
-
-			; VarValue
-			%15 = alloca i32
-			store i32 0, i32* %15
-			%16 = load i32, i32* %15
-			
-			br label %condEnd2
-
-		condElse2:
-			; If
-			; VarValue
-			%17 = alloca i1
-			store i1 1, i1* %17
-			%18 = load i1, i1* %17
-			
-			br i1 %18, label %condIf3, label %condEnd3			
-
-			condIf3:
-				; Call Method
-				%19 = load %struct.Main*, %struct.Main** %2
-				%20 = getelementptr inbounds %struct.Main, %struct.Main* %19, i32 0, i32 0
-				; Arguments
-				; VarValue
-				%21 = alloca i32
-				store i32 11, i32* %21
-				%22 = load i32, i32* %21
-				
-				%23 = call %struct.IO* @IO_printlnInt32(%struct.IO* %20, i32 %22)
-
-				; VarValue
-				%24 = alloca i32
-				store i32 0, i32* %24
-				%25 = load i32, i32* %24
-				
-				br label %condEnd3
-
-			condEnd3:
-			; Call Method
-			%26 = load %struct.Main*, %struct.Main** %2
-			%27 = getelementptr inbounds %struct.Main, %struct.Main* %26, i32 0, i32 0
-			; Arguments
-			; VarValue
-			%28 = alloca i32
-			store i32 0, i32* %28
-			%29 = load i32, i32* %28
-			
-			%30 = call %struct.IO* @IO_printlnInt32(%struct.IO* %27, i32 %29)
-
-			; VarValue
-			%31 = alloca i32
-			store i32 0, i32* %31
-			%32 = load i32, i32* %31
-			
-			br label %condEnd2
-
-		condEnd2:
-			%33 = phi i32 [%16, %condIf2], [%32, %condEnd3]
-
-		br label %condEnd1
-
-	condEnd1:
-		%34 = phi i32 [%7, %condIf1], [%33, %condEnd2]
+	%16 = call %struct.IO* @Main_useIO(%struct.Main* %12, %struct.IO* %15)
 
 	; VarValue
-	%35 = alloca i32
-	store i32 0, i32* %35
-	%36 = load i32, i32* %35
+	%17 = alloca i32
+	store i32 0, i32* %17
+	%18 = load i32, i32* %17
 	
-	ret i32 %36
+	ret i32 %18
 }
 

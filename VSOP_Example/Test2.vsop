@@ -1,27 +1,13 @@
-class Parent {
-    name() : int32 { 50 }
-}
-class Child extends Parent {
-    name() : int32 { 20 }
-}
 class Main extends IO {
+    io : IO;
+
+    useIO(io : IO) : IO {
+        io.print("This argument looks like it is a valid IO object.\n")
+    }
+
     main() : int32 {
-        if (false) then {
-            0
-        }
-        else {
-            if (false) then {
-                printlnInt32(1);
-                0
-            } else {
-                if (true) then {
-                    printlnInt32(11);
-                    0
-                }
-                printlnInt32(0);
-                0
-            }
-        }
+        io <- self; // OK, as Main extends IO
+        useIO(io); // Should not trigger any error, as io is a valid IO
         0
     }
 }

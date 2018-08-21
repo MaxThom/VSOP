@@ -36,7 +36,7 @@ grammar SEMANTIC;
     expr5                   : expr5 factorOperator expr6 | expr6 ;
     expr6                   : <assoc=right> MINUS expr6 | <assoc=right> ISNULL expr6 | expr7 ;
     expr7                   : <assoc=right> expr8 POW expr7 | expr8 ;
-    expr8                   : '(' expr1 ')' |  varValue | OBJECT_IDENTIFIER | callMethod | newObj | ifStatement ;
+    expr8                   : '(' expr1 ')' |  varValue | OBJECT_IDENTIFIER | callMethod | newObj | ifStatement | block ;
 
     termOperator            : MINUS | PLUS ;
     factorOperator          : MULTI | DIV ;

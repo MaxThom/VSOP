@@ -921,6 +921,7 @@ public class CodeGenerationListener extends CODEBaseListener {
      * @return
      */
     private VariableDefinition generateVarValue(VarValueContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        VariableDefinition returnVar = new VariableDefinition("", "", "", "");
         String typeFound = "";
         String text = ctx.getText();
         int returnInstruction = -1;
@@ -960,10 +961,6 @@ public class CodeGenerationListener extends CODEBaseListener {
                 llvmOutput.append(indents).append("store [").append(strLength).append(" x i8] c\"").append(str).append("\\00\"").append(", [").append(strLength).append(" x i8]* %").append(lastInstructionId).append("\n");
                 returnInstruction = varId;
 
-                //%7 = call noalias i8* @malloc(i64 4) #3
-                //%8 = bitcast i8* %7 to [4 x i8]*
-                //store [4 x i8] c"str\00", [4 x i8]* %8
-                //store i8* %7, i8** %6
             } else {
                 // Put on stack
                 llvmOutput.append(indents).append("%").append(varId).append(" = alloca ").append("[").append(strLength)
@@ -988,7 +985,11 @@ public class CodeGenerationListener extends CODEBaseListener {
         }
 
         llvmOutput.append(indents).append("\n");
-        return new VariableDefinition("", String.valueOf(returnInstruction), typeFound, "");
+
+        returnVar.value = text;
+        returnVar.type = typeFound;
+        returnVar.alias = String.valueOf(returnInstruction);
+        return returnVar;
     }
 
     /**
@@ -1212,12 +1213,14 @@ public class CodeGenerationListener extends CODEBaseListener {
         // Handle and operation
         if (expr1.expr1() != null) {
             VariableDefinition var1 = handleExpr1(expr1.expr1(), variablesCache);
-            VariableDefinition var2 = handleExpr2(expr1.expr2(), variablesCache);
+            if (var1.type.equals("bool") && var1.value.equals("1")) {
+                VariableDefinition var2 = handleExpr2(expr1.expr2(), variablesCache);
 
-            llvmOutput.append(indents).append("; And\n");
-            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = and i1 %").append(var1.alias)
-                    .append(", %").append(var2.alias).append("\n");
-            llvmOutput.append("\n");
+                llvmOutput.append(indents).append("; And\n");
+                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = and i1 %").append(var1.alias)
+                        .append(", %").append(var2.alias).append("\n");
+                llvmOutput.append("\n");
+            }
         } else
             return handleExpr2(expr1.expr2(), variablesCache);
 
@@ -1479,9 +1482,10 @@ public class CodeGenerationListener extends CODEBaseListener {
             return generateNewObj(expr8.newObj(), variablesCache);
         else if (expr8.ifStatement() != null)
             return generateIfStatement(expr8.ifStatement(), variablesCache);
-        else if (expr8.OBJECT_IDENTIFIER() != null) {
+        else if (expr8.OBJECT_IDENTIFIER() != null)
             return generateObjectIdentifier(expr8.OBJECT_IDENTIFIER(), variablesCache);
-        }
+        else if (expr8.block() != null)
+            return generateBlock(expr8.block(), variablesCache);
 
         return new VariableDefinition("", "", "", "");
     }

@@ -669,6 +669,8 @@ public class ParserListener extends PARSERBaseListener {
             output.append(handleNewObj(expr8.newObj()));
         else if (expr8.ifStatement() != null)
             output.append(handleIfStatement(expr8.ifStatement()));
+        else if (expr8.block() != null)
+            output.append(handleBlock(expr8.block()));
 
         return output;
     }

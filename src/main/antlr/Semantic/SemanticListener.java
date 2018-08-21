@@ -918,6 +918,8 @@ public class SemanticListener extends SEMANTICBaseListener {
             return checkNewOperator(expr8.newObj(), variablesCache);
         else if (expr8.ifStatement() != null)
             return checkIfStatementType(expr8.ifStatement(), variablesCache, true);
+        else if (expr8.block() != null)
+            return checkBlockType(expr8.block(), variablesCache);
         else if (expr8.OBJECT_IDENTIFIER() != null) {
             String typeFound = checkVariableCacheForIdentifier(expr8.OBJECT_IDENTIFIER(), variablesCache);
             treeOutput.append(expr8.OBJECT_IDENTIFIER().getText() + " : " + typeFound);

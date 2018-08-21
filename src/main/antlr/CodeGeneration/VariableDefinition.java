@@ -10,6 +10,7 @@ public class VariableDefinition {
     public String type;
     public String aliasAlocated;
     public String blockName;
+    public String value;
 
     public VariableDefinition(String name, String alias, String type, String aliasAlocated) {
         this.name = name;
@@ -17,6 +18,7 @@ public class VariableDefinition {
         this.type = type;
         this.aliasAlocated = aliasAlocated;
         this.blockName = "";
+        this.value = "";
     }
 
     public VariableDefinition(String name, String alias, String type, String aliasAlocated, String blockName) {
@@ -25,5 +27,6 @@ public class VariableDefinition {
         this.type = type;
         this.aliasAlocated = aliasAlocated;
         this.blockName = blockName;
+        this.value = "";
     }
 }
