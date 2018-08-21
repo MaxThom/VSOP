@@ -282,7 +282,8 @@ public class LexerListener extends LEXERBaseListener {
             }
 
             // Pop last one
-            if (txt.substring(txt.length()-2).equals("*)")) {
+            if (txt.substring(txt.length()-3).equals("(*)")) {
+            } else if (txt.substring(txt.length()-2).equals("*)")) {
                 commentStack.pop();
             }
 

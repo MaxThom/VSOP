@@ -22,8 +22,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+/**
+ * Main entry for the VSOP compiler
+ */
 public class Main {
 
+    /**
+     * Main methods. Receive arguments and dispatch
+     * @param args
+     */
     public static void main(String[] args) {
         try {
             int exitCode = 0;
@@ -33,7 +40,7 @@ public class Main {
             }
 
             File file = new File(args[args.length-1]);
-
+            // Analyze arguments and call right method
             switch (args[0]) {
                 case "-lex":
                     exitCode = startLexer(file, true);
@@ -49,8 +56,6 @@ public class Main {
                     break;
                 default:
                     exitCode = startProgram(file, args[0].equals("-v") || args[0].equals("-visual"));
-                    //System.out.println("Error : Missing correct arguments");
-                    //exitCode = 1;
                     break;
             }
             System.exit(exitCode);
@@ -59,6 +64,13 @@ public class Main {
         }
     }
 
+    /**
+     * Call every part of the compiler
+     * @param file
+     * @param displayVisual
+     * @return
+     * @throws IOException
+     */
     private static int startProgram(File file, boolean displayVisual) throws IOException {
         int exitCode = 0;
 
@@ -102,6 +114,13 @@ public class Main {
         return exitCode;
     }
 
+    /**
+     * Call the lexer part
+     * @param file
+     * @param displayVisual
+     * @return
+     * @throws IOException
+     */
     private static int startLexer(File file, boolean displayVisual) throws IOException {
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(file));
         LEXERLexer lexer = new LEXERLexer(input);
@@ -116,6 +135,7 @@ public class Main {
         // Start parsing
         parser.program();
 
+        // Display results
         if (displayVisual) {
             for (String token : listener.tokenOutput) {
                 System.out.println(token);
@@ -128,6 +148,13 @@ public class Main {
         return LexerErrorListener.getInstance("").inError ? 1 : (listener.lexicalError ? 1 : 0) ;
     }
 
+    /**
+     * Call the parser part
+     * @param file
+     * @param displayVisual
+     * @return
+     * @throws IOException
+     */
     private static int startParser(File file, boolean displayVisual) throws IOException  {
         String text = removeSpecialChar(removeComments(file));
 
@@ -145,12 +172,20 @@ public class Main {
         // Start parsing
         parser.program();
 
+        // Display results
         if (parser.getNumberOfSyntaxErrors() == 0 && displayVisual)
             System.out.println(listener.treeOuput);
 
         return parser.getNumberOfSyntaxErrors();
     }
 
+    /**
+     * Call the semantic part
+     * @param file
+     * @param displayVisual
+     * @return
+     * @throws IOException
+     */
     private static int startSemantic(File file, boolean displayVisual) throws IOException  {
         String text = removeSpecialChar(removeComments(file));
 
@@ -171,9 +206,11 @@ public class Main {
         // Start parsing
         parser.program();
 
+        // Display results
         if (parser.getNumberOfSyntaxErrors() == 0 && displayVisual)
             System.out.println(listener.treeOutput.toString());
 
+        // Display errors
         for (String token : listener.errorOutput) {
             System.err.println(token);
         }
@@ -181,34 +218,33 @@ public class Main {
         return parser.getNumberOfSyntaxErrors() + listener.errorOutput.size();
     }
 
+    /**
+     * Call the code generation part
+     * @param file
+     * @param displayVisual
+     * @param generateLllvmFile
+     * @return
+     * @throws IOException
+     */
     private static int startCodeGeneration(File file, boolean displayVisual, boolean generateLllvmFile) throws IOException  {
 
         String text = removeSpecialChar(removeComments(file));
 
         ANTLRInputStream input = new ANTLRInputStream(text);
         CODELexer lexer = new CODELexer(input);
-        //lexer.removeErrorListeners();
-        //lexer.addErrorListener(SemanticErrorListener.getInstance(file.getName()));
-
         CODEParser parser = new CODEParser(new CommonTokenStream(lexer));
         CodeGenerationListener listener = new CodeGenerationListener(file.getName());
-        //listener.addLibrary(addIOClasses()); // TODO : Maybe no need since they have to be implemented in llvm
-        //listener.addLibrary(addObjectClasses());
-
         parser.addParseListener(listener);
-        //parser.removeErrorListeners();
-        //parser.addErrorListener(SemanticErrorListener.getInstance(file.getName()));
 
         // Start parsing
         parser.program();
 
+        // Display results
         if (parser.getNumberOfSyntaxErrors() == 0 && displayVisual) {
             System.out.println(listener.llvmOutput.toString());
-
-        //for (String token : listener.errorOutput) {
-            //System.err.println(token);
         }
 
+        // Generate llvm file and executable
         if (generateLllvmFile) {
             createLlvmFile(file.getName(), listener.llvmOutput.toString(), displayVisual);
         }
@@ -216,6 +252,12 @@ public class Main {
         return parser.getNumberOfSyntaxErrors();
     }
 
+    /**
+     * Create llvm file with the results
+     * @param fileName
+     * @param input
+     * @param displayVisual
+     */
     private static void createLlvmFile(String fileName, String input, boolean displayVisual) {
         try {
             String name = fileName.substring(0, fileName.lastIndexOf("."));
@@ -244,39 +286,47 @@ public class Main {
         }
     }
 
+    /**
+     * Generate an executable with the .ll file
+     * @param fileName
+     */
     private static void generateExecutableFinal(String fileName) {
         try
         {
             String command = "llvm-as -f " + fileName + ".ll -o " + fileName + ".bc" ;
-            executeCommmandAnsListen(command);
+            executeCommandAndListen(command);
 
             command = "llc " + fileName + ".bc";
-            executeCommmandAnsListen(command);
+            executeCommandAndListen(command);
 
             command = "gcc -c " + fileName + ".s -o " + fileName + ".o";
-            executeCommmandAnsListen(command);
+            executeCommandAndListen(command);
 
             command = "gcc " + fileName + ".o -lm -o " + fileName + " -no-pie";
-            executeCommmandAnsListen(command);
+            executeCommandAndListen(command);
 
             command = "rm " + fileName + ".bc";
-            executeCommmandAnsListen(command);
+            executeCommandAndListen(command);
 
             command = "rm " + fileName + ".s";
-            executeCommmandAnsListen(command);
+            executeCommandAndListen(command);
 
             command = "rm " + fileName + ".o";
-            executeCommmandAnsListen(command);
+            executeCommandAndListen(command);
 
             command = "rm " + fileName + ".ll";
-            executeCommmandAnsListen(command);
+            executeCommandAndListen(command);
 
         } catch (Exception e) {
             System.err.println("Can't generate LLVM file : " + e.getMessage());
         }
     }
 
-    private static void executeCommmandAnsListen(String command) {
+    /**
+     * Execute a command line command and Listen
+     * @param command
+     */
+    private static void executeCommandAndListen(String command) {
         try
         {
             Process proc = Runtime.getRuntime().exec(command);
@@ -292,6 +342,10 @@ public class Main {
         }
     }
 
+    /**
+     * Execute executable
+     * @param fileName
+     */
     private static void executeFinal(String fileName) {
         try
         {
@@ -310,6 +364,11 @@ public class Main {
         }
     }
 
+    /**
+     * Remove special char in a file
+     * @param file
+     * @return
+     */
     private static String removeSpecialChar(String file) {
         HashMap<String, String> characterEscape = new HashMap<>();
         characterEscape.put("\\b", "\\x08");
@@ -365,6 +424,11 @@ public class Main {
         return file;
     }
 
+    /**
+     * Remove comments in a file
+     * @param file
+     * @return
+     */
     private static String removeComments(File file) {
 
         String text = "";
@@ -403,6 +467,10 @@ public class Main {
         return text;
     }
 
+    /**
+     * Add IO class
+     * @return
+     */
     private static ClassDefinition addIOClasses() {
         ClassDefinition ioClass = new ClassDefinition("IO", "Object");
         ioClass.classInitialized = true;
@@ -445,8 +513,10 @@ public class Main {
         return ioClass;
     }
 
-
-
+    /**
+     * Add Object class
+     * @return
+     */
     private static ClassDefinition addObjectClasses() {
         ClassDefinition objectClass = new ClassDefinition("Object", "");
         objectClass.classInitialized = true;

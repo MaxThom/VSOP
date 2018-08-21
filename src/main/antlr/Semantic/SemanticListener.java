@@ -1117,10 +1117,11 @@ public class SemanticListener extends SEMANTICBaseListener {
                     String argType = "";
                     argType = checkStatementType(arg.statement(), variablesCache);
 
-                    if (isPrimitive(argType))
+                    if (isPrimitive(argType)) {
                         if (!formal.type.equals(argType))
                             errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1)
                                     + ":" + " semantic error - method call '" + methodToCheck.name + "()' argument's #" + j + " is of type '" + argType + "'. Expecting '" + formal.type + "'.");
+                    }
                     else if (!lookForInheritance(ctx, formal.type, argType))
                         errorOutput.add(fileName + ":" + ctx.getStart().getLine() + ":" + (ctx.getStart().getCharPositionInLine() + 1)
                                 + ":" + " semantic error - method call '" + methodToCheck.name + "()' argument's #" + j + " is of type '" + argType + "'. Expecting '" + formal.type + "'.");
