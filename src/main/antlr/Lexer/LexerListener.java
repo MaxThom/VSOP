@@ -136,7 +136,8 @@ public class LexerListener extends LEXERBaseListener {
                 if (node != null)
                     printTokenCustom(node.getSymbol(), "integer-literal," + decimalValue);
             } catch (Exception e) {
-                printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "lexical error\n  " + node.getText() + " is not a valid integer literal.");
+                printError(node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine(), "lexical error\n  "
+                        + node.getText() + " is not a valid integer literal.");
             }
         }
     }
