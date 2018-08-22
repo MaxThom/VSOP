@@ -8,6 +8,9 @@ declare double @pow(double, double) #1
 declare i32 @strcmp(i8*, i8*) #1
 declare i32 @__isoc99_scanf(i8*, ...) #1
 declare i8* @fgets(i8*, i32, %struct._IO_FILE*) #2
+declare i8* @llvm.stacksave() #3
+declare i8* @fgets(i8*, i32, %struct._IO_FILE*) #2
+declare void @llvm.stackrestore(i8*) #3
 %struct._IO_FILE = type { i32, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, %struct._IO_marker*, %struct._IO_FILE*, i32, i32, i64, i16, i8, [1 x i8], i8*, i64, i8*, i8*, i8*, i8*, i64, i32, [20 x i8] }
 %struct._IO_marker = type { %struct._IO_marker*, %struct._IO_FILE*, i32 }
 @stdin = external global %struct._IO_FILE*, align 8
@@ -258,21 +261,21 @@ define i32 @main(%struct.Main*) #0 {
 	%21 = call %struct.IO* @IO_print(%struct.IO* %18, i8* %20)
 
 	; Let
-	%22 = alloca i32
+	%22 = alloca i8*
 	; Call Method
 	%23 = load %struct.Main*, %struct.Main** %2
 	%24 = getelementptr inbounds %struct.Main, %struct.Main* %23, i32 0, i32 0
-	%25 = call i32 @IO_inputInt32(%struct.IO* %24)
+	%25 = call i8* @IO_inputLine(%struct.IO* %24)
 
-	store i32 %25, i32* %22
+	store i8* %25, i8** %22
 	; Call Method
 	%26 = load %struct.Main*, %struct.Main** %2
 	%27 = getelementptr inbounds %struct.Main, %struct.Main* %26, i32 0, i32 0
 	; Arguments
 	; ObjectIdentifier
-	%28 = load i32, i32* %22
+	%28 = load i8*, i8** %22
 
-	%29 = call %struct.IO* @IO_printInt32(%struct.IO* %27, i32 %28)
+	%29 = call %struct.IO* @IO_print(%struct.IO* %27, i8* %28)
 
 	
 	; Call Method
@@ -287,21 +290,21 @@ define i32 @main(%struct.Main*) #0 {
 	%34 = call %struct.IO* @IO_print(%struct.IO* %31, i8* %33)
 
 	; Let
-	%35 = alloca i1
+	%35 = alloca i8*
 	; Call Method
 	%36 = load %struct.Main*, %struct.Main** %2
 	%37 = getelementptr inbounds %struct.Main, %struct.Main* %36, i32 0, i32 0
-	%38 = call i1 @IO_inputBool(%struct.IO* %37)
+	%38 = call i8* @IO_inputLine(%struct.IO* %37)
 
-	store i1 %38, i1* %35
+	store i8* %38, i8** %35
 	; Call Method
 	%39 = load %struct.Main*, %struct.Main** %2
 	%40 = getelementptr inbounds %struct.Main, %struct.Main* %39, i32 0, i32 0
 	; Arguments
 	; ObjectIdentifier
-	%41 = load i1, i1* %35
+	%41 = load i8*, i8** %35
 
-	%42 = call %struct.IO* @IO_printBool(%struct.IO* %40, i1 %41)
+	%42 = call %struct.IO* @IO_print(%struct.IO* %40, i8* %41)
 
 	
 	; Call Method
@@ -316,21 +319,21 @@ define i32 @main(%struct.Main*) #0 {
 	%47 = call %struct.IO* @IO_print(%struct.IO* %44, i8* %46)
 
 	; Let
-	%48 = alloca i1
+	%48 = alloca i8*
 	; Call Method
 	%49 = load %struct.Main*, %struct.Main** %2
 	%50 = getelementptr inbounds %struct.Main, %struct.Main* %49, i32 0, i32 0
-	%51 = call i1 @IO_inputBool(%struct.IO* %50)
+	%51 = call i8* @IO_inputLine(%struct.IO* %50)
 
-	store i1 %51, i1* %48
+	store i8* %51, i8** %48
 	; Call Method
 	%52 = load %struct.Main*, %struct.Main** %2
 	%53 = getelementptr inbounds %struct.Main, %struct.Main* %52, i32 0, i32 0
 	; Arguments
 	; ObjectIdentifier
-	%54 = load i1, i1* %48
+	%54 = load i8*, i8** %48
 
-	%55 = call %struct.IO* @IO_printBool(%struct.IO* %53, i1 %54)
+	%55 = call %struct.IO* @IO_print(%struct.IO* %53, i8* %54)
 
 	
 	; Call Method

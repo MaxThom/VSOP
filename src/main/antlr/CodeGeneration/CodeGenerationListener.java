@@ -20,6 +20,8 @@ public class CodeGenerationListener extends CODEBaseListener {
     private String fileName;
     private int lastInstructionId;
     private int lastGotoId;
+    private int lastGotoAnd;
+    private boolean isElseStatement;
 
     public StringBuilder llvmOutput;
     private StringBuilder indents;
@@ -185,6 +187,8 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append("declare i32 @strcmp(i8*, i8*) #1").append("\n");
         llvmOutput.append("declare i32 @__isoc99_scanf(i8*, ...) #1").append("\n");
         llvmOutput.append("declare i8* @fgets(i8*, i32, %struct._IO_FILE*) #2").append("\n");
+        llvmOutput.append("declare i8* @llvm.stacksave() #3").append("\n");
+        llvmOutput.append("declare void @llvm.stackrestore(i8*) #3").append("\n");
         llvmOutput.append("%struct._IO_FILE = type { i32, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, %struct._IO_marker*, %struct._IO_FILE*, i32, i32, i64, i16, i8, [1 x i8], i8*, i64, i8*, i8*, i8*, i8*, i64, i32, [20 x i8] }").append("\n");
         llvmOutput.append("%struct._IO_marker = type { %struct._IO_marker*, %struct._IO_FILE*, i32 }").append("\n");
         llvmOutput.append("@stdin = external global %struct._IO_FILE*, align 8").append("\n");
@@ -281,58 +285,65 @@ public class CodeGenerationListener extends CODEBaseListener {
                 "\tret %struct.IO* %0\n" +
                 "}").append("\n");
 
-        llvmOutput.append(indents).append("define i32 @IO_inputInt32(%struct.IO*) {\n" +
-                "    %2 = alloca i32, align 4\n" +
-                "    %3 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.inputInt, i32 0, i32 0), i32* %2)\n" +
-                "    %4 = load i32, i32* %2\n" +
-                "\n" +
-                "    %5 = icmp eq i32 %3, 0\n" +
-                "    br i1 %5, label %exit, label %end\n" +
-                "\n" +
-                "    exit:\n" +
-                "        %msg = alloca [40 x i8]\n" +
-                "        store [40 x i8] c\"Error : invalid input. Expecting int32.\\00\", [40 x i8]* %msg\n" +
-                "        %loadedMsg = bitcast [40 x i8]* %msg to i8*\n" +
-                "        call %struct.IO* @IO_println(%struct.IO* %0, i8* %loadedMsg)\n" +
-                "        call void @exit(i32 1) #3\n" +
-                "        br label %end\n" +
-                "\n" +
-                "    end:\n" +
-                "\t    ret i32 %4\n" +
-                "}").append("\n");
-        llvmOutput.append(indents).append("define i1 @IO_inputBool(%struct.IO*) {\n" +
-                "    %2 = alloca i32, align 4\n" +
-                "    %3 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.inputInt, i32 0, i32 0), i32* %2)\n" +
-                "    %4 = load i32, i32* %2\n" +
-                "\n" +
-                "    %5 = icmp eq i32 %3, 0\n" +
-                "    br i1 %5, label %exit, label %end\n" +
-                "\n" +
-                "    exit:\n" +
-                "        %msg = alloca [49 x i8]\n" +
-                "        store [49 x i8] c\"Error : invalid input. Expecting boolean 1 or 0.\\00\", [49 x i8]* %msg\n" +
-                "        %loadedMsg = bitcast [49 x i8]* %msg to i8*\n" +
-                "        call %struct.IO* @IO_println(%struct.IO* %0, i8* %loadedMsg)\n" +
-                "        call void @exit(i32 1) #3\n" +
-                "        br label %end\n" +
-                "\n" +
-                "    end:\n" +
-                "        %7 = icmp ne i32 %4, 0\n" +
-                "\t    ret i1 %7\n" +
-                "}").append("\n");
-        llvmOutput.append(indents).append("define i8* @IO_inputLine(%struct.IO*) {\n" +
-                "    %2 = alloca [1024 x i8]\n" +
-                "    %3 = getelementptr inbounds [1024 x i8], [1024 x i8]* %2, i32 0, i32 0\n" +
-                "    %4 = load %struct._IO_FILE*, %struct._IO_FILE** @stdin\n" +
-                "    %5 = call i8* @fgets(i8* %3, i32 1024, %struct._IO_FILE* %4)\n" +
-                "    %6 = bitcast [1024 x i8]* %2 to i8*\n" +
-                "\n" +
-                "    ret i8* %6\n" +
-                "}").append("\n");
 
-        llvmOutput.append(indents).append("\n");
 
-        llvmOutput.append("\n");
+
+        if (fileName.substring(fileName.lastIndexOf(".")).equals(".input")) {
+
+        } else {
+            llvmOutput.append(indents).append("define i32 @IO_inputInt32(%struct.IO*) {\n" +
+                    "    %2 = alloca i32, align 4\n" +
+                    "    %3 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.inputInt, i32 0, i32 0), i32* %2)\n" +
+                    "    %4 = load i32, i32* %2\n" +
+                    "\n" +
+                    "    %5 = icmp eq i32 %3, 0\n" +
+                    "    br i1 %5, label %exit, label %end\n" +
+                    "\n" +
+                    "    exit:\n" +
+                    "        %msg = alloca [40 x i8]\n" +
+                    "        store [40 x i8] c\"Error : invalid input. Expecting int32.\\00\", [40 x i8]* %msg\n" +
+                    "        %loadedMsg = bitcast [40 x i8]* %msg to i8*\n" +
+                    "        call %struct.IO* @IO_println(%struct.IO* %0, i8* %loadedMsg)\n" +
+                    "        call void @exit(i32 1) #3\n" +
+                    "        br label %end\n" +
+                    "\n" +
+                    "    end:\n" +
+                    "\t    ret i32 %4\n" +
+                    "}").append("\n");
+            llvmOutput.append(indents).append("define i1 @IO_inputBool(%struct.IO*) {\n" +
+                    "    %2 = alloca i32, align 4\n" +
+                    "    %3 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.inputInt, i32 0, i32 0), i32* %2)\n" +
+                    "    %4 = load i32, i32* %2\n" +
+                    "\n" +
+                    "    %5 = icmp eq i32 %3, 0\n" +
+                    "    br i1 %5, label %exit, label %end\n" +
+                    "\n" +
+                    "    exit:\n" +
+                    "        %msg = alloca [49 x i8]\n" +
+                    "        store [49 x i8] c\"Error : invalid input. Expecting boolean 1 or 0.\\00\", [49 x i8]* %msg\n" +
+                    "        %loadedMsg = bitcast [49 x i8]* %msg to i8*\n" +
+                    "        call %struct.IO* @IO_println(%struct.IO* %0, i8* %loadedMsg)\n" +
+                    "        call void @exit(i32 1) #3\n" +
+                    "        br label %end\n" +
+                    "\n" +
+                    "    end:\n" +
+                    "        %7 = icmp ne i32 %4, 0\n" +
+                    "\t    ret i1 %7\n" +
+                    "}").append("\n");
+            llvmOutput.append(indents).append("define i8* @IO_inputLine(%struct.IO*) {\n" +
+                    "    %2 = alloca [1024 x i8]\n" +
+                    "    %3 = getelementptr inbounds [1024 x i8], [1024 x i8]* %2, i32 0, i32 0\n" +
+                    "    %4 = load %struct._IO_FILE*, %struct._IO_FILE** @stdin\n" +
+                    "    %5 = call i8* @fgets(i8* %3, i32 1024, %struct._IO_FILE* %4)\n" +
+                    "    %6 = bitcast [1024 x i8]* %2 to i8*\n" +
+                    "\n" +
+                    "    ret i8* %6\n" +
+                    "}").append("\n");
+        }
+
+
+
+        llvmOutput.append("\n\n");
     }
 
     private void generateObjectClass() {
@@ -665,6 +676,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         int ifGoto = ++lastGotoId;
         llvmOutput.append(indents).append("; If\n");
         if (ctx.ifStat().statement(0) != null) {
+            isElseStatement = ctx.elseStat() != null;
             generateStatement(ctx.ifStat().statement(0), variablesCache);
             llvmOutput.append(indents).append("br i1 %").append(lastInstructionId).append(", label %condIf").append(ifGoto);
             if (ctx.elseStat() != null) {
@@ -1289,15 +1301,20 @@ public class CodeGenerationListener extends CODEBaseListener {
     private VariableDefinition handleExpr1(Expr1Context expr1, ArrayList<Map<String, VariableDefinition>> variablesCache) {
         // Handle and operation
         if (expr1.expr1() != null) {
+            int andGotoId = lastGotoId;
+            boolean isElse = isElseStatement;
             VariableDefinition var1 = handleExpr1(expr1.expr1(), variablesCache);
-            if (var1.type.equals("bool") && var1.value.equals("1")) {
-                VariableDefinition var2 = handleExpr2(expr1.expr2(), variablesCache);
+            // Here put short-circuiting and
+            llvmOutput.append(indents).append("br i1 %").append(var1.alias).append(", label %And").append(++lastGotoAnd).append(", label").append(isElse ? "%condElse" : "%condEnd").append(andGotoId).append("\n");
+            llvmOutput.append(indents).append("And").append(lastGotoAnd).append(":").append("\n");
 
-                llvmOutput.append(indents).append("; And\n");
-                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = and i1 %").append(var1.alias)
-                        .append(", %").append(var2.alias).append("\n");
-                llvmOutput.append("\n");
-            }
+            VariableDefinition var2 = handleExpr2(expr1.expr2(), variablesCache);
+
+            llvmOutput.append(indents).append("; And\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = and i1 %").append(var1.alias)
+                    .append(", %").append(var2.alias).append("\n");
+            llvmOutput.append("\n");
+            //}
         } else
             return handleExpr2(expr1.expr2(), variablesCache);
 
