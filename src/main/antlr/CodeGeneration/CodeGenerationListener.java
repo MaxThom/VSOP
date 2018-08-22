@@ -184,6 +184,10 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append("declare double @pow(double, double) #1").append("\n");
         llvmOutput.append("declare i32 @strcmp(i8*, i8*) #1").append("\n");
         llvmOutput.append("declare i32 @__isoc99_scanf(i8*, ...) #1").append("\n");
+        llvmOutput.append("declare i8* @fgets(i8*, i32, %struct._IO_FILE*) #2").append("\n");
+        llvmOutput.append("%struct._IO_FILE = type { i32, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, %struct._IO_marker*, %struct._IO_FILE*, i32, i32, i64, i16, i8, [1 x i8], i8*, i64, i8*, i8*, i8*, i8*, i64, i32, [20 x i8] }").append("\n");
+        llvmOutput.append("%struct._IO_marker = type { %struct._IO_marker*, %struct._IO_FILE*, i32 }").append("\n");
+        llvmOutput.append("@stdin = external global %struct._IO_FILE*, align 8").append("\n");
         llvmOutput.append("declare void @exit(i32) #1").append("\n");
         llvmOutput.append("@.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1").append("\n");
 
@@ -317,14 +321,16 @@ public class CodeGenerationListener extends CODEBaseListener {
                 "\t    ret i1 %7\n" +
                 "}").append("\n");
         llvmOutput.append(indents).append("define i8* @IO_inputLine(%struct.IO*) {\n" +
-                "    %2 = alloca i8*\n" +
-                "    %3 = load i8*, i8** %2\n" +
-                "    \n" +
-                "    %4 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.inputStr, i32 0, i32 0), i8* %3)\n" +
-                "    %5 = load i8*, i8** %2\n" +
+                "    %2 = alloca [1024 x i8]\n" +
+                "    %3 = getelementptr inbounds [1024 x i8], [1024 x i8]* %2, i32 0, i32 0\n" +
+                "    %4 = load %struct._IO_FILE*, %struct._IO_FILE** @stdin\n" +
+                "    %5 = call i8* @fgets(i8* %3, i32 1024, %struct._IO_FILE* %4)\n" +
+                "    %6 = bitcast [1024 x i8]* %2 to i8*\n" +
                 "\n" +
-                "    ret i8* %5\n" +
-                "}\n").append("\n");
+                "    ret i8* %6\n" +
+                "}").append("\n");
+
+        llvmOutput.append(indents).append("\n");
 
         llvmOutput.append("\n");
     }

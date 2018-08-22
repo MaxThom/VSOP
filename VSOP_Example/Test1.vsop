@@ -1,6 +1,7 @@
 class Main extends IO {
     main() : int32 {
-
+        print("Enter a string:\n");
+        let s : string <- inputLine() in print(s);
         print("Enter a number:\n");
         let i : int32 <- inputInt32() in printInt32(i);
         print("\nEnter a boolean:\n");

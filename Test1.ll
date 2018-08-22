@@ -7,6 +7,10 @@ declare i32 @printf(i8*, ...)
 declare double @pow(double, double) #1
 declare i32 @strcmp(i8*, i8*) #1
 declare i32 @__isoc99_scanf(i8*, ...) #1
+declare i8* @fgets(i8*, i32, %struct._IO_FILE*) #2
+%struct._IO_FILE = type { i32, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, i8*, %struct._IO_marker*, %struct._IO_FILE*, i32, i32, i64, i16, i8, [1 x i8], i8*, i64, i8*, i8*, i8*, i8*, i64, i32, [20 x i8] }
+%struct._IO_marker = type { %struct._IO_marker*, %struct._IO_FILE*, i32 }
+@stdin = external global %struct._IO_FILE*, align 8
 declare void @exit(i32) #1
 @.str.empty = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
 
@@ -163,13 +167,13 @@ define i1 @IO_inputBool(%struct.IO*) {
 	    ret i1 %7
 }
 define i8* @IO_inputLine(%struct.IO*) {
-    %2 = alloca i8*
-    %3 = load i8*, i8** %2
-    
-    %4 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @IO.inputStr, i32 0, i32 0), i8* %3)
-    %5 = load i8*, i8** %2
+    %2 = alloca [1024 x i8]
+    %3 = getelementptr inbounds [1024 x i8], [1024 x i8]* %2, i32 0, i32 0
+    %4 = load %struct._IO_FILE*, %struct._IO_FILE** @stdin
+    %5 = call i8* @fgets(i8* %3, i32 1024, %struct._IO_FILE* %4)
+    %6 = bitcast [1024 x i8]* %2 to i8*
 
-    ret i8* %5
+    ret i8* %6
 }
 
 
@@ -219,27 +223,27 @@ define i32 @main(%struct.Main*) #0 {
 	; Arguments
 	; VarValue
 	%6 = alloca [17 x i8]
-	store [17 x i8] c"Enter a number:\0a\00", [17 x i8]* %6
+	store [17 x i8] c"Enter a string:\0a\00", [17 x i8]* %6
 	%7 = bitcast [17 x i8]* %6 to i8*
 	
 	%8 = call %struct.IO* @IO_print(%struct.IO* %5, i8* %7)
 
 	; Let
-	%9 = alloca i32
+	%9 = alloca i8*
 	; Call Method
 	%10 = load %struct.Main*, %struct.Main** %2
 	%11 = getelementptr inbounds %struct.Main, %struct.Main* %10, i32 0, i32 0
-	%12 = call i32 @IO_inputInt32(%struct.IO* %11)
+	%12 = call i8* @IO_inputLine(%struct.IO* %11)
 
-	store i32 %12, i32* %9
+	store i8* %12, i8** %9
 	; Call Method
 	%13 = load %struct.Main*, %struct.Main** %2
 	%14 = getelementptr inbounds %struct.Main, %struct.Main* %13, i32 0, i32 0
 	; Arguments
 	; ObjectIdentifier
-	%15 = load i32, i32* %9
+	%15 = load i8*, i8** %9
 
-	%16 = call %struct.IO* @IO_printInt32(%struct.IO* %14, i32 %15)
+	%16 = call %struct.IO* @IO_print(%struct.IO* %14, i8* %15)
 
 	
 	; Call Method
@@ -247,28 +251,28 @@ define i32 @main(%struct.Main*) #0 {
 	%18 = getelementptr inbounds %struct.Main, %struct.Main* %17, i32 0, i32 0
 	; Arguments
 	; VarValue
-	%19 = alloca [19 x i8]
-	store [19 x i8] c"\0aEnter a boolean:\0a\00", [19 x i8]* %19
-	%20 = bitcast [19 x i8]* %19 to i8*
+	%19 = alloca [17 x i8]
+	store [17 x i8] c"Enter a number:\0a\00", [17 x i8]* %19
+	%20 = bitcast [17 x i8]* %19 to i8*
 	
 	%21 = call %struct.IO* @IO_print(%struct.IO* %18, i8* %20)
 
 	; Let
-	%22 = alloca i1
+	%22 = alloca i32
 	; Call Method
 	%23 = load %struct.Main*, %struct.Main** %2
 	%24 = getelementptr inbounds %struct.Main, %struct.Main* %23, i32 0, i32 0
-	%25 = call i1 @IO_inputBool(%struct.IO* %24)
+	%25 = call i32 @IO_inputInt32(%struct.IO* %24)
 
-	store i1 %25, i1* %22
+	store i32 %25, i32* %22
 	; Call Method
 	%26 = load %struct.Main*, %struct.Main** %2
 	%27 = getelementptr inbounds %struct.Main, %struct.Main* %26, i32 0, i32 0
 	; Arguments
 	; ObjectIdentifier
-	%28 = load i1, i1* %22
+	%28 = load i32, i32* %22
 
-	%29 = call %struct.IO* @IO_printBool(%struct.IO* %27, i1 %28)
+	%29 = call %struct.IO* @IO_printInt32(%struct.IO* %27, i32 %28)
 
 	
 	; Call Method
@@ -276,9 +280,9 @@ define i32 @main(%struct.Main*) #0 {
 	%31 = getelementptr inbounds %struct.Main, %struct.Main* %30, i32 0, i32 0
 	; Arguments
 	; VarValue
-	%32 = alloca [25 x i8]
-	store [25 x i8] c"\0aEnter another boolean:\0a\00", [25 x i8]* %32
-	%33 = bitcast [25 x i8]* %32 to i8*
+	%32 = alloca [19 x i8]
+	store [19 x i8] c"\0aEnter a boolean:\0a\00", [19 x i8]* %32
+	%33 = bitcast [19 x i8]* %32 to i8*
 	
 	%34 = call %struct.IO* @IO_print(%struct.IO* %31, i8* %33)
 
@@ -305,17 +309,46 @@ define i32 @main(%struct.Main*) #0 {
 	%44 = getelementptr inbounds %struct.Main, %struct.Main* %43, i32 0, i32 0
 	; Arguments
 	; VarValue
-	%45 = alloca [2 x i8]
-	store [2 x i8] c"\0a\00", [2 x i8]* %45
-	%46 = bitcast [2 x i8]* %45 to i8*
+	%45 = alloca [25 x i8]
+	store [25 x i8] c"\0aEnter another boolean:\0a\00", [25 x i8]* %45
+	%46 = bitcast [25 x i8]* %45 to i8*
 	
 	%47 = call %struct.IO* @IO_print(%struct.IO* %44, i8* %46)
 
-	; VarValue
-	%48 = alloca i32
-	store i32 0, i32* %48
-	%49 = load i32, i32* %48
+	; Let
+	%48 = alloca i1
+	; Call Method
+	%49 = load %struct.Main*, %struct.Main** %2
+	%50 = getelementptr inbounds %struct.Main, %struct.Main* %49, i32 0, i32 0
+	%51 = call i1 @IO_inputBool(%struct.IO* %50)
+
+	store i1 %51, i1* %48
+	; Call Method
+	%52 = load %struct.Main*, %struct.Main** %2
+	%53 = getelementptr inbounds %struct.Main, %struct.Main* %52, i32 0, i32 0
+	; Arguments
+	; ObjectIdentifier
+	%54 = load i1, i1* %48
+
+	%55 = call %struct.IO* @IO_printBool(%struct.IO* %53, i1 %54)
+
 	
-	ret i32 %49
+	; Call Method
+	%56 = load %struct.Main*, %struct.Main** %2
+	%57 = getelementptr inbounds %struct.Main, %struct.Main* %56, i32 0, i32 0
+	; Arguments
+	; VarValue
+	%58 = alloca [2 x i8]
+	store [2 x i8] c"\0a\00", [2 x i8]* %58
+	%59 = bitcast [2 x i8]* %58 to i8*
+	
+	%60 = call %struct.IO* @IO_print(%struct.IO* %57, i8* %59)
+
+	; VarValue
+	%61 = alloca i32
+	store i32 0, i32* %61
+	%62 = load i32, i32* %61
+	
+	ret i32 %62
 }
 
