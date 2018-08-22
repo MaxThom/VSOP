@@ -18,21 +18,33 @@ declare void @exit(i32) #1
 	%struct.Object
 }
 %struct.Main = type {
-	%struct.IO,
-	%struct.IO*,
-	%struct.IO*,
-	%struct.IO*,
-	i32,
-	i8*,
-	i1
+	%struct.IO
 }
+
+; 
+; Object Class
+
+; 
+; Allocation
+define %struct.Object* @Object.new() #0 {
+	%1 = alloca %struct.Object*
+	%2 = call noalias i8* @malloc(i64 0) #3
+	%3 = bitcast i8* %2 to %struct.Object*
+	store %struct.Object* %3, %struct.Object** %1
+	%4 = load %struct.Object*, %struct.Object** %1
+	ret %struct.Object* %4
+}
+
+; Initializer
+define void @Object.init(%struct.Object*) #0 { ret void }
+
 
 ; 
 ; IO Class
 
 ; 
 ; Allocation
-define %struct.IO* @IO_new() #0 {
+define %struct.IO* @IO.new() #0 {
 	%1 = alloca %struct.IO*
 	%2 = call noalias i8* @malloc(i64 0) #3
 	%3 = bitcast i8* %2 to %struct.IO*
@@ -42,7 +54,7 @@ define %struct.IO* @IO_new() #0 {
 }
 
 ; Initializer
-define void @IO_init(%struct.IO*) #0 { ret void }
+define void @IO.init(%struct.IO*) #0 { ret void }
 
 @IO.printInt = private constant [3 x i8] c"%d\00"
 @IO.printStr = private constant [3 x i8] c"%s\00"
@@ -166,7 +178,7 @@ define i8* @IO_inputLine(%struct.IO*) {
 ; 
 
 ; Allocation
-define %struct.Main* @Main_new() #0 {
+define %struct.Main* @Main.new() #0 {
 	%size_as_ptr = getelementptr %struct.Main, %struct.Main* null, i32 1
 	%size_as_i64 = ptrtoint %struct.Main* %size_as_ptr to i64
 
@@ -176,71 +188,21 @@ define %struct.Main* @Main_new() #0 {
 	store %struct.Main* %3, %struct.Main** %1
 
 	%4 = load %struct.Main*, %struct.Main** %1
-	call void @Main_init(%struct.Main* %4)
+	call void @Main.init(%struct.Main* %4)
 
 	%5 = load %struct.Main*, %struct.Main** %1
 	ret %struct.Main* %5
 }
 
 ; Initializer
-define void @Main_init(%struct.Main*) #0 {
+define void @Main.init(%struct.Main*) #0 {
 	%2 = alloca %struct.Main*
 	store %struct.Main* %0, %struct.Main** %2
 
 	%3 = load %struct.Main*, %struct.Main** %2
 	%4 = getelementptr inbounds %struct.Main, %struct.Main* %3, i32 0, i32 0
-	call void @IO_init(%struct.IO* %4)
+	call void @IO.init(%struct.IO* %4)
 
-	; field #1
-	%5 = load %struct.Main*, %struct.Main** %2
-	%6 = getelementptr inbounds %struct.Main, %struct.Main* %5, i32 0, i32 1
-	; New
-	%7 = alloca %struct.IO*
-	%8 = call %struct.IO* @IO_new()
-	store %struct.IO* %8, %struct.IO** %7
-
-	store %struct.IO* %8, %struct.IO** %6
-	; field #2
-	%9 = load %struct.Main*, %struct.Main** %2
-	%10 = getelementptr inbounds %struct.Main, %struct.Main* %9, i32 0, i32 2
-		; New
-		%11 = alloca %struct.IO*
-		%12 = call %struct.IO* @IO_new()
-		store %struct.IO* %12, %struct.IO** %11
-
-	store %struct.IO* %12, %struct.IO** %10
-	; field #3
-	%13 = load %struct.Main*, %struct.Main** %2
-	%14 = getelementptr inbounds %struct.Main, %struct.Main* %13, i32 0, i32 3
-	store %struct.IO* null, %struct.IO** %14
-
-	; field #4
-	%15 = load %struct.Main*, %struct.Main** %2
-	%16 = getelementptr inbounds %struct.Main, %struct.Main* %15, i32 0, i32 4
-	; VarValue
-	%17 = alloca i32
-	store i32 23, i32* %17
-	%18 = load i32, i32* %17
-	
-	store i32 %18, i32* %16
-	; field #5
-	%19 = load %struct.Main*, %struct.Main** %2
-	%20 = getelementptr inbounds %struct.Main, %struct.Main* %19, i32 0, i32 5
-	; VarValue
-	%21 = call noalias i8* @malloc(i64 7) #3
-	%22 = bitcast i8* %21 to [7 x i8]*
-	store [7 x i8] c"string\00", [7 x i8]* %22
-	
-	store i8* %21, i8** %20
-	; field #6
-	%23 = load %struct.Main*, %struct.Main** %2
-	%24 = getelementptr inbounds %struct.Main, %struct.Main* %23, i32 0, i32 6
-	; VarValue
-	%25 = alloca i1
-	store i1 1, i1* %25
-	%26 = load i1, i1* %25
-	
-	store i1 %26, i1* %24
 	ret void
 }
 
@@ -248,267 +210,112 @@ define void @Main_init(%struct.Main*) #0 {
 define i32 @main(%struct.Main*) #0 {
 	; Formals
 	%2 = alloca %struct.Main*
-	%3 = call %struct.Main* @Main_new()
+	%3 = call %struct.Main* @Main.new()
 	store %struct.Main* %3, %struct.Main** %2
 	
-	; ObjectIdentifier
+	; Call Method
 	%4 = load %struct.Main*, %struct.Main** %2
-	%5 = getelementptr inbounds %struct.Main, %struct.Main* %4, i32 0, i32 1
-	%6 = load %struct.IO*, %struct.IO** %5
-
-	; IsNull
-	%7 = icmp eq %struct.IO* %6, null
-
-	; Call Method
-	%8 = load %struct.Main*, %struct.Main** %2
-	%9 = getelementptr inbounds %struct.Main, %struct.Main* %8, i32 0, i32 0
+	%5 = getelementptr inbounds %struct.Main, %struct.Main* %4, i32 0, i32 0
 	; Arguments
-	; ObjectIdentifier
+	; VarValue
+	%6 = alloca [17 x i8]
+	store [17 x i8] c"Enter a number:\0a\00", [17 x i8]* %6
+	%7 = bitcast [17 x i8]* %6 to i8*
+	
+	%8 = call %struct.IO* @IO_print(%struct.IO* %5, i8* %7)
+
+	; Let
+	%9 = alloca i32
+	; Call Method
 	%10 = load %struct.Main*, %struct.Main** %2
-	%11 = getelementptr inbounds %struct.Main, %struct.Main* %10, i32 0, i32 1
-	%12 = load %struct.IO*, %struct.IO** %11
+	%11 = getelementptr inbounds %struct.Main, %struct.Main* %10, i32 0, i32 0
+	%12 = call i32 @IO_inputInt32(%struct.IO* %11)
 
-	; IsNull
-	%13 = icmp eq %struct.IO* %12, null
-
-	%14 = call %struct.IO* @IO_printlnBool(%struct.IO* %9, i1 %13)
-
+	store i32 %12, i32* %9
 	; Call Method
-	%15 = load %struct.Main*, %struct.Main** %2
-	%16 = getelementptr inbounds %struct.Main, %struct.Main* %15, i32 0, i32 0
+	%13 = load %struct.Main*, %struct.Main** %2
+	%14 = getelementptr inbounds %struct.Main, %struct.Main* %13, i32 0, i32 0
 	; Arguments
 	; ObjectIdentifier
+	%15 = load i32, i32* %9
+
+	%16 = call %struct.IO* @IO_printInt32(%struct.IO* %14, i32 %15)
+
+	
+	; Call Method
 	%17 = load %struct.Main*, %struct.Main** %2
-	%18 = getelementptr inbounds %struct.Main, %struct.Main* %17, i32 0, i32 2
-	%19 = load %struct.IO*, %struct.IO** %18
+	%18 = getelementptr inbounds %struct.Main, %struct.Main* %17, i32 0, i32 0
+	; Arguments
+	; VarValue
+	%19 = alloca [19 x i8]
+	store [19 x i8] c"\0aEnter a boolean:\0a\00", [19 x i8]* %19
+	%20 = bitcast [19 x i8]* %19 to i8*
+	
+	%21 = call %struct.IO* @IO_print(%struct.IO* %18, i8* %20)
 
-	; IsNull
-	%20 = icmp eq %struct.IO* %19, null
-
-	%21 = call %struct.IO* @IO_printlnBool(%struct.IO* %16, i1 %20)
-
+	; Let
+	%22 = alloca i1
 	; Call Method
-	%22 = load %struct.Main*, %struct.Main** %2
-	%23 = getelementptr inbounds %struct.Main, %struct.Main* %22, i32 0, i32 0
+	%23 = load %struct.Main*, %struct.Main** %2
+	%24 = getelementptr inbounds %struct.Main, %struct.Main* %23, i32 0, i32 0
+	%25 = call i1 @IO_inputBool(%struct.IO* %24)
+
+	store i1 %25, i1* %22
+	; Call Method
+	%26 = load %struct.Main*, %struct.Main** %2
+	%27 = getelementptr inbounds %struct.Main, %struct.Main* %26, i32 0, i32 0
 	; Arguments
 	; ObjectIdentifier
-	%24 = load %struct.Main*, %struct.Main** %2
-	%25 = getelementptr inbounds %struct.Main, %struct.Main* %24, i32 0, i32 3
-	%26 = load %struct.IO*, %struct.IO** %25
+	%28 = load i1, i1* %22
 
-	; IsNull
-	%27 = icmp eq %struct.IO* %26, null
+	%29 = call %struct.IO* @IO_printBool(%struct.IO* %27, i1 %28)
 
-	%28 = call %struct.IO* @IO_printlnBool(%struct.IO* %23, i1 %27)
-
+	
 	; Call Method
-	%29 = load %struct.Main*, %struct.Main** %2
-	%30 = getelementptr inbounds %struct.Main, %struct.Main* %29, i32 0, i32 0
+	%30 = load %struct.Main*, %struct.Main** %2
+	%31 = getelementptr inbounds %struct.Main, %struct.Main* %30, i32 0, i32 0
 	; Arguments
-	; New
-	%31 = alloca %struct.IO*
-	%32 = call %struct.IO* @IO_new()
-	store %struct.IO* %32, %struct.IO** %31
+	; VarValue
+	%32 = alloca [25 x i8]
+	store [25 x i8] c"\0aEnter another boolean:\0a\00", [25 x i8]* %32
+	%33 = bitcast [25 x i8]* %32 to i8*
+	
+	%34 = call %struct.IO* @IO_print(%struct.IO* %31, i8* %33)
 
-	; IsNull
-	%33 = icmp eq %struct.IO* %32, null
-
-	%34 = call %struct.IO* @IO_printlnBool(%struct.IO* %30, i1 %33)
-
+	; Let
+	%35 = alloca i1
 	; Call Method
-	%35 = load %struct.Main*, %struct.Main** %2
-	%36 = getelementptr inbounds %struct.Main, %struct.Main* %35, i32 0, i32 0
+	%36 = load %struct.Main*, %struct.Main** %2
+	%37 = getelementptr inbounds %struct.Main, %struct.Main* %36, i32 0, i32 0
+	%38 = call i1 @IO_inputBool(%struct.IO* %37)
+
+	store i1 %38, i1* %35
+	; Call Method
+	%39 = load %struct.Main*, %struct.Main** %2
+	%40 = getelementptr inbounds %struct.Main, %struct.Main* %39, i32 0, i32 0
 	; Arguments
-	; New
-	%37 = alloca %struct.IO*
-	%38 = call %struct.IO* @IO_new()
-	store %struct.IO* %38, %struct.IO** %37
+	; ObjectIdentifier
+	%41 = load i1, i1* %35
 
-	; IsNull
-	%39 = icmp eq %struct.IO* %38, null
+	%42 = call %struct.IO* @IO_printBool(%struct.IO* %40, i1 %41)
 
-	; Not
-	%40 = alloca i1
-	br i1 %39, label %notTrue1 , label %notFalse1
-	notTrue1:
-		store i1 0, i1* %40
-		br label %notEnd1
-	notFalse1:
-		store i1 1, i1* %40
-		br label %notEnd1
-	notEnd1:
-		%41 = load i1, i1* %40
-
-	%42 = call %struct.IO* @IO_printlnBool(%struct.IO* %36, i1 %41)
-
+	
 	; Call Method
 	%43 = load %struct.Main*, %struct.Main** %2
 	%44 = getelementptr inbounds %struct.Main, %struct.Main* %43, i32 0, i32 0
 	; Arguments
-	; ObjectIdentifier
-	%45 = load %struct.Main*, %struct.Main** %2
-	%46 = getelementptr inbounds %struct.Main, %struct.Main* %45, i32 0, i32 5
-	%47 = load i8*, i8** %46
-
-	%48 = call %struct.IO* @IO_println(%struct.IO* %44, i8* %47)
-
-	; Call Method
-	%49 = load %struct.Main*, %struct.Main** %2
-	%50 = getelementptr inbounds %struct.Main, %struct.Main* %49, i32 0, i32 0
-	; Arguments
-	; ObjectIdentifier
-	%51 = load %struct.Main*, %struct.Main** %2
-	%52 = getelementptr inbounds %struct.Main, %struct.Main* %51, i32 0, i32 4
-	%53 = load i32, i32* %52
-
-	%54 = call %struct.IO* @IO_printlnInt32(%struct.IO* %50, i32 %53)
-
-	; Call Method
-	%55 = load %struct.Main*, %struct.Main** %2
-	%56 = getelementptr inbounds %struct.Main, %struct.Main* %55, i32 0, i32 0
-	; Arguments
-	; ObjectIdentifier
-	%57 = load %struct.Main*, %struct.Main** %2
-	%58 = getelementptr inbounds %struct.Main, %struct.Main* %57, i32 0, i32 6
-	%59 = load i1, i1* %58
-
-	%60 = call %struct.IO* @IO_printlnBool(%struct.IO* %56, i1 %59)
+	; VarValue
+	%45 = alloca [2 x i8]
+	store [2 x i8] c"\0a\00", [2 x i8]* %45
+	%46 = bitcast [2 x i8]* %45 to i8*
+	
+	%47 = call %struct.IO* @IO_print(%struct.IO* %44, i8* %46)
 
 	; VarValue
-	%61 = alloca i32
-	store i32 0, i32* %61
-	%62 = load i32, i32* %61
+	%48 = alloca i32
+	store i32 0, i32* %48
+	%49 = load i32, i32* %48
 	
-	ret i32 %62
-}
-
-; Method main2
-define i32 @Main_main2(%struct.Main*, %struct.IO*, i32, i8*, i8*) #0 {
-	; Formals
-	%6 = alloca %struct.Main*
-	store %struct.Main* %0, %struct.Main** %6
-	%7 = alloca %struct.IO*
-	store %struct.IO* %1, %struct.IO** %7
-	%8 = alloca i32
-	store i32 %2, i32* %8
-	%9 = alloca i8*
-	store i8* %3, i8** %9
-	%10 = alloca i8*
-	store i8* %4, i8** %10
-	
-	; Call Method
-	%11 = load %struct.Main*, %struct.Main** %6
-	%12 = getelementptr inbounds %struct.Main, %struct.Main* %11, i32 0, i32 0
-	; Arguments
-	; ObjectIdentifier
-	%13 = load %struct.IO*, %struct.IO** %7
-
-	; IsNull
-	%14 = icmp eq %struct.IO* %13, null
-
-	%15 = call %struct.IO* @IO_printlnBool(%struct.IO* %12, i1 %14)
-
-	; ObjectIdentifier
-	%16 = load %struct.IO*, %struct.IO** %7
-
-	; New
-	%17 = alloca %struct.IO*
-	%18 = call %struct.IO* @IO_new()
-	store %struct.IO* %18, %struct.IO** %17
-
-	; Assign
-	store %struct.IO* %18, %struct.IO** %7
-	
-	; ObjectIdentifier
-	%19 = load %struct.IO*, %struct.IO** %7
-
-	; Call Method
-	%20 = load %struct.Main*, %struct.Main** %6
-	%21 = getelementptr inbounds %struct.Main, %struct.Main* %20, i32 0, i32 0
-	; Arguments
-	; ObjectIdentifier
-	%22 = load %struct.IO*, %struct.IO** %7
-
-	; IsNull
-	%23 = icmp eq %struct.IO* %22, null
-
-	%24 = call %struct.IO* @IO_printlnBool(%struct.IO* %21, i1 %23)
-
-	; ObjectIdentifier
-	%25 = load i32, i32* %8
-
-	; VarValue
-	%26 = alloca i32
-	store i32 2, i32* %26
-	%27 = load i32, i32* %26
-	
-	; Assign
-	store i32 %27, i32* %8
-	
-	; ObjectIdentifier
-	%28 = load i32, i32* %8
-
-	; ObjectIdentifier
-	%29 = load i8*, i8** %9
-
-	; VarValue
-	%30 = alloca [5 x i8]
-	store [5 x i8] c"test\00", [5 x i8]* %30
-	%31 = bitcast [5 x i8]* %30 to i8*
-	
-	; Assign
-	store i8* %31, i8** %9
-	
-	; ObjectIdentifier
-	%32 = load i8*, i8** %9
-
-	; ObjectIdentifier
-	%33 = load i8*, i8** %10
-
-	; VarValue
-	%34 = alloca [5 x i8]
-	store [5 x i8] c"test\00", [5 x i8]* %34
-	%35 = bitcast [5 x i8]* %34 to i8*
-	
-	; Assign
-	store i8* %35, i8** %10
-	
-	; ObjectIdentifier
-	%36 = load i8*, i8** %10
-
-	; If
-	; ObjectIdentifier
-	%37 = load i8*, i8** %9
-
-	; ObjectIdentifier
-	%38 = load i8*, i8** %10
-
-	; Equal
-	%39 = call i32 @strcmp(i8* %37, i8* %38) #2
-	%40 = icmp eq i32 %39, 0
-
-	br i1 %40, label %condIf1, label %condEnd1	
-
-	condIf1:
-		; Call Method
-		%41 = load %struct.Main*, %struct.Main** %6
-		%42 = getelementptr inbounds %struct.Main, %struct.Main* %41, i32 0, i32 0
-		; Arguments
-		; VarValue
-		%43 = alloca [5 x i8]
-		store [5 x i8] c"true\00", [5 x i8]* %43
-		%44 = bitcast [5 x i8]* %43 to i8*
-		
-		%45 = call %struct.IO* @IO_println(%struct.IO* %42, i8* %44)
-
-		br label %condEnd1
-
-	condEnd1:
-	; VarValue
-	%46 = alloca i32
-	store i32 0, i32* %46
-	%47 = load i32, i32* %46
-	
-	ret i32 %47
+	ret i32 %49
 }
 

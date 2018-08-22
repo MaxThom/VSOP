@@ -36,6 +36,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput = new StringBuilder();
         indents = new StringBuilder();
         addLibrary(addIOClasses());
+        addLibrary(addObjectClasses());
     }
 
     /**
@@ -50,7 +51,7 @@ public class CodeGenerationListener extends CODEBaseListener {
      * Add IO Class
      * @return
      */
-    private static ClassDefinition addIOClasses() {
+    private ClassDefinition addIOClasses() {
         ClassDefinition ioClass = new ClassDefinition("IO", "Object");
         ioClass.isManuallyGenerated = true;
         ioClass.classInitialized = true;
@@ -91,6 +92,12 @@ public class CodeGenerationListener extends CODEBaseListener {
         ioClass.methods.put(inputInt32.name, inputInt32);
 
         return ioClass;
+    }
+
+    private ClassDefinition addObjectClasses() {
+        ClassDefinition objectClass = new ClassDefinition("Object", "");
+        objectClass.classInitialized = true;
+        return objectClass;
     }
 
     /**
@@ -190,7 +197,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         appendSectionHeader("IO Class\n");
 
         llvmOutput.append(indents).append("; Allocation\n" +
-                "define %struct.IO* @IO_new() #0 {\n" +
+                "define %struct.IO* @IO.new() #0 {\n" +
                 "\t%1 = alloca %struct.IO*\n" +
                 "\t%2 = call noalias i8* @malloc(i64 0) #3\n" +
                 "\t%3 = bitcast i8* %2 to %struct.IO*\n" +
@@ -199,7 +206,7 @@ public class CodeGenerationListener extends CODEBaseListener {
                 "\tret %struct.IO* %4\n" +
                 "}").append("\n\n");
 
-        llvmOutput.append(indents).append("; Initializer\ndefine void @IO_init(%struct.IO*) #0 { ret void }").append("\n\n");
+        llvmOutput.append(indents).append("; Initializer\ndefine void @IO.init(%struct.IO*) #0 { ret void }").append("\n\n");
 
         llvmOutput.append(indents).append("@IO.printInt = private constant [3 x i8] c\"%d\\00\"").append("\n");
         llvmOutput.append(indents).append("@IO.printStr = private constant [3 x i8] c\"%s\\00\"").append("\n");
@@ -326,7 +333,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         appendSectionHeader("Object Class\n");
 
         llvmOutput.append(indents).append("; Allocation\n" +
-                "define %struct.Object* @Object_new() #0 {\n" +
+                "define %struct.Object* @Object.new() #0 {\n" +
                 "\t%1 = alloca %struct.Object*\n" +
                 "\t%2 = call noalias i8* @malloc(i64 0) #3\n" +
                 "\t%3 = bitcast i8* %2 to %struct.Object*\n" +
@@ -335,7 +342,7 @@ public class CodeGenerationListener extends CODEBaseListener {
                 "\tret %struct.Object* %4\n" +
                 "}").append("\n\n");
 
-        llvmOutput.append(indents).append("; Initializer\ndefine void @Object_init(%struct.Object*) #0 { ret void }").append("\n\n");
+        llvmOutput.append(indents).append("; Initializer\ndefine void @Object.init(%struct.Object*) #0 { ret void }").append("\n\n");
 
 
         llvmOutput.append("\n");
@@ -352,21 +359,23 @@ public class CodeGenerationListener extends CODEBaseListener {
 
         // For inheritance, Ive chosen to have the parent structure in the child class
         for (ClassDefinition cl: classes.values()) {
-            llvmOutput.append(indents).append("%struct.").append(cl.name).append(" = type {\n");
+            if (!cl.name.equals("Object")) {
+                llvmOutput.append(indents).append("%struct.").append(cl.name).append(" = type {\n");
 
-            if (!cl.extend.equals("Object"))
-                llvmOutput.append(indents).append("\t%struct.").append(cl.extend).append(",\n");
-            else
-                llvmOutput.append(indents).append("\t%struct.").append("Object").append(",\n");
+                if (!cl.extend.equals("Object"))
+                    llvmOutput.append(indents).append("\t%struct.").append(cl.extend).append(",\n");
+                else
+                    llvmOutput.append(indents).append("\t%struct.").append("Object").append(",\n");
 
-            // Add fields
-            List<FieldDefinition> fields = new ArrayList<>(cl.fields.values());
-            Collections.sort(fields, Comparator.comparingInt(FieldDefinition::getPosition));
-            for (FieldDefinition field : fields) {
-                llvmOutput.append(indents).append("\t").append(vsopTypeToLlvmType(field.type, true)).append(",\n");
+                // Add fields
+                List<FieldDefinition> fields = new ArrayList<>(cl.fields.values());
+                Collections.sort(fields, Comparator.comparingInt(FieldDefinition::getPosition));
+                for (FieldDefinition field : fields) {
+                    llvmOutput.append(indents).append("\t").append(vsopTypeToLlvmType(field.type, true)).append(",\n");
+                }
+                llvmOutput.delete(llvmOutput.length() - 2, llvmOutput.length());
+                llvmOutput.append(indents).append("\n}\n");
             }
-            llvmOutput.delete(llvmOutput.length() - 2, llvmOutput.length());
-            llvmOutput.append(indents).append("\n}\n");
         }
 
         llvmOutput.append(indents).append("\n");
@@ -380,7 +389,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append(indents).append("\n; Allocation\n");
         ClassDefinition cl = classes.get(ctx.TYPE_IDENTIFIER(0).getText());
 
-        llvmOutput.append(indents).append("define %struct.").append(cl.name).append("* @").append(cl.name).append("_new() #0 {\n");
+        llvmOutput.append(indents).append("define %struct.").append(cl.name).append("* @").append(cl.name).append(".new() #0 {\n");
         llvmOutput.append(indents).append("\t").append("%size_as_ptr = getelementptr %struct.").append(cl.name).append(", %struct.").append(cl.name).append("* null, i32 1").append("\n");
         llvmOutput.append(indents).append("\t").append("%size_as_i64 = ptrtoint %struct.").append(cl.name).append("* %size_as_ptr to i64").append("\n\n");
         llvmOutput.append(indents).append("\t").append("%1 = alloca %struct.").append(cl.name).append("*").append("\n");
@@ -388,7 +397,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append(indents).append("\t").append("%3 = bitcast i8* %2 to %struct.").append(cl.name).append("*").append("\n");
         llvmOutput.append(indents).append("\t").append("store %struct.").append(cl.name).append("* %3, %struct.").append(cl.name).append("** %1").append("\n\n");
         llvmOutput.append(indents).append("\t").append("%4 = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %1").append("\n");
-        llvmOutput.append(indents).append("\t").append("call void @").append(cl.name).append("_init(%struct.").append(cl.name).append("* %4)").append("\n\n");
+        llvmOutput.append(indents).append("\t").append("call void @").append(cl.name).append(".init(%struct.").append(cl.name).append("* %4)").append("\n\n");
         llvmOutput.append(indents).append("\t").append("%5 = load %struct.").append(cl.name).append("*, %struct.").append(cl.name).append("** %1").append("\n");
         llvmOutput.append(indents).append("\t").append("ret %struct.").append(cl.name).append("* %5").append("\n");
         llvmOutput.append(indents).append("}\n");
@@ -403,7 +412,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         ClassDefinition cl = classes.get(ctx.TYPE_IDENTIFIER(0).getText());
         List<FieldContext> fields = ctx.children.stream().filter(x -> x instanceof  FieldContext).map(x -> (FieldContext) x).collect(Collectors.toList());
 
-        llvmOutput.append(indents).append("define void @").append(cl.name).append("_init(%struct.").append(cl.name).append("*) #0 {\n");
+        llvmOutput.append(indents).append("define void @").append(cl.name).append(".init(%struct.").append(cl.name).append("*) #0 {\n");
         llvmOutput.append(indents).append("\t").append("%2 = alloca %struct.").append(cl.name).append("*").append("\n");
         llvmOutput.append(indents).append("\t").append("store %struct.").append(cl.name).append("* %0, %struct.").append(cl.name).append("** %2").append("\n\n");
 
@@ -414,7 +423,7 @@ public class CodeGenerationListener extends CODEBaseListener {
                 .append("*, %struct.").append(cl.name).append("** %2").append("\n");
         llvmOutput.append(indents).append("\t").append("%").append(i+1).append(" = getelementptr inbounds %struct.")
                 .append(cl.name).append(", %struct.").append(cl.name).append("* %").append(i).append(", i32 0, i32 ").append(j).append("\n");
-        llvmOutput.append(indents).append("\t").append("call void @").append(cl.extend).append("_init(%struct.")
+        llvmOutput.append(indents).append("\t").append("call void @").append(cl.extend).append(".init(%struct.")
                 .append(cl.extend).append("* %").append(i+1).append(")").append("\n\n");
         i += 2;
 
@@ -514,7 +523,7 @@ public class CodeGenerationListener extends CODEBaseListener {
                 if (classType.equals("Main") && method.OBJECT_IDENTIFIER().getText().equals("main")) {
                     // If main, add initializer else it's already created with the new before the call
                     llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call ")
-                            .append(vsopTypeToLlvmType(classType, false)).append("* @").append(classType).append("_new()\n");
+                            .append(vsopTypeToLlvmType(classType, false)).append("* @").append(classType).append(".new()\n");
                     llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(classType, false)).append("* %")
                             .append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(classType, false)).append("** %")
                             .append(lastInstructionId - 1).append("\n");
@@ -599,7 +608,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         variablesCache.remove(variablesCache.size()-1);
         this.indents.delete(this.indents.length()-1, this.indents.length());
 
-        if (returnVar.blockName.equals(""))
+        if (returnVar != null && returnVar.blockName.equals(""))
             returnVar.blockName = lastBlock;
         return returnVar;
     }
@@ -693,7 +702,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append(indents).append("condEnd").append(ifGoto).append(":").append("\n");
 
         // Add cast in case of inheritance
-        String returnType = "";
+        String returnType = "unit";
         String idIf = "", idElse = "";
         if (returnIf != null && returnElse != null && !returnIf.type.equals("") && !returnElse.type.equals("")) {
             String labelIf = (returnIf.blockName.equals("")) ? "%condIf" + ifGoto :returnIf.blockName;
@@ -804,7 +813,14 @@ public class CodeGenerationListener extends CODEBaseListener {
         // Initializer
         int statOffset = 0;
         if (ctx.statement().size() == 2 || (ctx.statement().size() == 1 && ctx.block() != null)) {
-            generateStatement(ctx.statement(statOffset++), variablesCache);
+            VariableDefinition varRightSide = generateStatement(ctx.statement(statOffset++), variablesCache);
+
+            //Check for inheritance
+            if (!ctx.varType().getText().equals(varRightSide.type) && lookForInheritance(ctx.varType().getText(), varRightSide.type)) {
+                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = bitcast ").append(vsopTypeToLlvmType(varRightSide.type, true)).append(" %").append(varRightSide.alias).append(" to ").append(vsopTypeToLlvmType(ctx.varType().getText(), true)).append("\n");
+            }
+
+
             llvmOutput.append(indents).append("store ").append(vsopType).append(isPrimitive(ctx.varType().getText()) ? "" : "*")
                     .append(" %").append(lastInstructionId).append(", ").append(vsopType).append(isPrimitive(ctx.varType().getText()) ? "" : "*").append("* %").append(letId).append("\n");
         } else
@@ -831,23 +847,29 @@ public class CodeGenerationListener extends CODEBaseListener {
      * @return
      */
     private VariableDefinition generateAssign(AssignContext ctx, ArrayList<Map<String, VariableDefinition>> variablesCache) {
-        VariableDefinition var = generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
-        generateStatement(ctx.statement(), variablesCache);
+        VariableDefinition varLeftSide = generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
+        VariableDefinition varRightSide = generateStatement(ctx.statement(), variablesCache);
+
+
+        //Check for inheritance
+        if (!varLeftSide.type.equals(varRightSide.type) && lookForInheritance(varLeftSide.type, varRightSide.type)) {
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = bitcast ").append(vsopTypeToLlvmType(varRightSide.type, true)).append(" %").append(varRightSide.alias).append(" to ").append(vsopTypeToLlvmType(varLeftSide.type, true)).append("\n");
+        }
 
         // Add store instruction for assign and get the variable for next use
         llvmOutput.append(indents).append("; Assign\n");
-        if (!var.name.equals("self"))
-            llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(var.type, false)).append(isPrimitive(var.type) ? "" : "*")
-                    .append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type, false)).append(isPrimitive(var.type) ? "" : "*")
+        /*if (!var.name.equals("self"))
+            llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(var.type, true))
+                    .append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type, true))
                     .append("* %").append(var.aliasAlocated).append("\n");
-        else
-            llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(var.type, false)).append(isPrimitive(var.type) ? "" : "")
-                    .append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(var.type, false)).append(isPrimitive(var.type) ? "" : "")
-                    .append("* %").append(var.aliasAlocated).append("\n");
+        else*/
+            llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(varLeftSide.type, true))
+                    .append(" %").append(lastInstructionId).append(", ").append(vsopTypeToLlvmType(varLeftSide.type, true))
+                    .append("* %").append(varLeftSide.aliasAlocated).append("\n");
 
         llvmOutput.append(indents).append("\n");
-        var = generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
-        return var;
+        varLeftSide = generateObjectIdentifier(ctx.OBJECT_IDENTIFIER(), variablesCache);
+        return varLeftSide;
     }
 
     /**
@@ -871,22 +893,22 @@ public class CodeGenerationListener extends CODEBaseListener {
                     .append("*, ").append(varType).append("** %").append(var.alias).append("\n");
             String heritageType = "";
             ParserRuleContext parentNode = (ParserRuleContext) ctx.getParent();
-            while (!(parentNode instanceof LetContext) && !(parentNode instanceof MethodDefinitionContext) ) {
+            while (!(parentNode instanceof LetContext) && !(parentNode instanceof ClassDefinitionContext) ) {
                 parentNode = parentNode.getParent();
             }
 
-            if (parentNode instanceof  LetContext) {
+            if (parentNode instanceof LetContext) {
                 heritageType = ((LetContext) parentNode).varType().getText();
             }
-            else if (parentNode instanceof MethodDefinitionContext) {
-                heritageType = ((MethodDefinitionContext) parentNode).varType().getText();
+            else if (parentNode instanceof ClassDefinitionContext) {
+                heritageType = ((ClassDefinitionContext) parentNode).TYPE_IDENTIFIER(0).getText();
             }
 
             // Add getelementptr inbounds if variable is in parent
             String tmpVarType = var.type;
             while (!tmpVarType.equals(heritageType)) {
                 tmpVarType = classes.get(tmpVarType).extend;
-                if (tmpVarType.equals("Object") || tmpVarType.equals(""))
+                if (tmpVarType.equals(""))
                     break;
                 llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = getelementptr inbounds ")
                         .append(varType).append(", ").append(varType).append("* %").append(lastInstructionId-1).append(", i32 0, i32 ").append(0).append("\n");
@@ -1038,7 +1060,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca ").append(vsopTypeToLlvmType(objType, false))
                 .append("*").append("\n");
         llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = call ").append(vsopTypeToLlvmType(objType, false))
-                .append("* @").append(objType).append("_new()").append("\n");
+                .append("* @").append(objType).append(".new()").append("\n");
         llvmOutput.append(indents).append("store ").append(vsopTypeToLlvmType(objType, false)).append("* %").append(lastInstructionId)
                 .append(", ").append(vsopTypeToLlvmType(objType, false)).append("** %").append(lastInstructionId-1).append("\n");
        // llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = load ").append(vsopTypeToLlvmType(objType, false))
@@ -1203,12 +1225,22 @@ public class CodeGenerationListener extends CODEBaseListener {
             ArgumentContext arg = ctx.argument(j++);
             VariableDefinition argType = generateStatement(arg.statement(), variablesCache);
 
-            if (arg.statement().newObj() != null)
-                formalStr.append(", ").append(vsopTypeToLlvmType(argType.type, false)).append(isPrimitive(argType.type) ? "" : "*")
-                        .append(" %").append(argType.aliasAlocated);
-            else
-                formalStr.append(", ").append(vsopTypeToLlvmType(argType.type, false)).append(isPrimitive(argType.type) ? "" : "*")
-                        .append(" %").append(isPrimitive(argType.type) ? argType.alias : argType.alias);
+            if (!isPrimitive(formal.type) && !formal.type.equals(argType.type)) {
+                // Mean we must cast to formal type
+                llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = bitcast ").append(vsopTypeToLlvmType(argType.type, true)).append(" %").append(argType.alias).append(" to ").append(vsopTypeToLlvmType(formal.type, true)).append("\n");
+                argType.alias = String.valueOf(lastInstructionId);
+                // %cast1 = bitcast %struct.A* %7 to %struct.B*
+
+            }
+
+            //if (arg.statement().newObj() != null)
+            //    formalStr.append(", ").append(vsopTypeToLlvmType(argType.type, true))
+            //            .append(" %").append(argType.alias);
+            //else
+                formalStr.append(", ").append(vsopTypeToLlvmType(formal.type, true))
+                        .append(" %").append(argType.alias);
+
+
         }
 
         // Find function to get type
@@ -1224,6 +1256,11 @@ public class CodeGenerationListener extends CODEBaseListener {
 
 
         return new VariableDefinition("", String.valueOf(lastInstructionId), methodToCheck.type, "");
+    }
+
+    private VariableDefinition generateCast(VariableDefinition from, String to) {
+       return new VariableDefinition("", "", "", "");
+
     }
 
     /**
@@ -1360,6 +1397,13 @@ public class CodeGenerationListener extends CODEBaseListener {
                 } else if (id1.type.equals("unit") && id2.type.equals("unit")) {
                     alias1 = "0";
                     alias2 = "0";
+                } else if (!isPrimitive(id1.type) && !isPrimitive(id2.type)) {
+                    // TODO : Add cast to parent object
+                    if (lookForInheritance(id1.type, id2.type)) {
+                        type = vsopTypeToLlvmType(id1.type, true);
+                    } else if (lookForInheritance(id2.type, id1.type)) {
+                        type = vsopTypeToLlvmType(id2.type, true);
+                    }
                 }
             }
 

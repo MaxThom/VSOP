@@ -8,7 +8,8 @@ class Main extends IO {
             if self = o then print("KO\n") else print("OK\n");
             o <- self;
             if o = self then print("OK\n") else print("KO\n");
-            if self = o then print("OK\n") else print("KO\n")
+            if self = o then print("OK\n") else print("KO\n");
+            0
         };
         0
     }

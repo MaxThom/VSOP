@@ -763,10 +763,13 @@ public class SemanticListener extends SEMANTICBaseListener {
             String type2 = handleExpr4(expr3.expr4(1), variablesCache);
             treeOutput.append(") : bool");
 
-            // Ccheck if they are bool type
-            if (!type1.equals(type2))
-                errorOutput.add(fileName + ":" + expr3.getStart().getLine() + ":" + (expr3.getStart().getCharPositionInLine() + 1)
-                        + ":" + " semantic error - expecting same type on each side. Found '" + type1 + "' on left side and '" + type2 + "' on right side.");
+            // Check if they are bool type
+            if (!type1.equals(type2)) {
+                if (isPrimitive(type1) || isPrimitive(type2) || (!lookForInheritance(expr3, type1, type2) && !lookForInheritance(expr3, type2, type1))) {
+                    errorOutput.add(fileName + ":" + expr3.getStart().getLine() + ":" + (expr3.getStart().getCharPositionInLine() + 1)
+                            + ":" + " semantic error - expecting same type on each side. Found '" + type1 + "' on left side and '" + type2 + "' on right side.");
+                }
+            }
         } else
            return handleExpr4(expr3.expr4(0), variablesCache);
 
