@@ -268,6 +268,18 @@ public class SEMANTICBaseListener implements SEMANTICListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterExprOr(SEMANTICParser.ExprOrContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExprOr(SEMANTICParser.ExprOrContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterExpr2(SEMANTICParser.Expr2Context ctx) { }
 	/**
 	 * {@inheritDoc}

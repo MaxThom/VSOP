@@ -29,7 +29,8 @@ grammar SEMANTIC;
     newObj                  : 'new' TYPE_IDENTIFIER ;
 
     binaryOperation         : expr1 ;
-    expr1                   : expr1 AND expr2 | expr2 ;
+    expr1                   : expr1 AND exprOr | exprOr ;
+    exprOr                  : exprOr OR expr2 | expr2 ;
     expr2                   : <assoc=right> NOT expr2 | expr3 ;
     expr3                   : expr4 comparatorOperator expr4 | expr4 ;
     expr4                   : expr4 termOperator expr5 | expr5 ;
@@ -61,6 +62,7 @@ grammar SEMANTIC;
     DIFFERENT_EQUAL         : '!=' ;
 
     AND                     : 'and' ;
+    OR                      : 'or' ;
     NOT                     : 'not' ;
     ISNULL                  : 'isnull' ;
 

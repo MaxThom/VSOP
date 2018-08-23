@@ -21,7 +21,9 @@ public class CodeGenerationListener extends CODEBaseListener {
     private int lastInstructionId;
     private int lastGotoId;
     private int lastGotoAnd;
+    private int lastGotoOr;
     private boolean isElseStatement;
+    private boolean isAndOperator;
 
     public StringBuilder llvmOutput;
     private StringBuilder indents;
@@ -684,6 +686,7 @@ public class CodeGenerationListener extends CODEBaseListener {
             } else {
                 llvmOutput.append(", label %condEnd").append(ifGoto);
             }
+            isElseStatement = false;
             llvmOutput.append(indents).append("\n\n");
         }
 
@@ -754,14 +757,11 @@ public class CodeGenerationListener extends CODEBaseListener {
                 }
 
                 llvmOutput.insert(whereToAdd, whatToAdd);
-                //llvmOutput.append(indents).append("\t%").append(++lastInstructionId).append(" = phi ").append(vsopTypeToLlvmType(returnType))
-                //        .append("*").append(" [%").append(idIf).append(", %condIf").append(ifGoto).append("], [%").append(idElse).append(", %condElse").append(ifGoto).append("]").append("\n\n");
                 llvmOutput.append(indents).append("\t%").append(++lastInstructionId).append(" = phi ").append(vsopTypeToLlvmType(returnType, false))
                         .append("*").append(" [%").append(idIf).append(", ").append(labelIf).append("], [%").append(idElse).append(", ").append(labelElse).append("]").append("\n\n");
             } else if (!returnIf.type.equals("unit") && !returnElse.type.equals("unit")) {
                 returnType = returnIf.type;
-                //llvmOutput.append(indents).append("\t%").append(++lastInstructionId).append(" = phi ").append(vsopTypeToLlvmType(returnType))
-                //        .append(isPrimitive(returnIf.type) ? "" : "*").append(" [%").append(returnIf.alias).append(", %condIf").append(ifGoto).append("], [%").append(returnElse.alias).append(", %condElse").append(ifGoto).append("]").append("\n\n");
+
                 llvmOutput.append(indents).append("\t%").append(++lastInstructionId).append(" = phi ").append(vsopTypeToLlvmType(returnType, false))
                         .append(isPrimitive(returnIf.type) ? "" : "*").append(" [%").append(returnIf.alias).append(", ").append(labelIf).append("], [%").append(returnElse.alias).append(", ").append(labelElse).append("]").append("\n\n");
             }
@@ -1299,8 +1299,10 @@ public class CodeGenerationListener extends CODEBaseListener {
      * @return
      */
     private VariableDefinition handleExpr1(Expr1Context expr1, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        String lastBlockName = "";
         // Handle and operation
         if (expr1.expr1() != null) {
+            isAndOperator = true;
             int andGotoId = lastGotoId;
             boolean isElse = isElseStatement;
             VariableDefinition var1 = handleExpr1(expr1.expr1(), variablesCache);
@@ -1308,17 +1310,63 @@ public class CodeGenerationListener extends CODEBaseListener {
             llvmOutput.append(indents).append("br i1 %").append(var1.alias).append(", label %And").append(++lastGotoAnd).append(", label").append(isElse ? "%condElse" : "%condEnd").append(andGotoId).append("\n");
             llvmOutput.append(indents).append("And").append(lastGotoAnd).append(":").append("\n");
 
-            VariableDefinition var2 = handleExpr2(expr1.expr2(), variablesCache);
-
+            VariableDefinition var2 = handleExprOr(expr1.exprOr(), variablesCache);
+            lastBlockName = var2.blockName.equals("") ? "%And" + lastGotoAnd : var2.blockName;
             llvmOutput.append(indents).append("; And\n");
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = and i1 %").append(var1.alias)
                     .append(", %").append(var2.alias).append("\n");
             llvmOutput.append("\n");
-            //}
-        } else
-            return handleExpr2(expr1.expr2(), variablesCache);
+            isAndOperator = false;
 
-        return new VariableDefinition("", String.valueOf(lastInstructionId), "bool", "");
+        } else
+            return handleExprOr(expr1.exprOr(), variablesCache);
+
+        return new VariableDefinition("", String.valueOf(lastInstructionId), "bool", "", lastBlockName);
+    }
+
+    /**
+     * Generate or expression type
+     * @param exprOr
+     * @param variablesCache
+     * @return
+     */
+    private VariableDefinition handleExprOr(ExprOrContext exprOr, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        int orGotoId;
+        // Handle and operation
+        if (exprOr.exprOr() != null) {
+            orGotoId = ++lastGotoOr;
+            boolean isAnd = isAndOperator;
+            String phiLabel1 = "%Or" + orGotoId + ".1";
+            String phiLabel2 = "%Or" + orGotoId + ".2";
+            llvmOutput.append(indents).append("; Or\n");
+            llvmOutput.append(indents).append("br label %Or").append(orGotoId).append(".1").append("\n");
+            llvmOutput.append(indents).append("Or").append(orGotoId).append(".1:").append("\n");
+
+
+            VariableDefinition var1 = handleExprOr(exprOr.exprOr(), variablesCache);
+            // Here put short-circuiting or
+            llvmOutput.append(indents).append("br i1 %").append(var1.alias).append(", label ").append("%OrEnd").append(orGotoId).append(", label %Or").append(orGotoId).append(".2").append("\n");
+            llvmOutput.append(indents).append("Or").append(orGotoId).append(".2:").append("\n");
+
+            VariableDefinition var2 = handleExpr2(exprOr.expr2(), variablesCache);
+
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = or i1 %").append(var1.alias)
+                    .append(", %").append(var2.alias).append("\n");
+            llvmOutput.append(indents).append("br label %OrEnd").append(orGotoId).append("\n");
+
+            phiLabel1 = var1.blockName.equals("") ? phiLabel1 : var1.blockName;
+            phiLabel2 = var2.blockName.equals("") ? phiLabel2 : var2.blockName;
+
+            llvmOutput.append(indents).append("OrEnd").append(orGotoId).append(":").append("\n");
+            llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = phi i1 [%").append(var1.alias).append(", ").append(phiLabel1).append("], [%").append(lastInstructionId-1).append(", ").append(phiLabel2).append("]").append("\n");
+
+
+            llvmOutput.append("\n");
+
+        } else
+            return handleExpr2(exprOr.expr2(), variablesCache);
+
+        return new VariableDefinition("", String.valueOf(lastInstructionId), "bool", "","%OrEnd" + orGotoId);
     }
 
     /**
@@ -1328,12 +1376,13 @@ public class CodeGenerationListener extends CODEBaseListener {
      * @return
      */
     private VariableDefinition handleExpr2(Expr2Context expr2, ArrayList<Map<String, VariableDefinition>> variablesCache) {
+        int notEnd;
         // Handle not operation
         if (expr2.expr2() != null) {
             VariableDefinition var1 = handleExpr2(expr2.expr2(), variablesCache);
             int notTrue = ++lastGotoId;
             int notFalse = lastGotoId;
-            int notEnd = lastGotoId;
+            notEnd = lastGotoId;
 
             llvmOutput.append(indents).append("; Not\n");
             llvmOutput.append(indents).append("%").append(++lastInstructionId).append(" = alloca i1").append("\n");
@@ -1357,7 +1406,7 @@ public class CodeGenerationListener extends CODEBaseListener {
         } else
             return handleExpr3(expr2.expr3(), variablesCache);
 
-        return new VariableDefinition("", String.valueOf(lastInstructionId), "bool", "");
+        return new VariableDefinition("", String.valueOf(lastInstructionId), "bool", "","%notEnd" + notEnd);
     }
 
     /**

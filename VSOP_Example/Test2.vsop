@@ -1,11 +1,13 @@
 class Main extends IO {
     main() : int32 {
 
-        let o : Object in {
-
-            if o = self then print("OK\n") else print("KO\n");
-            if self = o then print("OK\n") else print("KO\n")
-        };
+      if ({printlnInt32(1); false} or {printlnInt32(2); false or false or {println("deep"); true or true or false} and false or true}) then {
+        println("OK");
         0
+      }
+      else {
+        println("KO");
+            0
+      }
     }
 }

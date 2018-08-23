@@ -703,7 +703,7 @@ public class SemanticListener extends SEMANTICBaseListener {
             treeOutput.append(", ");
             String type1 = handleExpr1(expr1.expr1(), variablesCache);
             treeOutput.append(", ");
-            String type2 = handleExpr2(expr1.expr2(), variablesCache);
+            String type2 = handleExprOr(expr1.exprOr(), variablesCache);
             treeOutput.append(") : bool");
 
             // Check if they are bool type
@@ -714,10 +714,42 @@ public class SemanticListener extends SEMANTICBaseListener {
                 errorOutput.add(fileName + ":" + expr1.getStart().getLine() + ":" + (expr1.getStart().getCharPositionInLine() + 1)
                         + ":" + " semantic error - expecting 'bool' in and statement. Found '" + type2 + "' on right side.");
         } else
-           return handleExpr2(expr1.expr2(), variablesCache);
+           return handleExprOr(expr1.exprOr(), variablesCache);
 
         return "bool";
     }
+
+    /**
+     * Handle or expression type
+     * @param exprOr
+     * @param variablesCache
+     * @return
+     */
+    private String handleExprOr(ExprOrContext exprOr, ArrayList<Map<String, String>> variablesCache) {
+
+        // Handle and operation
+        if (exprOr.exprOr() != null) {
+            treeOutput.append("BinOp(");
+            treeOutput.append(exprOr.OR().getText());
+            treeOutput.append(", ");
+            String type1 = handleExprOr(exprOr.exprOr(), variablesCache);
+            treeOutput.append(", ");
+            String type2 = handleExpr2(exprOr.expr2(), variablesCache);
+            treeOutput.append(") : bool");
+
+            // Check if they are bool type
+            if (!type1.equals("bool"))
+                errorOutput.add(fileName + ":" + exprOr.getStart().getLine() + ":" + (exprOr.getStart().getCharPositionInLine() + 1)
+                        + ":" + " semantic error - expecting 'bool' in or statement. Found '" + type1 + "' on left side.");
+            if (!type2.equals("bool"))
+                errorOutput.add(fileName + ":" + exprOr.getStart().getLine() + ":" + (exprOr.getStart().getCharPositionInLine() + 1)
+                        + ":" + " semantic error - expecting 'bool' in or statement. Found '" + type2 + "' on right side.");
+        } else
+            return handleExpr2(exprOr.expr2(), variablesCache);
+
+        return "bool";
+    }
+
 
     /**
      * Check not expression type

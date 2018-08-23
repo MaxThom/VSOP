@@ -218,6 +218,16 @@ public interface SEMANTICListener extends ParseTreeListener {
 	 */
 	void exitExpr1(SEMANTICParser.Expr1Context ctx);
 	/**
+	 * Enter a parse tree produced by {@link SEMANTICParser#exprOr}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprOr(SEMANTICParser.ExprOrContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SEMANTICParser#exprOr}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprOr(SEMANTICParser.ExprOrContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SEMANTICParser#expr2}.
 	 * @param ctx the parse tree
 	 */

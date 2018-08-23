@@ -1,6 +1,15 @@
 class Main extends IO {
+
+    x: int32;
+    y: string;
+    z: IO;
+    u: IO;
+
     main() : int32 {
-        println("Hello World !");
+        if (not true or 5 = 5 and true) then {
+            println("OK");
+            0
+        }
         0
     }
 }

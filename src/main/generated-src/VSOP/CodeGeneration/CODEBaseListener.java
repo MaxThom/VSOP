@@ -268,6 +268,18 @@ public class CODEBaseListener implements CODEListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterExprOr(CODEParser.ExprOrContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExprOr(CODEParser.ExprOrContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterExpr2(CODEParser.Expr2Context ctx) { }
 	/**
 	 * {@inheritDoc}

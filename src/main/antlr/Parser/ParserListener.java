@@ -505,10 +505,34 @@ public class ParserListener extends PARSERBaseListener {
             output.append(", ");
             output.append(handleExpr1(expr1.expr1()));
             output.append(", ");
-            output.append(handleExpr2(expr1.expr2()));
+            output.append(handleExprOr(expr1.exprOr()));
             output.append(")");
         } else
-            output.append(handleExpr2(expr1.expr2()));
+            output.append(handleExprOr(expr1.exprOr()));
+
+
+        return output;
+    }
+
+    /**
+     * Handle exprOr node
+     * @param exprOr
+     * @return
+     */
+    private StringBuilder handleExprOr(ExprOrContext exprOr) {
+        StringBuilder output = new StringBuilder();
+
+        // Handle and operation
+        if (exprOr.exprOr() != null) {
+            output.append("BinOp(");
+            output.append(exprOr.OR().getText());
+            output.append(", ");
+            output.append(handleExprOr(exprOr.exprOr()));
+            output.append(", ");
+            output.append(handleExpr2(exprOr.expr2()));
+            output.append(")");
+        } else
+            output.append(handleExpr2(exprOr.expr2()));
 
 
         return output;
