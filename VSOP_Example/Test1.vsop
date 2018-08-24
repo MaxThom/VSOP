@@ -1,15 +1,17 @@
+class Parent {
+    name() : string { "Parent" }
+}
+class Child extends Parent {
+    test: string <- "hello";
+
+    name() : string { "Child" }
+}
 class Main extends IO {
-
-    x: int32;
-    y: string;
-    z: IO;
-    u: IO;
-
     main() : int32 {
-        if (not true or 5 = 5 and true) then {
-            println("OK");
-            0
-        }
+        print((if true then new Parent else new Child).name());
+        print("\n");
+        print((if false then new Parent else new Child).name());
+        print("\n");
         0
     }
 }

@@ -1,13 +1,20 @@
 class Main extends IO {
-    main() : int32 {
+    factorial(n : int32) : int32 {
+        if n < 2 then 1
+        else n * factorial(n - 1)
+    }
 
-      if ({printlnInt32(1); false} or {printlnInt32(2); false or false or {println("deep"); true or true or false} and false or true}) then {
-        println("OK");
-        0
-      }
-      else {
-        println("KO");
+    main() : int32 {
+        print("Enter an integer greater-than or equal to 0:\n");
+        (* We avoid inputInt32() here *)
+        let n : int32 <- 7 in
+        if n < 0 then {
+            print("Error: number must be greater-than or equal to 0.\n");
+            -1
+        } else {
+            print("The factorial of ").printInt32(n).print(" is ");
+            printInt32(factorial(n)).print("\n");
             0
-      }
+        }
     }
 }
