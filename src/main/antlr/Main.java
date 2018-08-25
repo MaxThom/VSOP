@@ -60,7 +60,9 @@ public class Main {
             }
             System.exit(exitCode);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("IO Exception : " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Unknown Exception : " + e.getMessage());
         }
     }
 

@@ -24,18 +24,22 @@ public class ParserListener extends PARSERBaseListener {
      */
     @Override
     public void exitProgram(ProgramContext ctx) {
-        StringBuilder output = new StringBuilder();
-        output.append("[");
+        try {
+            StringBuilder output = new StringBuilder();
+            output.append("[");
 
-        // Move in the tree for each class and generate output
-        for (ClassDefinitionContext classDef : ctx.classDefinition()) {
-            output.append(handleClass(classDef));
-            output.append(", ");
+            // Move in the tree for each class and generate output
+            for (ClassDefinitionContext classDef : ctx.classDefinition()) {
+                output.append(handleClass(classDef));
+                output.append(", ");
+            }
+            if ( ctx.classDefinition().size() > 0) output.delete(output.length()-2, output.length());
+
+            output.append("]");
+            this.treeOuput = output.toString();
+        } catch (Exception e) {
+
         }
-        if ( ctx.classDefinition().size() > 0) output.delete(output.length()-2, output.length());
-
-        output.append("]");
-        this.treeOuput = output.toString();
     }
 
     /**
